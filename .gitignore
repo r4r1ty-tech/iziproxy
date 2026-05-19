@@ -1,0 +1,13 @@
+# Dotnet build folders
+[Bb]in/
+[Oo]bj/
+
+# IDE configurations
+.idea/
+.vscode/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
