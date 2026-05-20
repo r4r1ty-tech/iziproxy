@@ -95,6 +95,26 @@ public class SSH : IDisposable
         }
     }
 
+    public SshCommand RunSudoCommand(ServerConfig serverConfig, string command)
+    {
+        if (_sshClient == null || !_sshClient.IsConnected)
+        {
+            throw new InvalidOperationException("SSH-клиент не подключен.");
+        }
+
+        string sudoCommand;
+        if (serverConfig.Username.Equals("root", StringComparison.OrdinalIgnoreCase))
+        {
+            sudoCommand = command;
+        }
+        else
+        {
+            sudoCommand = $"echo '{serverConfig.Password}' | sudo -S {command}";
+        }
+
+        return _sshClient.RunCommand(sudoCommand);
+    }
+
     public void Dispose()
     {
         if (_sshClient != null)
