@@ -41,7 +41,6 @@ install_xray() {
     bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 }
 
-
 install_deps
 enable_bbr
 install_xray

@@ -64,6 +64,39 @@ public class SSH : IDisposable
         }
     }
 
+    public Boolean UploadFile(string localFilePath, string remoteFileName, ServerConfig serverConfig)
+    {
+        if (_sftpClient == null || !_sftpClient.IsConnected)
+        {
+            Console.WriteLine("SFTP-клиент не подключен.");
+            return false;
+        }
+
+        try
+        {
+            using var file = File.OpenRead(localFilePath);
+            
+            string targetPath;
+            if (serverConfig.Username == "root")
+            {
+                targetPath = $"/root/{remoteFileName}";
+            }
+            else
+            {
+                targetPath = remoteFileName;
+            }
+            
+            _sftpClient.UploadFile(file, targetPath, true); // true = overwrite
+            Console.WriteLine($"Файл {localFilePath} загружен успешно в {targetPath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return false;
+        }
+    }
+
     public Boolean RunTestScript(ServerConfig serverConfig)
     {
         if (_sshClient == null || !_sshClient.IsConnected)
