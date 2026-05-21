@@ -51,7 +51,17 @@ public class DeployScripts
 
         Console.WriteLine("Выполнение Deploy.sh на сервере...");
         var result = sshClient.RunSudoCommand(serverConfig, runCommand);
-        Console.WriteLine(result.Result);
+        string output = result.Result;
+        Console.WriteLine(output);
+
+        // Пытаемся вытащить порт, который скрипт реально назначил
+        foreach (var line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (line.StartsWith("SELECTED_PORT="))
+            {
+                xrayParams.Port = line.Substring("SELECTED_PORT=".Length).Trim();
+            }
+        }
 
         return true;
     }

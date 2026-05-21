@@ -8,6 +8,7 @@ public class XrayConfigParams
     public string Password { get; set; } = string.Empty;
     public string Uuid { get; set; } = string.Empty;
     public string ShortId { get; set; } = string.Empty;
+    public string Port { get; set; } = "443"; // Добавляем свойство порта
 
     public static XrayConfigParams Generate(SSH sshClient, ServerConfig serverConfig)
     {

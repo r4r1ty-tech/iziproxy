@@ -21,7 +21,7 @@ install_deps() {
     fi
 
     echo "Устанавливаем утилиты..."
-    $cmd curl unzip wget net-tools ufw
+    $cmd curl unzip wget net-tools ufw jq bc
 }
 
 enable_bbr() {
@@ -34,6 +34,7 @@ enable_bbr() {
         echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 
     sysctl -p
+    echo "BBR включен"
 }
 
 install_xray() {
