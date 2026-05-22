@@ -7,6 +7,7 @@
       "listen": "0.0.0.0",
       "port": 443,
       "protocol": "vless",
+      "tag": "inbound-1",
       "settings": {
         "clients": [
           {
@@ -28,8 +29,85 @@
           "dest": "www.microsoft.com:443",
           "xver": 0,
           "serverNames": [
-            "www.microsoft.com",
-            "microsoft.com"
+            "www.microsoft.com"
+          ],
+          "privateKey": "__PRIVATE_KEY__",
+          "shortIds": [
+            "__SHORT_ID__"
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "listen": "0.0.0.0",
+      "port": 8443,
+      "protocol": "vless",
+      "tag": "inbound-2",
+      "settings": {
+        "clients": [
+          {
+            "id": "__UUID__",
+            "email": "user_xhttp@vless.local"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "xhttpSettings": {
+          "path": "/xh-query",
+          "mode": "auto"
+        },
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "www.microsoft.com:443",
+          "xver": 0,
+          "serverNames": [
+            "www.microsoft.com"
+          ],
+          "privateKey": "__PRIVATE_KEY__",
+          "shortIds": [
+            "__SHORT_ID__"
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "listen": "0.0.0.0",
+      "port": 10000,
+      "protocol": "vless",
+      "tag": "inbound-3",
+      "settings": {
+        "clients": [
+          {
+            "id": "__UUID__",
+            "email": "user_xhttp@vless.local"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "xhttpSettings": {
+          "path": "/xh-query",
+          "mode": "auto"
+        },
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "www.microsoft.com:443",
+          "xver": 0,
+          "serverNames": [
+            "www.microsoft.com"
           ],
           "privateKey": "__PRIVATE_KEY__",
           "shortIds": [
@@ -68,4 +146,4 @@
       }
     ]
   }
-}   
+}
