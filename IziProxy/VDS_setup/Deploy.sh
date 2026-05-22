@@ -1,12 +1,33 @@
 #!/bin/bash
-## Функция для будующего масштабирования
-check_ufw(){
-    ufw_allow "$@"
+have_jq(){
+    command -v jq >/dev/null 2>&1
 }
 
-ufw_allow(){
-    local selected_port="$1"
-    local previous_port="$2"
+warn_no_jq(){
+    if [ -z "${JQ_WARNED:-}" ]; then
+        echo "jq not found, skip config read/update"
+        JQ_WARNED=1
+    fi
+}
+
+
+ufw_open_port(){
+    local port="$1"
+    ufw --force delete deny "${port}/tcp" >/dev/null 2>&1 || true
+    ufw allow "${port}/tcp" >/dev/null 2>&1
+}
+
+ufw_close_port(){
+    local port="$1"
+    ufw --force delete allow "${port}/tcp" >/dev/null 2>&1 || true
+    ufw deny "${port}/tcp" >/dev/null 2>&1 || true
+}
+
+setup_firewall(){
+    local port1="$1"
+    local port2="$2"
+    local port3="$3"
+    local previous_port="$4"
 
     if ! command -v ufw >/dev/null 2>&1; then
         echo "ufw not found, skip firewall setup"
@@ -19,43 +40,63 @@ ufw_allow(){
         ufw --force enable >/dev/null 2>&1
     fi
 
-    if [ -n "$selected_port" ]; then
-        ufw --force delete deny "${selected_port}/tcp" >/dev/null 2>&1 || true
-        ufw allow "${selected_port}/tcp" >/dev/null 2>&1
-    fi
+    ufw_open_port "$port1"
+    ufw_open_port "$port2"
+    ufw_open_port "$port3"
 
-    declare -A close_ports
-    if [ -n "$previous_port" ] && [ "$previous_port" != "$selected_port" ]; then
-        close_ports["$previous_port"]=1
-    fi
+    declare -A active_ports
+    active_ports["$port1"]=1
+    active_ports["$port2"]=1
+    active_ports["$port3"]=1
 
-    for p in 443 8443; do
-        if [ "$p" != "$selected_port" ]; then
-            close_ports["$p"]=1
+    for p in 443 8443 "$previous_port"; do
+        if [ -n "$p" ] && [ -z "${active_ports[$p]+x}" ]; then
+            ufw_close_port "$p"
         fi
-    done
-
-    for p in "${!close_ports[@]}"; do
-        ufw --force delete allow "${p}/tcp" >/dev/null 2>&1 || true
-        ufw deny "${p}/tcp" >/dev/null 2>&1 || true
     done
 
     ufw reload >/dev/null 2>&1 || true
 }
 
-have_jq(){
-    command -v jq >/dev/null 2>&1
-}
 
-warn_no_jq(){
-    if [ -z "${JQ_WARNED:-}" ]; then
-        echo "jq not found, skip config read/update"
-        JQ_WARNED=1
+port_is_free(){
+    local port="$1"
+    if ss -tuln | grep -q ":${port} "; then
+        return 1
     fi
+    return 0
 }
 
-setup_port(){
-    local config_path="$(dirname "$0")/config.json"
+pick_random_port(){
+    local -a excluded_ports=("$@")
+    local candidate=""
+
+    while true; do
+        candidate=$(shuf -i 10000-50000 -n 1)
+
+        local is_excluded=0
+        for excl in "${excluded_ports[@]}"; do
+            if [ "$candidate" = "$excl" ]; then
+                is_excluded=1
+                break
+            fi
+        done
+
+        if [ "$is_excluded" -eq 1 ]; then
+            continue
+        fi
+
+        if port_is_free "$candidate"; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+}
+
+
+setup_ports(){
+    local config_path
+    config_path="$(dirname "$0")/config.json"
     local previous_port=""
     local can_jq=1
 
@@ -68,30 +109,40 @@ setup_port(){
     elif [ -f "$config_path" ]; then
         warn_no_jq
     fi
-    
-    if ! ss -tuln | grep -q ":443 "; then
-        TARGET_PORT=443
-    elif ! ss -tuln | grep -q ":8443 "; then
-        TARGET_PORT=8443
+
+    local PORT_1=""
+    if port_is_free 443; then
+        PORT_1=443
     else
-        while true; do
-            TARGET_PORT=$(shuf -i 10000-50000 -n 1)
-            if ! ss -tuln | grep -q ":$TARGET_PORT "; then
-                break
-            fi
-        done
+        PORT_1=$(pick_random_port)
     fi
 
+    local PORT_2=""
+    if port_is_free 8443 && [ "8443" != "$PORT_1" ]; then
+        PORT_2=8443
+    else
+        PORT_2=$(pick_random_port "$PORT_1")
+    fi
+
+    local PORT_3=""
+    PORT_3=$(pick_random_port "$PORT_1" "$PORT_2")
+
     if [ -f "$config_path" ] && [ "$can_jq" -eq 1 ]; then
-        jq ".inbounds[0].port = $TARGET_PORT" "$config_path" > "${config_path}.tmp" && mv "${config_path}.tmp" "$config_path"
+        jq ".inbounds[0].port = $PORT_1
+          | .inbounds[1].port = $PORT_2
+          | .inbounds[2].port = $PORT_3" \
+            "$config_path" > "${config_path}.tmp" && mv "${config_path}.tmp" "$config_path"
     elif [ -f "$config_path" ]; then
         warn_no_jq
     fi
 
-    ufw_allow "$TARGET_PORT" "$previous_port"
+    setup_firewall "$PORT_1" "$PORT_2" "$PORT_3" "$previous_port"
 
-    echo "SELECTED_PORT=$TARGET_PORT"
+    echo "SELECTED_PORT_1=$PORT_1"
+    echo "SELECTED_PORT_2=$PORT_2"
+    echo "SELECTED_PORT_3=$PORT_3"
 }
+
 
 is_public_ip(){
     local ip="$1"
@@ -116,6 +167,7 @@ is_public_ip(){
 
     return 0
 }
+
 
 sni_probe_domain(){
     local domain="$1"
@@ -145,17 +197,16 @@ sni_probe_domain(){
                 "https://${domain}" 2>/dev/null || true
         )"
 
-        connect="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="connect") {print $(i+1); exit}}' <<<"$out")"
-        app="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="app") {print $(i+1); exit}}' <<<"$out")"
-        total="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="total") {print $(i+1); exit}}' <<<"$out")"
-        httpver="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="httpver") {print $(i+1); exit}}' <<<"$out")"
-        code="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="code") {print $(i+1); exit}}' <<<"$out")"
-        ip_cur="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="ip") {print $(i+1); exit}}' <<<"$out")"
+        connect="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="connect") {print $(i+1); exit}}' <<< "$out")"
+        app="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="app") {print $(i+1); exit}}' <<< "$out")"
+        total="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="total") {print $(i+1); exit}}' <<< "$out")"
+        httpver="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="httpver") {print $(i+1); exit}}' <<< "$out")"
+        code="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="code") {print $(i+1); exit}}' <<< "$out")"
+        ip_cur="$(awk -F'[ =]' '{for(i=1;i<=NF;i++) if($i=="ip") {print $(i+1); exit}}' <<< "$out")"
 
         if [ -n "$ip_cur" ]; then
             ip="$ip_cur"
         fi
-
         if [ -n "$connect" ]; then
             connect_list="$connect_list $connect"
         fi
@@ -165,7 +216,6 @@ sni_probe_domain(){
         if [ -n "$total" ]; then
             total_list="$total_list $total"
         fi
-
         if [ "$httpver" = "2" ]; then
             ok_h2=1
         fi
@@ -181,10 +231,11 @@ sni_probe_domain(){
     fi
 
     local connect_avg="" app_avg="" total_avg=""
-    connect_avg="$(awk '{sum=0; for(i=1;i<=NF;i++) sum+=$i; printf "%.6f", sum/NF}' <<<"$connect_list")"
-    total_avg="$(awk '{sum=0; for(i=1;i<=NF;i++) sum+=$i; printf "%.6f", sum/NF}' <<<"$total_list")"
+    connect_avg="$(awk '{sum=0; for(i=1;i<=NF;i++) sum+=$i; printf "%.6f", sum/NF}' <<< "$connect_list")"
+    total_avg="$(awk '{sum=0; for(i=1;i<=NF;i++) sum+=$i; printf "%.6f", sum/NF}' <<< "$total_list")"
+
     if [ -n "$app_list" ]; then
-        app_avg="$(awk '{sum=0; for(i=1;i<=NF;i++) sum+=$i; printf "%.6f", sum/NF}' <<<"$app_list")"
+        app_avg="$(awk '{sum=0; for(i=1;i<=NF;i++) sum+=$i; printf "%.6f", sum/NF}' <<< "$app_list")"
     else
         app_avg="$total_avg"
     fi
@@ -200,7 +251,7 @@ score_sni_domain(){
     local score=""
 
     probe="$(sni_probe_domain "$domain")" || return 1
-    IFS='|' read -r connect app total ok_h2 ok_code ip <<<"$probe"
+    IFS='|' read -r connect app total ok_h2 ok_code ip <<< "$probe"
 
     if ! is_public_ip "$ip"; then
         return 1
@@ -218,15 +269,16 @@ score_sni_domain(){
                 -servername "${domain}" \
                 -tls1_3 $verify_arg < /dev/null 2>/dev/null || true
         )"
-        if grep -qE 'Protocol *: TLSv1\.3|TLSv1\.3' <<<"$openssl_out"; then
+        if grep -qE 'Protocol *: TLSv1\.3|TLSv1\.3' <<< "$openssl_out"; then
             ok_tls=1
         fi
-        if grep -q 'Verify return code: 0' <<<"$openssl_out"; then
+        if grep -q 'Verify return code: 0' <<< "$openssl_out"; then
             ok_verify=1
         fi
     fi
 
-    score="$(awk -v c="$connect" -v a="$app" -v t="$total" -v tls="$ok_tls" -v h2="$ok_h2" -v code="$ok_code" -v vfy="$ok_verify" '
+    score="$(awk -v c="$connect" -v a="$app" -v t="$total" \
+                 -v tls="$ok_tls" -v h2="$ok_h2" -v code="$ok_code" -v vfy="$ok_verify" '
         BEGIN {
             s = 100
             if (c < 999) s -= (c * 120)
@@ -244,12 +296,12 @@ score_sni_domain(){
     echo "${score}|${connect}|${app}|${total}|${ok_tls}|${ok_h2}|${ok_code}|${ok_verify}|${ip}"
 }
 
+
 select_best_sni(){
     local domain_file="${1:-}"
-    local config_path="$(dirname "$0")/config.json"
+    local config_path
+    config_path="$(dirname "$0")/config.json"
     local -a domains=()
-    local best=""
-    local best_score=-1
     local can_jq=1
 
     if ! have_jq; then
@@ -316,37 +368,66 @@ select_best_sni(){
     done
     domains=("${filtered[@]}")
 
+    local -a scored_list=()
+
     for d in "${domains[@]}"; do
-        local result="" score="" connect="" app="" total="" ok_tls="" ok_h2="" ok_code="" ok_verify="" ip=""
+        local result="" score=""
         result="$(score_sni_domain "$d")" || continue
-        IFS='|' read -r score connect app total ok_tls ok_h2 ok_code ok_verify ip <<<"$result"
-        if [[ "$score" =~ ^[0-9]+$ ]] && [ "$score" -gt "$best_score" ]; then
-            best_score="$score"
-            best="$d"
-        fi
-        if [ "${SNI_VERBOSE:-0}" = "1" ]; then
-            echo "SNI_SCORE domain=$d score=$score connect=$connect app=$app total=$total tls13=$ok_tls h2=$ok_h2 verify=$ok_verify ip=$ip"
+        score="${result%%|*}"
+
+        if [[ "$score" =~ ^[0-9]+$ ]]; then
+            scored_list+=("${score}|${d}")
+
+            if [ "${SNI_VERBOSE:-0}" = "1" ]; then
+                local rest="${result#*|}"
+                IFS='|' read -r connect app total ok_tls ok_h2 ok_code ok_verify ip <<< "$rest"
+                echo "SNI_SCORE domain=$d score=$score connect=$connect app=$app total=$total tls13=$ok_tls h2=$ok_h2 verify=$ok_verify ip=$ip"
+            fi
         fi
     done
 
-    if [ -z "$best" ]; then
+    if [ "${#scored_list[@]}" -eq 0 ]; then
         echo "SNI selection failed"
         return 1
     fi
 
+    local -a sorted_domains=()
+    while IFS= read -r line; do
+        sorted_domains+=("${line#*|}")
+    done < <(printf '%s\n' "${scored_list[@]}" | sort -t'|' -k1 -rn)
+
+    local SNI_1="${sorted_domains[0]}"
+    local SNI_2="" SNI_3=""
+
+    if [ "${#sorted_domains[@]}" -ge 2 ]; then
+        SNI_2="${sorted_domains[1]}"
+    else
+        SNI_2="$SNI_1"
+    fi
+
+    if [ "${#sorted_domains[@]}" -ge 3 ]; then
+        SNI_3="${sorted_domains[2]}"
+    else
+        SNI_3="$SNI_1"
+    fi
+
     if [ -f "$config_path" ] && [ "$can_jq" -eq 1 ]; then
-        jq --arg sni "$best" \
-            '.inbounds[0].streamSettings.realitySettings.dest = ($sni + ":443")
-             | .inbounds[0].streamSettings.realitySettings.serverNames = [$sni]' \
+        jq --arg sni1 "$SNI_1" --arg sni2 "$SNI_2" --arg sni3 "$SNI_3" \
+            '.inbounds[0].streamSettings.realitySettings.dest = ($sni1 + ":443")
+           | .inbounds[0].streamSettings.realitySettings.serverNames = [$sni1]
+           | .inbounds[1].streamSettings.realitySettings.dest = ($sni2 + ":443")
+           | .inbounds[1].streamSettings.realitySettings.serverNames = [$sni2]
+           | .inbounds[2].streamSettings.realitySettings.dest = ($sni3 + ":443")
+           | .inbounds[2].streamSettings.realitySettings.serverNames = [$sni3]' \
             "$config_path" > "${config_path}.tmp" && mv "${config_path}.tmp" "$config_path"
     elif [ -f "$config_path" ]; then
         warn_no_jq
     fi
 
-    echo "SNI_SELECTED=$best"
+    echo "SNI_SELECTED_1=$SNI_1"
+    echo "SNI_SELECTED_2=$SNI_2"
+    echo "SNI_SELECTED_3=$SNI_3"
 }
 
-
-
-setup_port
+setup_ports
 select_best_sni "${SNI_DOMAIN_FILE:-}"
