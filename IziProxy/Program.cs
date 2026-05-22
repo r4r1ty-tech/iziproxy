@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace IziProxy;
 
 /// <summary>
@@ -7,14 +9,14 @@ class Program
 {
     /// <summary>
     /// Точка входа в приложение. Выполняет шаги подключения, установки зависимостей,
-    /// генерации ключей, деплоя конфигурации и вывода ссылки для клиента.
+    /// генерации ключей, деплоя конфигурации и вывода ссылок для клиента.
     /// </summary>
     /// <param name="args">Аргументы командной строки.</param>
     static void Main(string[] args)
     {
         // Создаем SSH/SFTP клиент
         using SSH ssh = new SSH();
-        
+
         // Запрашиваем конфигурацию сервера у пользователя
         ServerConfig serverConfig = new ServerConfig();
         serverConfig.SetServer();
@@ -65,14 +67,14 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Ошибка генерации ключей Xray: {ex.Message}");
+            Console.WriteLine("Ошибка генерации ключей Xray: " + ex.Message);
             return;
         }
 
         // 5. Развертывание конфигурации и запуск службы на VDS
         var deployer = new DeployScripts();
         bool deployResult = deployer.DeployAndConfigure(ssh, serverConfig, xrayParams);
-        if (!deployResult)
+        if (deployResult == false)
         {
             Console.WriteLine("Ошибка деплоя конфигурации.");
             return;
@@ -82,16 +84,30 @@ class Program
         try
         {
             string geo = XrayConfigParams.GetGeoVDS(ssh, serverConfig);
-            Console.WriteLine($"GEO VDS: {geo}");
+            Console.WriteLine("GEO VDS: " + geo);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Ошибка получения GEO: {ex.Message}");
+            Console.WriteLine("Ошибка получения GEO: " + ex.Message);
         }
 
-        // 7. Генерация и вывод VLESS ссылки подключения для клиента
-        string vlessLink = VlessLinkGenerator.GenerateRealityLink(serverConfig, xrayParams);
-        Console.WriteLine("VLESS ссылка:");
-        Console.WriteLine(vlessLink);
+        // 7. Генерация и вывод VLESS ссылок для всех 3 inbound'ов
+        List<string> vlessLinks = VlessLinkGenerator.GenerateRealityLinks(serverConfig, xrayParams);
+
+        Console.WriteLine("");
+        Console.WriteLine("=== VLESS ссылки ===");
+
+        for (int i = 0; i < vlessLinks.Count; i++)
+        {
+            string port = xrayParams.Ports[i];
+            string sni = xrayParams.Snis[i];
+
+            Console.WriteLine("");
+            Console.WriteLine("Ссылка " + (i + 1) + " | Порт: " + port + " | SNI: " + sni);
+            Console.WriteLine(vlessLinks[i]);
+        }
+
+        Console.WriteLine("");
+        Console.WriteLine("=== Готово ===");
     }
 }
