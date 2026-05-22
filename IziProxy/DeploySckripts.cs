@@ -11,6 +11,7 @@ public class DeployScripts
     /// <summary>
     /// Загружает скрипты развертывания, формирует файл конфигурации config.json на основе параметров Xray,
     /// передает их на удаленный сервер и запускает процесс деплоя.
+    /// После успешного деплоя заполняет xrayParams.Ports и xrayParams.Snis из вывода скрипта.
     /// </summary>
     /// <param name="sshClient">Подключенный клиент для отправки SSH-команд.</param>
     /// <param name="serverConfig">Параметры авторизации и IP-адрес сервера.</param>
@@ -19,19 +20,17 @@ public class DeployScripts
     public bool DeployAndConfigure(SSH sshClient, ServerConfig serverConfig, XrayConfigParams xrayParams)
     {
         Console.WriteLine("Загрузка Deploy.sh...");
-        // Загружаем скрипт Deploy.sh во временную/домашнюю директорию на сервере
         bool isDeployUploaded = sshClient.UploadFile("VDS_setup/Deploy.sh", "Deploy.sh", serverConfig);
-        
-        if (!isDeployUploaded)
+
+        if (isDeployUploaded == false)
         {
             Console.WriteLine("Не удалось загрузить Deploy.sh");
             return false;
         }
 
         Console.WriteLine("Формирование config.json...");
-        // Читаем шаблон конфигурации Xray
         string configContent = File.ReadAllText("VDS_setup/config.json");
-        // Заменяем плейсхолдеры на сгенерированные значения
+
         configContent = configContent.Replace("__UUID__", xrayParams.Uuid)
                                      .Replace("__PRIVATE_KEY__", xrayParams.PrivateKey)
                                      .Replace("__SHORT_ID__", xrayParams.ShortId);
@@ -40,22 +39,19 @@ public class DeployScripts
         File.WriteAllText(tempConfigPath, configContent);
 
         Console.WriteLine("Загрузка config.json...");
-        // Загружаем сформированный config.json на VDS
         bool isConfigUploaded = sshClient.UploadFile(tempConfigPath, "config.json", serverConfig);
-        
-        // Удаляем временный локальный файл конфигурации
+
         if (File.Exists(tempConfigPath))
         {
             File.Delete(tempConfigPath);
         }
 
-        if (!isConfigUploaded)
+        if (isConfigUploaded == false)
         {
             Console.WriteLine("Не удалось загрузить config.json");
             return false;
         }
 
-        // Составляем команду запуска деплоя в зависимости от того, под каким пользователем мы авторизовались
         string runCommand;
         if (serverConfig.Username == "root")
         {
@@ -71,18 +67,57 @@ public class DeployScripts
         string output = result.Result;
         Console.WriteLine(output);
 
-        // Парсим вывод скрипта, чтобы получить реально выбранные свободный порт и лучший домен для SNI
+        // Парсим порты и SNI из вывода скрипта.
+        // Скрипт выводит строки вида:
+        //   SELECTED_PORT_1=443
+        //   SELECTED_PORT_2=8443
+        //   SELECTED_PORT_3=31337
+        //   SNI_SELECTED_1=speed.cloudflare.com
+        //   SNI_SELECTED_2=cdn.jsdelivr.net
+        //   SNI_SELECTED_3=www.microsoft.com
+
+        string port1 = string.Empty;
+        string port2 = string.Empty;
+        string port3 = string.Empty;
+        string sni1 = string.Empty;
+        string sni2 = string.Empty;
+        string sni3 = string.Empty;
+
         foreach (var line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
         {
-            if (line.StartsWith("SELECTED_PORT="))
+            if (line.StartsWith("SELECTED_PORT_1="))
             {
-                xrayParams.Port = line.Substring("SELECTED_PORT=".Length).Trim();
+                port1 = line.Substring("SELECTED_PORT_1=".Length).Trim();
             }
-            else if (line.StartsWith("SNI_SELECTED="))
+            else if (line.StartsWith("SELECTED_PORT_2="))
             {
-                xrayParams.Sni = line.Substring("SNI_SELECTED=".Length).Trim();
+                port2 = line.Substring("SELECTED_PORT_2=".Length).Trim();
+            }
+            else if (line.StartsWith("SELECTED_PORT_3="))
+            {
+                port3 = line.Substring("SELECTED_PORT_3=".Length).Trim();
+            }
+            else if (line.StartsWith("SNI_SELECTED_1="))
+            {
+                sni1 = line.Substring("SNI_SELECTED_1=".Length).Trim();
+            }
+            else if (line.StartsWith("SNI_SELECTED_2="))
+            {
+                sni2 = line.Substring("SNI_SELECTED_2=".Length).Trim();
+            }
+            else if (line.StartsWith("SNI_SELECTED_3="))
+            {
+                sni3 = line.Substring("SNI_SELECTED_3=".Length).Trim();
             }
         }
+
+        xrayParams.Ports.Add(port1);
+        xrayParams.Ports.Add(port2);
+        xrayParams.Ports.Add(port3);
+
+        xrayParams.Snis.Add(sni1);
+        xrayParams.Snis.Add(sni2);
+        xrayParams.Snis.Add(sni3);
 
         return true;
     }
