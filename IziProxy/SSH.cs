@@ -1,12 +1,20 @@
 using Renci.SshNet;
 namespace IziProxy;
 
+/// <summary>
+/// Управляет SSH- и SFTP-подключениями к удаленному серверу, а также выполнением команд и передачей файлов.
+/// </summary>
 public class SSH : IDisposable
 {
     private SshClient _sshClient = null!;
     private SftpClient _sftpClient = null!;
     private bool _disposed;
 
+    /// <summary>
+    /// Проверяет подключение к серверу по протоколам SSH и SFTP.
+    /// </summary>
+    /// <param name="serverConfig">Конфигурация с хостом, логином и паролем.</param>
+    /// <returns>True, если оба подключения успешно установлены; иначе false.</returns>
     public Boolean TestConnection(ServerConfig serverConfig)
     {
         try
@@ -17,9 +25,11 @@ public class SSH : IDisposable
                 Timeout = TimeSpan.FromSeconds(5)
             };
 
+            // Инициализация и подключение SSH
             _sshClient = new SshClient(connectionInfo);
             _sshClient.Connect();
 
+            // Инициализация и подключение SFTP
             _sftpClient = new SftpClient(connectionInfo);
             _sftpClient.Connect();
 
@@ -32,6 +42,11 @@ public class SSH : IDisposable
         }
     }
 
+    /// <summary>
+    /// Загружает скрипт предварительной подготовки MainInstall.sh на сервер.
+    /// </summary>
+    /// <param name="serverConfig">Конфигурация сервера.</param>
+    /// <returns>True, если загрузка прошла успешно; иначе false.</returns>
     public Boolean UploadTestScript(ServerConfig serverConfig)
     {
         if (_sftpClient == null || !_sftpClient.IsConnected)
@@ -44,13 +59,14 @@ public class SSH : IDisposable
         {
             using var file = File.OpenRead("VDS_setup/MainInstall.sh");
             string targetPath;
+            // Определяем домашнюю директорию в зависимости от имени пользователя
             if (serverConfig.Username == "root")
             {
                 targetPath = "/root/MainInstall.sh";
             }
             else
             {
-                targetPath = "MainInstall.sh";
+                targetPath = "MainInstall.sh"; // Загрузит в домашнюю папку пользователя
             }
 
             _sftpClient.UploadFile(file, targetPath);
@@ -64,6 +80,13 @@ public class SSH : IDisposable
         }
     }
 
+    /// <summary>
+    /// Загружает локальный файл на удаленный сервер через SFTP с возможностью перезаписи.
+    /// </summary>
+    /// <param name="localFilePath">Путь к файлу на локальном компьютере.</param>
+    /// <param name="remoteFileName">Имя файла, под которым он будет сохранен на сервере.</param>
+    /// <param name="serverConfig">Конфигурация сервера.</param>
+    /// <returns>True, если файл успешно загружен; иначе false.</returns>
     public Boolean UploadFile(string localFilePath, string remoteFileName, ServerConfig serverConfig)
     {
         if (_sftpClient == null || !_sftpClient.IsConnected)
@@ -86,7 +109,7 @@ public class SSH : IDisposable
                 targetPath = remoteFileName;
             }
             
-            _sftpClient.UploadFile(file, targetPath, true); // true = overwrite
+            _sftpClient.UploadFile(file, targetPath, true); // true = overwrite (перезаписать при наличии)
             Console.WriteLine($"Файл {localFilePath} загружен успешно в {targetPath}");
             return true;
         }
@@ -97,6 +120,11 @@ public class SSH : IDisposable
         }
     }
 
+    /// <summary>
+    /// Запускает скрипт предварительной подготовки MainInstall.sh на удаленном сервере.
+    /// </summary>
+    /// <param name="serverConfig">Конфигурация сервера.</param>
+    /// <returns>True, если скрипт успешно запущен; иначе false.</returns>
     public Boolean RunTestScript(ServerConfig serverConfig)
     {
         if (_sshClient == null || !_sshClient.IsConnected)
@@ -128,6 +156,14 @@ public class SSH : IDisposable
         }
     }
 
+    /// <summary>
+    /// Выполняет команду с правами администратора (sudo) на сервере.
+    /// Автоматически подставляет пароль пользователя при необходимости (если вход выполнен не под root).
+    /// </summary>
+    /// <param name="serverConfig">Конфигурация сервера.</param>
+    /// <param name="command">Выполняемая команда.</param>
+    /// <returns>Объект <see cref="SshCommand"/> с результатом выполнения команды.</returns>
+    /// <exception cref="InvalidOperationException">Бросается, если клиент не подключен.</exception>
     public SshCommand RunSudoCommand(ServerConfig serverConfig, string command)
     {
         if (_sshClient == null || !_sshClient.IsConnected)
@@ -148,6 +184,9 @@ public class SSH : IDisposable
         return _sshClient.RunCommand(sudoCommand);
     }
 
+    /// <summary>
+    /// Освобождает ресурсы, закрывая SSH и SFTP подключения.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed)
