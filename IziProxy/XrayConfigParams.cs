@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 
 namespace IziProxy;
 
 /// <summary>
-/// Представляет параметры конфигурации Xray, включая криптографические ключи, UUID, ShortID, порт и SNI.
+/// Представляет параметры конфигурации Xray, включая криптографические ключи, UUID, ShortID, порты и SNI.
 /// </summary>
 public class XrayConfigParams
 {
@@ -28,14 +29,17 @@ public class XrayConfigParams
     public string ShortId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Порт, на котором будет слушать Xray на сервере.
+    /// Порты, на которых слушает Xray. Индекс 0 — приоритетный (443 или рандом),
+    /// индекс 1 — второй (8443 или рандом), индекс 2 — рандомный.
+    /// Заполняется после деплоя скриптом Deploy.sh.
     /// </summary>
-    public string Port { get; set; } = "443";
+    public List<string> Ports { get; set; } = new List<string>();
 
     /// <summary>
-    /// Доменное имя (SNI), используемое для маскировки TLS-трафика (Reality dest).
+    /// Домены SNI для каждого inbound. Индекс соответствует индексу в Ports.
+    /// Заполняется после деплоя скриптом Deploy.sh.
     /// </summary>
-    public string Sni { get; set; } = "www.microsoft.com";
+    public List<string> Snis { get; set; } = new List<string>();
 
     /// <summary>
     /// Генерирует криптографические ключи, UUID и ShortID, выполняя команды на удаленном сервере через SSH.
@@ -47,13 +51,13 @@ public class XrayConfigParams
     public static XrayConfigParams Generate(SSH sshClient, ServerConfig serverConfig)
     {
         Console.WriteLine("Генерация ключей Xray...");
-        
+
         var xrayConfig = new XrayConfigParams();
 
         // 1. Генерация x25519 ключей (приватный и публичный/password)
         var x25519Result = sshClient.RunSudoCommand(serverConfig, "xray x25519");
         var x25519Output = x25519Result.Result;
-        
+
         foreach (var line in x25519Output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
         {
             if (line.StartsWith("PrivateKey:"))
@@ -75,7 +79,7 @@ public class XrayConfigParams
         xrayConfig.ShortId = shortIdResult.Result.Trim();
 
         Console.WriteLine($"Xray Keys Generated:\nUUID: {xrayConfig.Uuid}\nPrivateKey: {xrayConfig.PrivateKey}\nPassword: {xrayConfig.Password}\nShortID: {xrayConfig.ShortId}");
-        
+
         return xrayConfig;
     }
 
