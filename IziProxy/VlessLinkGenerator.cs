@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace IziProxy;
 
@@ -8,37 +9,60 @@ namespace IziProxy;
 public class VlessLinkGenerator
 {
     /// <summary>
-    /// Генерирует ссылку vless:// для подключения клиента (VLESS + xhttp + REALITY)
+    /// Генерирует список ссылок vless:// для каждого inbound (VLESS + xhttp + REALITY).
+    /// Количество ссылок равно количеству портов в xrayParams.Ports.
     /// </summary>
     /// <param name="serverConfig">Конфигурация целевого сервера VDS.</param>
-    /// <param name="xrayParams">Параметры ключей и настроек Xray.</param>
-    /// <param name="connectionName">Название подключения, отображаемое на клиенте.</param>
-    /// <returns>Готовая ссылка формата vless:// для импорта в клиентское ПО (например, v2rayN, Nekobox).</returns>
-    public static string GenerateRealityLink(ServerConfig serverConfig, XrayConfigParams xrayParams, string connectionName = "IziProxy_VDS")
+    /// <param name="xrayParams">Параметры ключей и настроек Xray. Должны быть заполнены Ports и Snis.</param>
+    /// <param name="connectionName">Базовое название подключения, отображаемое на клиенте.</param>
+    /// <returns>Список готовых ссылок формата vless:// для импорта в клиентское ПО (v2rayN, Nekobox и др.).</returns>
+    public static List<string> GenerateRealityLinks(ServerConfig serverConfig, XrayConfigParams xrayParams, string connectionName = "IziProxy_VDS")
     {
-        string port = xrayParams.Port;
+        var links = new List<string>();
+
+        for (int i = 0; i < xrayParams.Ports.Count; i++)
+        {
+            string port = xrayParams.Ports[i];
+            string sni = xrayParams.Snis[i];
+
+            if (string.IsNullOrWhiteSpace(sni))
+            {
+                sni = "www.microsoft.com";
+            }
+
+            string linkName = connectionName + "_" + (i + 1);
+
+            string link = BuildLink(serverConfig.Host, port, xrayParams.Uuid, xrayParams.Password, sni, xrayParams.ShortId, linkName);
+            links.Add(link);
+        }
+
+        return links;
+    }
+
+    /// <summary>
+    /// Собирает одну ссылку vless:// из переданных параметров.
+    /// </summary>
+    private static string BuildLink(string host, string port, string uuid, string publicKey, string sni, string shortId, string linkName)
+    {
         string type = "xhttp";
         string security = "reality";
-        string sni = string.IsNullOrWhiteSpace(xrayParams.Sni) ? "www.microsoft.com" : xrayParams.Sni;
         string path = "/xh-query";
-        string fp = "chrome"; 
+        string fingerprint = "chrome";
+
         var queryParams = new[]
         {
-            $"type={type}",
-            $"security={security}",
-            $"pbk={Uri.EscapeDataString(xrayParams.Password)}",
-            $"fp={fp}",
-            $"sni={Uri.EscapeDataString(sni)}",
-            $"sid={Uri.EscapeDataString(xrayParams.ShortId)}",
-            $"path={Uri.EscapeDataString(path)}"
+            "type=" + type,
+            "security=" + security,
+            "pbk=" + Uri.EscapeDataString(publicKey),
+            "fp=" + fingerprint,
+            "sni=" + Uri.EscapeDataString(sni),
+            "sid=" + Uri.EscapeDataString(shortId),
+            "path=" + Uri.EscapeDataString(path)
         };
 
         string query = string.Join("&", queryParams);
-        
-        // Кодируем название соединения (в конце после #)
-        string fragment = Uri.EscapeDataString(connectionName);
+        string fragment = Uri.EscapeDataString(linkName);
 
-        // Итоговый формат vless://uuid@host:port?query#name
-        return $"vless://{xrayParams.Uuid}@{serverConfig.Host}:{port}?{query}#{fragment}";
+        return "vless://" + uuid + "@" + host + ":" + port + "?" + query + "#" + fragment;
     }
 }
