@@ -14,7 +14,7 @@ public class VlessLinkGenerator
         string security = "reality";
         string sni = "www.microsoft.com";
         string path = "/xh-query";
-        string fp = "chrome"; // Рекомендуемый fingerprint для маскировки
+        string fp = "chrome"; 
         var queryParams = new[]
         {
             $"type={type}",

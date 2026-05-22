@@ -44,4 +44,9 @@ public class XrayConfigParams
         
         return xrayConfig;
     }
+    public static string GetGeoVDS(SSH sshClient, ServerConfig serverConfig)
+    {
+        var geoResult = sshClient.RunSudoCommand(serverConfig, "curl -s ipinfo.io/geo");
+        return geoResult.Result.Trim();
+    }
 }

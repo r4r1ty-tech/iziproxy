@@ -20,7 +20,7 @@
         "network": "xhttp",
         "xhttpSettings": {
           "path": "/xh-query",
-          "mode": "stream-one"
+          "mode": "auto"
         },
         "security": "reality",
         "realitySettings": {
@@ -57,7 +57,14 @@
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       {
-        
+        "type": "field",
+        "outboundTag": "direct",
+        "domain": ["geosite:ru"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "ip": ["geoip:ru"]
       }
     ]
   }

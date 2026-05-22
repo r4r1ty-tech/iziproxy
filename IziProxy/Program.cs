@@ -1,4 +1,3 @@
-using Renci.SshNet;
 namespace IziProxy;
 
 class Program

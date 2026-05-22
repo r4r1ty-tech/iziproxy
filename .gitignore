@@ -2,6 +2,19 @@
 [Bb]in/
 [Oo]bj/
 
+# Local tests folder
+tests/
+
+# Test files and projects
+**/*.Test/
+**/*.Tests/
+**/*Test.cs
+**/*Tests.cs
+**/*Test.*.cs
+**/*Tests.*.cs
+**/*Test.csproj
+**/*Tests.csproj
+
 # IDE configurations
 .idea/
 .vscode/

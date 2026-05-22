@@ -12,10 +12,10 @@ public class ServerConfig
     public void SetServer()
     {
         Console.WriteLine("Введите IP сервера");
-        host=Console.ReadLine();
+        host = Console.ReadLine() ?? string.Empty;
         Console.WriteLine("Введите username пользователя");
-        username = Console.ReadLine();
+        username = Console.ReadLine() ?? string.Empty;
         Console.WriteLine("Введите пароль от указанного пользователя");
-        password = Console.ReadLine();
+        password = Console.ReadLine() ?? string.Empty;
     }
 }
