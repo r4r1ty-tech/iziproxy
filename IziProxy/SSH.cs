@@ -5,6 +5,7 @@ public class SSH : IDisposable
 {
     private SshClient _sshClient = null!;
     private SftpClient _sftpClient = null!;
+    private bool _disposed;
 
     public Boolean TestConnection(ServerConfig serverConfig)
     {
@@ -27,7 +28,6 @@ public class SSH : IDisposable
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
-            Dispose();
             return false;
         }
     }
@@ -42,7 +42,7 @@ public class SSH : IDisposable
 
         try
         {
-            using var file = File.OpenRead("ScriptsVDS/MainInstall.sh");
+            using var file = File.OpenRead("VDS_setup/MainInstall.sh");
             string targetPath;
             if (serverConfig.Username == "root")
             {
@@ -150,15 +150,54 @@ public class SSH : IDisposable
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
         if (_sshClient != null)
         {
-            _sshClient.Disconnect();
-            _sshClient.Dispose();
+            try
+            {
+                if (_sshClient.IsConnected)
+                {
+                    _sshClient.Disconnect();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+
+            try
+            {
+                _sshClient.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
         if (_sftpClient != null)
         {
-            _sftpClient.Disconnect();
-            _sftpClient.Dispose();
+            try
+            {
+                if (_sftpClient.IsConnected)
+                {
+                    _sftpClient.Disconnect();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+
+            try
+            {
+                _sftpClient.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
     }
 }

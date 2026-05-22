@@ -12,7 +12,7 @@ public class VlessLinkGenerator
         string port = xrayParams.Port;
         string type = "xhttp";
         string security = "reality";
-        string sni = "www.microsoft.com";
+        string sni = string.IsNullOrWhiteSpace(xrayParams.Sni) ? "www.microsoft.com" : xrayParams.Sni;
         string path = "/xh-query";
         string fp = "chrome"; 
         var queryParams = new[]

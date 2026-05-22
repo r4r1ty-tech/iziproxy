@@ -61,6 +61,10 @@ public class DeployScripts
             {
                 xrayParams.Port = line.Substring("SELECTED_PORT=".Length).Trim();
             }
+            else if (line.StartsWith("SNI_SELECTED="))
+            {
+                xrayParams.Sni = line.Substring("SNI_SELECTED=".Length).Trim();
+            }
         }
 
         return true;
