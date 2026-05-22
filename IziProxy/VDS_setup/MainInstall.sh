@@ -1,24 +1,16 @@
 ﻿#!/bin/bash
 
 install_deps() {
-    local distro
-    distro=$(grep "^NAME=" /etc/os-release | cut -d '"' -f2)
+    local distro_id distro_like
+    distro_id=$(grep "^ID=" /etc/os-release | cut -d '=' -f2 | tr -d '"')
+    distro_like=$(grep "^ID_LIKE=" /etc/os-release | cut -d '=' -f2 | tr -d '"')
 
-    declare -A packages=(
-        ["Debian GNU/Linux"]="apt-get update && apt-get install -y"
-        [Ubuntu]="apt-get update && apt-get install -y"
-        [CentOS]="yum install -y"
-        [Fedora]="dnf install -y"
-        ["Arch Linux"]="pacman -Sy --noconfirm"
-        [openSUSE]="zypper install -y"
-        ["Alpine Linux"]="apk add --no-cache"
-    )
-
-    local cmd="${packages[$distro]}"
-    if [[ -z "$cmd" ]]; then
-        echo "Дистрибутив '$distro' не поддерживается" >&2
+    if [[ "$distro_id" != "debian" && "$distro_id" != "ubuntu" && "$distro_like" != *"debian"* ]]; then
+        echo "Поддерживаются только Debian/Ubuntu-подобные дистрибутивы" >&2
         exit 1
     fi
+
+    local cmd="apt-get update && apt-get install -y"
 
     echo "Устанавливаем утилиты..."
     $cmd curl unzip wget net-tools ufw jq bc
