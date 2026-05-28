@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:IziProxy.GUI.ViewModels"
+             x:Class="IziProxy.GUI.Views.LogsView"
+             x:DataType="vm:LogsViewModel">
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+    <!-- Заголовок -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal"
+                Spacing="10" Margin="0,4,0,8">
+      <TextBlock Text="📋 Лог деплоя"
+                 FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="Очистить"
+              Command="{Binding ClearLogsCommand}"
+              VerticalAlignment="Center"/>
+    </StackPanel>
+
+    <!-- Список логов -->
+    <Border Grid.Row="1" Background="#1E1E2E" CornerRadius="12">
+      <ListBox ItemsSource="{Binding Logs}"
+               Name="LogListBox"
+               Background="Transparent"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding}"
+                       TextWrapping="Wrap"
+                       FontFamily="Monospace"
+                       FontSize="12"
+                       Padding="4,2"/>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <!-- Счётчик -->
+    <TextBlock Grid.Row="2"
+               Text="{Binding Logs.Count, StringFormat='Сообщений: {0}'}"
+               FontSize="12" Foreground="#666"
+               HorizontalAlignment="Right"
+               Margin="0,4,0,0"/>
+  </Grid>
+
+</UserControl>
