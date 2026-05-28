@@ -1,0 +1,36 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install Android Workload
+      run: dotnet workload install android
+
+    - name: Publish Android
+      run: dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj -c Release -f net10.0-android -p:AndroidPackageFormat=apk
+
+    - name: Upload APK to Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
+        if ($apk) {
+          gh release upload v1.0.0 $apk.FullName --clobber
+        } else {
+          Write-Error "APK not found!"
+        }
