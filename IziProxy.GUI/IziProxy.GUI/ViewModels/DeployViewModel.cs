@@ -1,9 +1,12 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IziProxy;
+using Avalonia.Media.Imaging;
+using QRCoder;
 
 namespace IziProxy.GUI.ViewModels;
 
@@ -139,6 +142,8 @@ public partial class VlessLinkItem : ObservableObject
 
     [ObservableProperty] private string _copyLabel = "Скопировать";
 
+    [ObservableProperty] private Bitmap? _qrCodeImage = null;
+
     [RelayCommand]
     private async Task CopyLink()
     {
@@ -147,5 +152,31 @@ public partial class VlessLinkItem : ObservableObject
         CopyLabel = "Скопировано ✓";
         await Task.Delay(2000);
         CopyLabel = "Скопировать";
+    }
+
+    [RelayCommand]
+    private void ToggleQr()
+    {
+        if (QrCodeImage != null)
+        {
+            QrCodeImage = null;
+        }
+        else
+        {
+            try
+            {
+                using var qrGenerator = new QRCodeGenerator();
+                using var qrCodeData = qrGenerator.CreateQrCode(Link, QRCodeGenerator.ECCLevel.Q);
+                using var qrCode = new PngByteQRCode(qrCodeData);
+                byte[] qrCodeAsPngByteArr = qrCode.GetGraphic(20);
+                
+                using var ms = new MemoryStream(qrCodeAsPngByteArr);
+                QrCodeImage = new Bitmap(ms);
+            }
+            catch
+            {
+                // Игнорируем ошибки генерации
+            }
+        }
     }
 }

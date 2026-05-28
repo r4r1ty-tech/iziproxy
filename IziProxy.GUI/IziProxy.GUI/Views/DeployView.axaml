@@ -106,10 +106,25 @@
                            FontFamily="Cascadia Code, Consolas, Monospace"
                            FontSize="12"
                            Background="{StaticResource M3SurfaceContainerHighBrush}"/>
-                  <Button Content="{Binding CopyLabel}"
-                          Classes="Tonal"
-                          Command="{Binding CopyLinkCommand}"
-                          HorizontalAlignment="Right"/>
+                  <!-- QR Code Display -->
+                  <Image Source="{Binding QrCodeImage}"
+                         Width="180" Height="180"
+                         HorizontalAlignment="Center"
+                         Margin="0,8"
+                         IsVisible="{Binding QrCodeImage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+
+                  <Grid ColumnDefinitions="*,Auto">
+                    <Button Grid.Column="0"
+                            Content="QR-код"
+                            Classes="Tonal"
+                            Command="{Binding ToggleQrCommand}"
+                            HorizontalAlignment="Left"/>
+                    <Button Grid.Column="1"
+                            Content="{Binding CopyLabel}"
+                            Classes="Tonal"
+                            Command="{Binding CopyLinkCommand}"
+                            HorizontalAlignment="Right"/>
+                  </Grid>
                 </StackPanel>
               </Border>
             </DataTemplate>
