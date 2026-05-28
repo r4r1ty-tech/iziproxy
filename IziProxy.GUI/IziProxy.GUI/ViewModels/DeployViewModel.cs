@@ -198,6 +198,53 @@ public partial class DeployViewModel : ObservableObject
     }
 
     private bool CanDeploy() => !IsDeploying;
+
+    [RelayCommand]
+    private async Task TestConnection()
+    {
+        if (string.IsNullOrWhiteSpace(Host))
+        {
+            StatusText = "Введите IP-адрес";
+            return;
+        }
+
+        IsDeploying = true;
+        StatusText = "Проверка подключения...";
+        _logsVm.ProgressReporter.Report("Начало проверки SSH подключения к " + Host);
+
+        try
+        {
+            var config = new ServerConfig
+            {
+                Host       = Host,
+                Username   = Username,
+                Password   = Password,
+                SshKey     = SshKeyPath
+            };
+
+            using var ssh = new SSH();
+            bool connected = await ssh.TestConnection(config, _logsVm.ProgressReporter);
+            if (connected)
+            {
+                StatusText = "Подключение успешно установлено! ✓";
+                _logsVm.ProgressReporter.Report("SSH Подключение успешно установлено!");
+            }
+            else
+            {
+                StatusText = "Не удалось подключиться к серверу. ✗";
+                _logsVm.ProgressReporter.Report("Ошибка: не удалось авторизоваться по SSH.");
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = "Ошибка подключения: " + ex.Message;
+            _logsVm.ProgressReporter.Report("Ошибка SSH: " + ex.Message);
+        }
+        finally
+        {
+            IsDeploying = false;
+        }
+    }
 }
 
 /// <summary>

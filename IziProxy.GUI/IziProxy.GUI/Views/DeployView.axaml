@@ -104,19 +104,28 @@
       </Border>
 
       <!-- Кнопка + статус -->
-      <Button Classes="Primary"
-              Command="{Binding DeployCommand}"
-              HorizontalAlignment="Stretch"
-              Height="52"
-              Margin="0,8,0,0">
-        <StackPanel Orientation="Horizontal" Spacing="12">
-          <TextBlock Text="Установить" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
-          <ProgressBar IsIndeterminate="True"
-                       Width="20" Height="20"
-                       Foreground="{StaticResource OnPrimaryBrush}"
-                       IsVisible="{Binding IsDeploying}"/>
-        </StackPanel>
-      </Button>
+      <Grid ColumnDefinitions="*,*">
+        <Button Grid.Column="0"
+                Content="⚡ Проверить соединение"
+                Classes="Tonal"
+                Command="{Binding TestConnectionCommand}"
+                IsEnabled="{Binding !IsDeploying}"
+                Height="52"
+                Margin="0,8,8,0"/>
+        <Button Grid.Column="1"
+                Classes="Primary"
+                Command="{Binding DeployCommand}"
+                Height="52"
+                Margin="8,8,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="Установить" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
+            <ProgressBar IsIndeterminate="True"
+                         Width="20" Height="20"
+                         Foreground="{StaticResource OnPrimaryBrush}"
+                         IsVisible="{Binding IsDeploying}"/>
+          </StackPanel>
+        </Button>
+      </Grid>
 
       <TextBlock Text="{Binding StatusText}"
                  HorizontalAlignment="Center"
