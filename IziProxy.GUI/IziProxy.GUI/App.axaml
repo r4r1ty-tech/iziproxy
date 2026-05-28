@@ -1,15 +1,215 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:IziProxy.GUI"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
 
+    <Application.Resources>
+      <!-- Material 3 Dark Palette (Android 17 / Material You Style) -->
+      <!-- Brand Primary (Lavender/Violet) -->
+      <Color x:Key="M3Primary">#D0BCFF</Color>
+      <Color x:Key="M3OnPrimary">#381E72</Color>
+      <Color x:Key="M3PrimaryContainer">#4F378B</Color>
+      <Color x:Key="M3OnPrimaryContainer">#EADDFF</Color>
+      
+      <!-- Brand Secondary (Slate/Muted Violet) -->
+      <Color x:Key="M3Secondary">#CCC2DC</Color>
+      <Color x:Key="M3SecondaryContainer">#4A4458</Color>
+      <Color x:Key="M3OnSecondaryContainer">#E8DEF8</Color>
+
+      <!-- Neutrals / Surfaces -->
+      <Color x:Key="M3Background">#121318</Color>
+      <Color x:Key="M3OnBackground">#E6E1E5</Color>
+
+      <Color x:Key="M3Surface">#141318</Color>
+      <Color x:Key="M3SurfaceVariant">#49454F</Color>
+      <Color x:Key="M3OnSurface">#E6E1E5</Color>
+      <Color x:Key="M3OnSurfaceVariant">#CAC4D0</Color>
+      
+      <Color x:Key="M3Outline">#8A90A0</Color>
+      <Color x:Key="M3OutlineVariant">#44474F</Color>
+      
+      <!-- Brushes -->
+      <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource M3Primary}"/>
+      <SolidColorBrush x:Key="OnPrimaryBrush" Color="{StaticResource M3OnPrimary}"/>
+      <SolidColorBrush x:Key="PrimaryContainerBrush" Color="{StaticResource M3PrimaryContainer}"/>
+      <SolidColorBrush x:Key="OnPrimaryContainerBrush" Color="{StaticResource M3OnPrimaryContainer}"/>
+      <SolidColorBrush x:Key="TextBrush" Color="{StaticResource M3OnBackground}"/>
+      <SolidColorBrush x:Key="MutedTextBrush" Color="{StaticResource M3OnSurfaceVariant}"/>
+      <SolidColorBrush x:Key="OutlineBrush" Color="{StaticResource M3Outline}"/>
+      <SolidColorBrush x:Key="OutlineVariantBrush" Color="{StaticResource M3OutlineVariant}"/>
+      <SolidColorBrush x:Key="M3BgBrush" Color="{StaticResource M3Background}"/>
+      
+      <!-- Surface Containers -->
+      <SolidColorBrush x:Key="M3SurfaceBrush" Color="{StaticResource M3Surface}"/>
+      <SolidColorBrush x:Key="M3SurfaceContainerBrush" Color="#1D2026"/>
+      <SolidColorBrush x:Key="M3SurfaceContainerHighBrush" Color="#272A32"/>
+      <SolidColorBrush x:Key="M3SurfaceContainerHighestBrush" Color="#32353E"/>
+    </Application.Resources>
+
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="#D0BCFF" RegionColor="#121318" ErrorText="#F2B8B5" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <materialIcons:MaterialIconStyles />
+
+        <!-- Material 3 Surface Card Container -->
+        <Style Selector="Border.M3Card, Border.FloatingCard">
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerBrush}"/>
+          <Setter Property="BorderBrush" Value="{StaticResource OutlineVariantBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="20"/>
+          <Setter Property="BoxShadow" Value="0 4 16 0 #15000000"/>
+          <Setter Property="Transitions">
+            <Transitions>
+              <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+          </Setter>
+        </Style>
+
+        <!-- Primary Filled M3 Button (Pill shape) -->
+        <Style Selector="Button.Primary">
+          <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+          <Setter Property="CornerRadius" Value="24"/>
+          <Setter Property="Padding" Value="24,12"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="HorizontalContentAlignment" Value="Center"/>
+          <Setter Property="VerticalContentAlignment" Value="Center"/>
+          <Setter Property="Transitions">
+            <Transitions>
+              <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+              <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+          </Setter>
+        </Style>
+        
+        <Style Selector="Button.Primary:pointerover">
+          <Setter Property="Background" Value="#E2D4FF" />
+          <Setter Property="RenderTransform" Value="scale(1.02)" />
+        </Style>
+        <Style Selector="Button.Primary:pressed">
+          <Setter Property="RenderTransform" Value="scale(0.97)" />
+        </Style>
+        
+        <!-- Tonal Filled M3 Button (Pill shape) -->
+        <Style Selector="Button.Tonal">
+          <Setter Property="Background" Value="{StaticResource PrimaryContainerBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource OnPrimaryContainerBrush}"/>
+          <Setter Property="CornerRadius" Value="24"/>
+          <Setter Property="Padding" Value="24,12"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="HorizontalContentAlignment" Value="Center"/>
+          <Setter Property="VerticalContentAlignment" Value="Center"/>
+          <Setter Property="Transitions">
+            <Transitions>
+              <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+              <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+          </Setter>
+        </Style>
+        
+        <Style Selector="Button.Tonal:pointerover">
+          <Setter Property="Background" Value="#6248A3" />
+          <Setter Property="RenderTransform" Value="scale(1.02)" />
+        </Style>
+        <Style Selector="Button.Tonal:pressed">
+          <Setter Property="RenderTransform" Value="scale(0.97)" />
+        </Style>
+
+        <!-- Default M3 Button style -->
+        <Style Selector="Button">
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerHighBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+          <Setter Property="BorderBrush" Value="{StaticResource OutlineVariantBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="20"/>
+          <Setter Property="Padding" Value="16,10"/>
+          <Setter Property="Transitions">
+            <Transitions>
+              <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+          </Setter>
+        </Style>
+        <Style Selector="Button:pointerover">
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerHighestBrush}"/>
+        </Style>
+        <Style Selector="Button:pressed">
+          <Setter Property="RenderTransform" Value="scale(0.98)" />
+        </Style>
+
+        <!-- Styled M3 TextBox -->
+        <Style Selector="TextBox">
+          <Setter Property="CornerRadius" Value="16"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+          <Setter Property="Padding" Value="16,12"/>
+          <Setter Property="SelectionBrush" Value="{StaticResource PrimaryContainerBrush}"/>
+          <Setter Property="CaretBrush" Value="{StaticResource PrimaryBrush}"/>
+          <Setter Property="Transitions">
+            <Transitions>
+              <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+            </Transitions>
+          </Setter>
+        </Style>
+        <Style Selector="TextBox:pointerover">
+          <Setter Property="BorderBrush" Value="{StaticResource TextBrush}"/>
+        </Style>
+        <Style Selector="TextBox:focus">
+          <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+          <Setter Property="BorderThickness" Value="2"/>
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerBrush}"/>
+        </Style>
+
+        <!-- M3 Navigation Drawer Styles -->
+        <Style Selector="ListBox.Menu">
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="BorderThickness" Value="0" />
+          <Setter Property="Padding" Value="12,16" />
+        </Style>
+
+        <Style Selector="ListBox.Menu ListBoxItem">
+          <Setter Property="Padding" Value="16,14" />
+          <Setter Property="Margin" Value="0,4" />
+          <Setter Property="CornerRadius" Value="28" /> <!-- Pill shape for drawer items -->
+          <Setter Property="HorizontalContentAlignment" Value="Left" />
+          <Setter Property="VerticalContentAlignment" Value="Center" />
+          <Setter Property="Cursor" Value="Hand" />
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+          <Setter Property="Transitions">
+            <Transitions>
+              <BrushTransition Property="Background" Duration="0:0:0.15" />
+              <BrushTransition Property="Foreground" Duration="0:0:0.15" />
+            </Transitions>
+          </Setter>
+        </Style>
+
+        <!-- Selected Menu Item -->
+        <Style Selector="ListBox.Menu ListBoxItem:selected">
+          <Setter Property="Background" Value="{StaticResource PrimaryContainerBrush}" />
+          <Setter Property="Foreground" Value="{StaticResource OnPrimaryContainerBrush}" />
+        </Style>
+        <Style Selector="ListBox.Menu ListBoxItem:selected:pointerover">
+          <Setter Property="Background" Value="{StaticResource PrimaryContainerBrush}" />
+          <Setter Property="Foreground" Value="{StaticResource OnPrimaryContainerBrush}" />
+        </Style>
+
+        <!-- Pointer Over Menu Item -->
+        <Style Selector="ListBox.Menu ListBoxItem:pointerover">
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerHighestBrush}" />
+          <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        </Style>
     </Application.Styles>
 </Application>
