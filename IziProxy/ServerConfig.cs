@@ -8,6 +8,7 @@ public class ServerConfig
     private string host = "";
     private string username = "";
     private string password = "";
+    private string sshKey = "";
 
     /// <summary>
     /// IP-адрес или хост удаленного сервера.
@@ -23,6 +24,10 @@ public class ServerConfig
     /// Пароль пользователя для SSH/SFTP подключения и выполнения sudo-команд.
     /// </summary>
     public string Password { get => password; set => password = value; }
+    /// <summary>
+    /// SSH ключ от ВДС пользователя если он есть
+    /// </summary>
+    public string SshKey { get => sshKey; set => sshKey = value; }
 
     /// <summary>
     /// Запрашивает у пользователя через консоль параметры подключения к серверу.
@@ -35,5 +40,7 @@ public class ServerConfig
         username = Console.ReadLine() ?? string.Empty;
         Console.WriteLine("Введите пароль от указанного пользователя");
         password = Console.ReadLine() ?? string.Empty;
+        Console.WriteLine("Укажите путь до файла SSH ключ если он есть, если нет нажмите Enter");
+        sshKey = Console.ReadLine() ?? string.Empty;
     }
 }

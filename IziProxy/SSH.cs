@@ -10,20 +10,37 @@ public class SSH : IDisposable
     private SftpClient _sftpClient = null!;
     private bool _disposed;
 
-    /// <summary>
-    /// Проверяет подключение к серверу по протоколам SSH и SFTP.
-    /// </summary>
-    /// <param name="serverConfig">Конфигурация с хостом, логином и паролем.</param>
-    /// <returns>True, если оба подключения успешно установлены; иначе false.</returns>
     public Boolean TestConnection(ServerConfig serverConfig)
     {
         try
         {
-            var connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Username,
-                new PasswordAuthenticationMethod(serverConfig.Username, serverConfig.Password))
+            ConnectionInfo connectionInfo;
+
+            if (!string.IsNullOrEmpty(serverConfig.SshKey))
             {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
+                string sshKeyPath = serverConfig.SshKey;
+                if (sshKeyPath.StartsWith("~"))
+                {
+                    string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    sshKeyPath = Path.Combine(userProfile, sshKeyPath.TrimStart('~', '/', '\\'));
+                }
+
+                var privateKey = new PrivateKeyFile(sshKeyPath);
+                var keyAuth = new PrivateKeyAuthenticationMethod(serverConfig.Username, privateKey);
+
+                connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Username, keyAuth)
+                {
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
+            }
+            else
+            {
+                connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Username,
+                    new PasswordAuthenticationMethod(serverConfig.Username, serverConfig.Password))
+                {
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
+            }
 
             // Инициализация и подключение SSH
             _sshClient = new SshClient(connectionInfo);
