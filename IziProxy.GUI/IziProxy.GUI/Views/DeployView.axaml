@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
+             xmlns:views="using:IziProxy.GUI.Views"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.Views.DeployView"
              x:DataType="vm:DeployViewModel">
@@ -46,9 +47,19 @@
 
           <StackPanel Spacing="6">
             <TextBlock Text="SSH-ключ (необязательно)" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SshKeyPath}"
-                     PlaceholderText="~/.ssh/id_rsa  или  C:\Users\...\id_rsa"
-                     IsEnabled="{Binding !IsDeploying}"/>
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBox Grid.Column="0"
+                       Text="{Binding SshKeyPath}"
+                       PlaceholderText="~/.ssh/id_rsa  или  C:\Users\...\id_rsa"
+                       IsEnabled="{Binding !IsDeploying}"/>
+              <Button Grid.Column="1"
+                      Content="📁"
+                      Classes="Tonal"
+                      Margin="8,0,0,0"
+                      Width="48" Height="48"
+                      Command="{Binding $parent[views:DeployView].BrowseSshKey}"
+                      IsEnabled="{Binding !IsDeploying}"/>
+            </Grid>
           </StackPanel>
 
         </StackPanel>
