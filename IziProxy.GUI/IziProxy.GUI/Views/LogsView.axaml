@@ -1,23 +1,31 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.Views.LogsView"
              x:DataType="vm:LogsViewModel">
 
-  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20">
 
     <!-- Заголовок -->
-    <StackPanel Grid.Row="0" Orientation="Horizontal"
-                Spacing="10" Margin="0,4,0,8">
-      <TextBlock Text="📋 Лог деплоя"
-                 FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Очистить"
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,4,0,16">
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+        <Border Background="{StaticResource PrimaryContainerBrush}"
+                Width="48" Height="48"
+                CornerRadius="16">
+          <materialIcons:MaterialIcon Kind="ConsoleLine" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+        </Border>
+        <TextBlock Text="Журнал событий" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+      </StackPanel>
+      <Button Grid.Column="1"
+              Content="Очистить"
+              Classes="Tonal"
               Command="{Binding ClearLogsCommand}"
               VerticalAlignment="Center"/>
-    </StackPanel>
+    </Grid>
 
     <!-- Список логов -->
-    <Border Grid.Row="1" Background="#1E1E2E" CornerRadius="12">
+    <Border Grid.Row="1" Classes="M3Card" Padding="12">
       <ListBox ItemsSource="{Binding Logs}"
                Name="LogListBox"
                Background="Transparent"
@@ -26,9 +34,10 @@
           <DataTemplate>
             <TextBlock Text="{Binding}"
                        TextWrapping="Wrap"
-                       FontFamily="Monospace"
+                       FontFamily="Cascadia Code, Consolas, Monospace"
                        FontSize="12"
-                       Padding="4,2"/>
+                       Foreground="#E2E2E6"
+                       Padding="6,3"/>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
@@ -37,9 +46,9 @@
     <!-- Счётчик -->
     <TextBlock Grid.Row="2"
                Text="{Binding Logs.Count, StringFormat='Сообщений: {0}'}"
-               FontSize="12" Foreground="#666"
+               FontSize="13" Foreground="{StaticResource MutedTextBrush}"
                HorizontalAlignment="Right"
-               Margin="0,4,0,0"/>
+               Margin="0,8,0,0"/>
   </Grid>
 
 </UserControl>
