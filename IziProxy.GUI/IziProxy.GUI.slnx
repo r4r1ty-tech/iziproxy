@@ -1,0 +1,11 @@
+﻿<Solution>
+  <Project Path="IziProxy.GUI.Android/IziProxy.GUI.Android.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="IziProxy.GUI.Browser/IziProxy.GUI.Browser.csproj" />
+  <Project Path="IziProxy.GUI.Desktop/IziProxy.GUI.Desktop.csproj" />
+  <Project Path="IziProxy.GUI.iOS/IziProxy.GUI.iOS.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="IziProxy.GUI/IziProxy.GUI.csproj" />
+</Solution>
