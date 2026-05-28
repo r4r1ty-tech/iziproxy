@@ -1,0 +1,70 @@
+name: Build Linux AppImage
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Publish Linux Single File
+      run: dotnet publish IziProxy.GUI/IziProxy.GUI.Desktop/IziProxy.GUI.Desktop.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o publish_linux
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y wget
+
+    - name: Build AppImage
+      run: |
+        # Setup AppDir structure
+        mkdir -p AppDir/usr/bin
+        cp publish_linux/IziProxy.GUI.Desktop AppDir/usr/bin/IziProxy
+        chmod +x AppDir/usr/bin/IziProxy
+        
+        # Create AppRun script
+        cat > AppDir/AppRun << 'EOF'
+        #!/bin/bash
+        HERE="$(dirname "$(readlink -f "${0}")")"
+        exec "${HERE}/usr/bin/IziProxy" "$@"
+        EOF
+        chmod +x AppDir/AppRun
+        
+        # Create desktop file
+        cat > AppDir/IziProxy.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=IziProxy
+        Exec=IziProxy
+        Icon=iziproxy
+        Categories=Network;
+        EOF
+        
+        # Create a basic SVG icon
+        cat > AppDir/iziproxy.svg << 'EOF'
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="40" fill="#6200EA" />
+        </svg>
+        EOF
+        
+        # Download and extract appimagetool to avoid FUSE requirement on runner
+        wget -c "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
+        chmod +x appimagetool
+        ./appimagetool --appimage-extract
+        
+        # Build the final AppImage
+        ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-Linux-x86_64.AppImage
+
+    - name: Upload APK to Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release upload v1.0.0 IziProxy-Linux-x86_64.AppImage --clobber
