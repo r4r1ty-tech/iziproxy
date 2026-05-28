@@ -16,56 +16,54 @@ public class DeployScripts
     /// <param name="sshClient">Подключенный клиент для отправки SSH-команд.</param>
     /// <param name="serverConfig">Параметры авторизации и IP-адрес сервера.</param>
     /// <param name="xrayParams">Параметры конфигурации Xray (UUID, ключи, порт, SNI).</param>
+    /// <param name="progress">Получатель прогресса и сообщений об ошибках.</param>
     /// <returns>True, если деплой выполнен успешно; иначе false.</returns>
-    public bool DeployAndConfigure(SSH sshClient, ServerConfig serverConfig, XrayConfigParams xrayParams)
+    public async Task<bool> DeployAndConfigure(SSH sshClient, ServerConfig serverConfig, XrayConfigParams xrayParams, IProgress<string>? progress = null)
     {
-        Console.WriteLine("Загрузка Deploy.sh...");
-        bool isDeployUploaded = sshClient.UploadFile("VDS_setup/Deploy.sh", "Deploy.sh", serverConfig);
+        progress?.Report("Загрузка Deploy.sh...");
+        bool isDeployUploaded = await sshClient.UploadFile("VDS_setup/Deploy.sh", "Deploy.sh", serverConfig, progress);
 
-        if (isDeployUploaded == false)
+        if (!isDeployUploaded)
         {
-            Console.WriteLine("Не удалось загрузить Deploy.sh");
+            progress?.Report("Не удалось загрузить Deploy.sh");
             return false;
         }
 
-        Console.WriteLine("Формирование config.json...");
-        string configContent = File.ReadAllText("VDS_setup/config.json");
+        progress?.Report("Формирование config.json...");
+        string configContent = await Task.Run(() => File.ReadAllText("VDS_setup/config.json"));
 
         configContent = configContent.Replace("__UUID__", xrayParams.Uuid)
                                      .Replace("__PRIVATE_KEY__", xrayParams.PrivateKey)
                                      .Replace("__SHORT_ID__", xrayParams.ShortId);
 
         string tempConfigPath = "temp_config.json";
-        File.WriteAllText(tempConfigPath, configContent);
+        await Task.Run(() => File.WriteAllText(tempConfigPath, configContent));
 
-        Console.WriteLine("Загрузка config.json...");
-        bool isConfigUploaded = sshClient.UploadFile(tempConfigPath, "config.json", serverConfig);
+        progress?.Report("Загрузка config.json...");
+        bool isConfigUploaded = await sshClient.UploadFile(tempConfigPath, "config.json", serverConfig, progress);
 
-        if (File.Exists(tempConfigPath))
+        await Task.Run(() =>
         {
-            File.Delete(tempConfigPath);
-        }
+            if (File.Exists(tempConfigPath))
+                File.Delete(tempConfigPath);
+        });
 
-        if (isConfigUploaded == false)
+        if (!isConfigUploaded)
         {
-            Console.WriteLine("Не удалось загрузить config.json");
+            progress?.Report("Не удалось загрузить config.json");
             return false;
         }
 
         string runCommand;
         if (serverConfig.Username == "root")
-        {
             runCommand = "chmod +x /root/Deploy.sh && bash /root/Deploy.sh";
-        }
         else
-        {
             runCommand = $"chmod +x ~/Deploy.sh && sudo su - -c \"bash /home/{serverConfig.Username}/Deploy.sh\"";
-        }
 
-        Console.WriteLine("Выполнение Deploy.sh на сервере...");
-        var result = sshClient.RunSudoCommand(serverConfig, runCommand);
+        progress?.Report("Выполнение Deploy.sh на сервере...");
+        var result = await sshClient.RunSudoCommand(serverConfig, runCommand);
         string output = result.Result;
-        Console.WriteLine(output);
+        progress?.Report(output);
 
         // Парсим порты и SNI из вывода скрипта.
         // Скрипт выводит строки вида:
@@ -86,29 +84,17 @@ public class DeployScripts
         foreach (var line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
         {
             if (line.StartsWith("SELECTED_PORT_1="))
-            {
                 port1 = line.Substring("SELECTED_PORT_1=".Length).Trim();
-            }
             else if (line.StartsWith("SELECTED_PORT_2="))
-            {
                 port2 = line.Substring("SELECTED_PORT_2=".Length).Trim();
-            }
             else if (line.StartsWith("SELECTED_PORT_3="))
-            {
                 port3 = line.Substring("SELECTED_PORT_3=".Length).Trim();
-            }
             else if (line.StartsWith("SNI_SELECTED_1="))
-            {
                 sni1 = line.Substring("SNI_SELECTED_1=".Length).Trim();
-            }
             else if (line.StartsWith("SNI_SELECTED_2="))
-            {
                 sni2 = line.Substring("SNI_SELECTED_2=".Length).Trim();
-            }
             else if (line.StartsWith("SNI_SELECTED_3="))
-            {
                 sni3 = line.Substring("SNI_SELECTED_3=".Length).Trim();
-            }
         }
 
         xrayParams.Ports.Add(port1);

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace IziProxy;
 
 /// <summary>
@@ -12,8 +10,11 @@ class Program
     /// генерации ключей, деплоя конфигурации и вывода ссылок для клиента.
     /// </summary>
     /// <param name="args">Аргументы командной строки.</param>
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
+        // Все лог-сообщения из Core пишутся прямо в консоль
+        var progress = new Progress<string>(Console.WriteLine);
+
         // Создаем SSH/SFTP клиент
         using SSH ssh = new SSH();
 
@@ -22,8 +23,8 @@ class Program
         serverConfig.SetServer();
 
         // 1. Проверка соединения
-        bool resultTestConnection = ssh.TestConnection(serverConfig);
-        if (resultTestConnection == true)
+        bool resultTestConnection = await ssh.TestConnection(serverConfig, progress);
+        if (resultTestConnection)
         {
             Console.WriteLine("Подключение успешно установлено");
         }
@@ -35,8 +36,8 @@ class Program
 
         // 2. Загрузка скрипта предварительной подготовки
         Console.WriteLine("Загрузка установочного скрипта...");
-        bool resultTestUpload = ssh.UploadTestScript(serverConfig);
-        if (resultTestUpload == true)
+        bool resultTestUpload = await ssh.UploadTestScript(serverConfig, progress);
+        if (resultTestUpload)
         {
             Console.WriteLine("Файл успешно загружен");
         }
@@ -48,8 +49,8 @@ class Program
 
         // 3. Запуск скрипта подготовки (установка ufw, jq, curl, xray и включение BBR)
         Console.WriteLine("Запуск установочного скрипта...");
-        bool resultRunTestScript = ssh.RunTestScript(serverConfig);
-        if (resultRunTestScript == true)
+        bool resultRunTestScript = await ssh.RunTestScript(serverConfig, progress);
+        if (resultRunTestScript)
         {
             Console.WriteLine("Скрипт успешно выполнен");
         }
@@ -63,7 +64,7 @@ class Program
         XrayConfigParams xrayParams;
         try
         {
-            xrayParams = XrayConfigParams.Generate(ssh, serverConfig);
+            xrayParams = await XrayConfigParams.Generate(ssh, serverConfig, progress);
         }
         catch (Exception ex)
         {
@@ -73,8 +74,8 @@ class Program
 
         // 5. Развертывание конфигурации и запуск службы на VDS
         var deployer = new DeployScripts();
-        bool deployResult = deployer.DeployAndConfigure(ssh, serverConfig, xrayParams);
-        if (deployResult == false)
+        bool deployResult = await deployer.DeployAndConfigure(ssh, serverConfig, xrayParams, progress);
+        if (!deployResult)
         {
             Console.WriteLine("Ошибка деплоя конфигурации.");
             return;
@@ -83,7 +84,7 @@ class Program
         // 6. Получение информации о местоположении VDS
         try
         {
-            string geo = XrayConfigParams.GetGeoVDS(ssh, serverConfig);
+            string geo = await XrayConfigParams.GetGeoVDS(ssh, serverConfig, progress);
             Console.WriteLine("GEO VDS: " + geo);
         }
         catch (Exception ex)

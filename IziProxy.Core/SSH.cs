@@ -1,4 +1,5 @@
 using Renci.SshNet;
+
 namespace IziProxy;
 
 /// <summary>
@@ -10,7 +11,13 @@ public class SSH : IDisposable
     private SftpClient _sftpClient = null!;
     private bool _disposed;
 
-    public Boolean TestConnection(ServerConfig serverConfig)
+    /// <summary>
+    /// Проверяет подключение к серверу по протоколам SSH и SFTP.
+    /// </summary>
+    /// <param name="serverConfig">Конфигурация с хостом, логином и паролем.</param>
+    /// <param name="progress">Получатель прогресса и сообщений об ошибках.</param>
+    /// <returns>True, если оба подключения успешно установлены; иначе false.</returns>
+    public async Task<bool> TestConnection(ServerConfig serverConfig, IProgress<string>? progress = null)
     {
         try
         {
@@ -42,19 +49,22 @@ public class SSH : IDisposable
                 };
             }
 
-            // Инициализация и подключение SSH
-            _sshClient = new SshClient(connectionInfo);
-            _sshClient.Connect();
+            await Task.Run(() =>
+            {
+                // Инициализация и подключение SSH
+                _sshClient = new SshClient(connectionInfo);
+                _sshClient.Connect();
 
-            // Инициализация и подключение SFTP
-            _sftpClient = new SftpClient(connectionInfo);
-            _sftpClient.Connect();
+                // Инициализация и подключение SFTP
+                _sftpClient = new SftpClient(connectionInfo);
+                _sftpClient.Connect();
+            });
 
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            progress?.Report("Ошибка подключения: " + ex.Message);
             return false;
         }
     }
@@ -63,36 +73,37 @@ public class SSH : IDisposable
     /// Загружает скрипт предварительной подготовки MainInstall.sh на сервер.
     /// </summary>
     /// <param name="serverConfig">Конфигурация сервера.</param>
+    /// <param name="progress">Получатель прогресса и сообщений об ошибках.</param>
     /// <returns>True, если загрузка прошла успешно; иначе false.</returns>
-    public Boolean UploadTestScript(ServerConfig serverConfig)
+    public async Task<bool> UploadTestScript(ServerConfig serverConfig, IProgress<string>? progress = null)
     {
         if (_sftpClient == null || !_sftpClient.IsConnected)
         {
-            Console.WriteLine("SFTP-клиент не подключен.");
+            progress?.Report("SFTP-клиент не подключен.");
             return false;
         }
 
         try
         {
-            using var file = File.OpenRead("VDS_setup/MainInstall.sh");
-            string targetPath;
-            // Определяем домашнюю директорию в зависимости от имени пользователя
-            if (serverConfig.Username == "root")
+            await Task.Run(() =>
             {
-                targetPath = "/root/MainInstall.sh";
-            }
-            else
-            {
-                targetPath = "MainInstall.sh"; // Загрузит в домашнюю папку пользователя
-            }
+                using var file = File.OpenRead("VDS_setup/MainInstall.sh");
+                string targetPath;
+                // Определяем домашнюю директорию в зависимости от имени пользователя
+                if (serverConfig.Username == "root")
+                    targetPath = "/root/MainInstall.sh";
+                else
+                    targetPath = "MainInstall.sh"; // Загрузит в домашнюю папку пользователя
 
-            _sftpClient.UploadFile(file, targetPath);
-            Console.WriteLine("Файл загружен успешно");
+                _sftpClient.UploadFile(file, targetPath);
+            });
+
+            progress?.Report("MainInstall.sh загружен успешно.");
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            progress?.Report(ex.Message);
             return false;
         }
     }
@@ -103,36 +114,37 @@ public class SSH : IDisposable
     /// <param name="localFilePath">Путь к файлу на локальном компьютере.</param>
     /// <param name="remoteFileName">Имя файла, под которым он будет сохранен на сервере.</param>
     /// <param name="serverConfig">Конфигурация сервера.</param>
+    /// <param name="progress">Получатель прогресса и сообщений об ошибках.</param>
     /// <returns>True, если файл успешно загружен; иначе false.</returns>
-    public Boolean UploadFile(string localFilePath, string remoteFileName, ServerConfig serverConfig)
+    public async Task<bool> UploadFile(string localFilePath, string remoteFileName, ServerConfig serverConfig, IProgress<string>? progress = null)
     {
         if (_sftpClient == null || !_sftpClient.IsConnected)
         {
-            Console.WriteLine("SFTP-клиент не подключен.");
+            progress?.Report("SFTP-клиент не подключен.");
             return false;
         }
 
         try
         {
-            using var file = File.OpenRead(localFilePath);
-            
-            string targetPath;
-            if (serverConfig.Username == "root")
+            await Task.Run(() =>
             {
-                targetPath = $"/root/{remoteFileName}";
-            }
-            else
-            {
-                targetPath = remoteFileName;
-            }
-            
-            _sftpClient.UploadFile(file, targetPath, true); // true = overwrite (перезаписать при наличии)
-            Console.WriteLine($"Файл {localFilePath} загружен успешно в {targetPath}");
+                using var file = File.OpenRead(localFilePath);
+
+                string targetPath;
+                if (serverConfig.Username == "root")
+                    targetPath = $"/root/{remoteFileName}";
+                else
+                    targetPath = remoteFileName;
+
+                _sftpClient.UploadFile(file, targetPath, true); // true = overwrite (перезаписать при наличии)
+                progress?.Report($"Файл {localFilePath} загружен успешно в {targetPath}");
+            });
+
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            progress?.Report(ex.Message);
             return false;
         }
     }
@@ -141,34 +153,36 @@ public class SSH : IDisposable
     /// Запускает скрипт предварительной подготовки MainInstall.sh на удаленном сервере.
     /// </summary>
     /// <param name="serverConfig">Конфигурация сервера.</param>
+    /// <param name="progress">Получатель прогресса и сообщений об ошибках.</param>
     /// <returns>True, если скрипт успешно запущен; иначе false.</returns>
-    public Boolean RunTestScript(ServerConfig serverConfig)
+    public async Task<bool> RunTestScript(ServerConfig serverConfig, IProgress<string>? progress = null)
     {
         if (_sshClient == null || !_sshClient.IsConnected)
         {
-            Console.WriteLine("SSH-клиент не подключен.");
+            progress?.Report("SSH-клиент не подключен.");
             return false;
         }
 
         try
         {
-            string command;
-            if (serverConfig.Username == "root")
+            string output = await Task.Run(() =>
             {
-                command = "chmod +x /root/MainInstall.sh && bash /root/MainInstall.sh";
-            }
-            else
-            {
-                command = $"chmod +x ~/MainInstall.sh && sudo su - -c \"bash /home/{serverConfig.Username}/MainInstall.sh\"";
-            }
+                string command;
+                if (serverConfig.Username == "root")
+                    command = "chmod +x /root/MainInstall.sh && bash /root/MainInstall.sh";
+                else
+                    command = $"chmod +x ~/MainInstall.sh && sudo su - -c \"bash /home/{serverConfig.Username}/MainInstall.sh\"";
 
-            SshCommand sshCommand = _sshClient.RunCommand(command);
-            Console.WriteLine(sshCommand.Result);
+                SshCommand sshCommand = _sshClient.RunCommand(command);
+                return sshCommand.Result;
+            });
+
+            progress?.Report(output);
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            progress?.Report(ex.Message);
             return false;
         }
     }
@@ -181,24 +195,18 @@ public class SSH : IDisposable
     /// <param name="command">Выполняемая команда.</param>
     /// <returns>Объект <see cref="SshCommand"/> с результатом выполнения команды.</returns>
     /// <exception cref="InvalidOperationException">Бросается, если клиент не подключен.</exception>
-    public SshCommand RunSudoCommand(ServerConfig serverConfig, string command)
+    public async Task<SshCommand> RunSudoCommand(ServerConfig serverConfig, string command)
     {
         if (_sshClient == null || !_sshClient.IsConnected)
-        {
             throw new InvalidOperationException("SSH-клиент не подключен.");
-        }
 
         string sudoCommand;
         if (serverConfig.Username.Equals("root", StringComparison.OrdinalIgnoreCase))
-        {
             sudoCommand = command;
-        }
         else
-        {
             sudoCommand = $"echo '{serverConfig.Password}' | sudo -S {command}";
-        }
 
-        return _sshClient.RunCommand(sudoCommand);
+        return await Task.Run(() => _sshClient.RunCommand(sudoCommand));
     }
 
     /// <summary>
@@ -207,9 +215,7 @@ public class SSH : IDisposable
     public void Dispose()
     {
         if (_disposed)
-        {
             return;
-        }
 
         _disposed = true;
 
@@ -218,42 +224,31 @@ public class SSH : IDisposable
             try
             {
                 if (_sshClient.IsConnected)
-                {
                     _sshClient.Disconnect();
-                }
             }
-            catch (ObjectDisposedException)
-            {
-            }
+            catch (ObjectDisposedException) { }
 
             try
             {
                 _sshClient.Dispose();
             }
-            catch (ObjectDisposedException)
-            {
-            }
+            catch (ObjectDisposedException) { }
         }
+
         if (_sftpClient != null)
         {
             try
             {
                 if (_sftpClient.IsConnected)
-                {
                     _sftpClient.Disconnect();
-                }
             }
-            catch (ObjectDisposedException)
-            {
-            }
+            catch (ObjectDisposedException) { }
 
             try
             {
                 _sftpClient.Dispose();
             }
-            catch (ObjectDisposedException)
-            {
-            }
+            catch (ObjectDisposedException) { }
         }
     }
 }

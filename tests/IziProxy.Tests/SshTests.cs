@@ -6,51 +6,51 @@ namespace IziProxy.Tests;
 public class SshTests
 {
     [Fact]
-    public void TestConnection_ReturnsFalse_ForEmptyHost()
+    public async Task TestConnection_ReturnsFalse_ForEmptyHost()
     {
         using var ssh = new SSH();
         var config = new ServerConfig { Host = string.Empty, Username = string.Empty, Password = string.Empty };
 
-        bool result = ssh.TestConnection(config);
+        bool result = await ssh.TestConnection(config);
 
         Assert.False(result);
     }
 
     [Fact]
-    public void UploadTestScript_ReturnsFalse_WhenNotConnected()
+    public async Task UploadTestScript_ReturnsFalse_WhenNotConnected()
     {
         using var ssh = new SSH();
 
-        bool result = ssh.UploadTestScript(new ServerConfig());
+        bool result = await ssh.UploadTestScript(new ServerConfig());
 
         Assert.False(result);
     }
 
     [Fact]
-    public void UploadFile_ReturnsFalse_WhenNotConnected()
+    public async Task UploadFile_ReturnsFalse_WhenNotConnected()
     {
         using var ssh = new SSH();
 
-        bool result = ssh.UploadFile("missing.txt", "remote.txt", new ServerConfig());
+        bool result = await ssh.UploadFile("missing.txt", "remote.txt", new ServerConfig());
 
         Assert.False(result);
     }
 
     [Fact]
-    public void RunTestScript_ReturnsFalse_WhenNotConnected()
+    public async Task RunTestScript_ReturnsFalse_WhenNotConnected()
     {
         using var ssh = new SSH();
 
-        bool result = ssh.RunTestScript(new ServerConfig());
+        bool result = await ssh.RunTestScript(new ServerConfig());
 
         Assert.False(result);
     }
 
     [Fact]
-    public void RunSudoCommand_Throws_WhenNotConnected()
+    public async Task RunSudoCommand_Throws_WhenNotConnected()
     {
         using var ssh = new SSH();
 
-        Assert.Throws<InvalidOperationException>(() => ssh.RunSudoCommand(new ServerConfig(), "whoami"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => ssh.RunSudoCommand(new ServerConfig(), "whoami"));
     }
 }

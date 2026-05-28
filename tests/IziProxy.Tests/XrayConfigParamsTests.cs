@@ -6,18 +6,18 @@ namespace IziProxy.Tests;
 public class XrayConfigParamsTests
 {
     [Fact]
-    public void Generate_Throws_WhenNotConnected()
+    public async Task Generate_Throws_WhenNotConnected()
     {
         using var ssh = new SSH();
 
-        Assert.Throws<InvalidOperationException>(() => XrayConfigParams.Generate(ssh, new ServerConfig()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => XrayConfigParams.Generate(ssh, new ServerConfig()));
     }
 
     [Fact]
-    public void GetGeoVDS_Throws_WhenNotConnected()
+    public async Task GetGeoVDS_Throws_WhenNotConnected()
     {
         using var ssh = new SSH();
 
-        Assert.Throws<InvalidOperationException>(() => XrayConfigParams.GetGeoVDS(ssh, new ServerConfig()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => XrayConfigParams.GetGeoVDS(ssh, new ServerConfig()));
     }
 }
