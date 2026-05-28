@@ -8,7 +8,7 @@
              x:DataType="vm:DeployViewModel">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="16" Margin="20">
+    <StackPanel Spacing="16" Margin="12">
 
       <!-- Заголовок -->
       <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,8">
@@ -21,7 +21,7 @@
       </StackPanel>
 
       <!-- Управление профилями -->
-      <Border Classes="M3Card" Padding="20">
+      <Border Classes="M3Card" Padding="16">
         <StackPanel Spacing="12">
           <TextBlock Text="Профили серверов" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
           <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
@@ -47,7 +47,7 @@
           <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
             <TextBox Grid.Column="0"
                      Text="{Binding NewProfileName}"
-                     PlaceholderText="Имя нового профиля (например: Мой VDS)"/>
+                     PlaceholderText="Имя нового профиля (напр. Мой VDS)"/>
             <Button Grid.Column="1"
                     Content="💾 Сохранить"
                     Classes="Tonal"
@@ -58,7 +58,7 @@
       </Border>
 
       <!-- Форма ввода -->
-      <Border Classes="M3Card" Padding="24">
+      <Border Classes="M3Card" Padding="16">
         <StackPanel Spacing="16">
 
           <StackPanel Spacing="6">
@@ -88,7 +88,7 @@
             <Grid ColumnDefinitions="*,Auto">
               <TextBox Grid.Column="0"
                        Text="{Binding SshKeyPath}"
-                       PlaceholderText="~/.ssh/id_rsa  или  C:\Users\...\id_rsa"
+                       PlaceholderText="Путь к id_rsa"
                        IsEnabled="{Binding !IsDeploying}"/>
               <Button Grid.Column="1"
                       Content="📁"
@@ -104,19 +104,17 @@
       </Border>
 
       <!-- Кнопка + статус -->
-      <Grid ColumnDefinitions="*,*">
-        <Button Grid.Column="0"
-                Content="⚡ Проверить соединение"
+      <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+        <Button Content="⚡ Проверить соединение"
                 Classes="Tonal"
                 Command="{Binding TestConnectionCommand}"
                 IsEnabled="{Binding !IsDeploying}"
                 Height="52"
-                Margin="0,8,8,0"/>
-        <Button Grid.Column="1"
-                Classes="Primary"
+                Margin="0,0,8,8"/>
+        <Button Classes="Primary"
                 Command="{Binding DeployCommand}"
                 Height="52"
-                Margin="8,8,0,0">
+                Margin="0,0,0,8">
           <StackPanel Orientation="Horizontal" Spacing="12">
             <TextBlock Text="Установить" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
             <ProgressBar IsIndeterminate="True"
@@ -125,7 +123,7 @@
                          IsVisible="{Binding IsDeploying}"/>
           </StackPanel>
         </Button>
-      </Grid>
+      </WrapPanel>
 
       <TextBlock Text="{Binding StatusText}"
                  HorizontalAlignment="Center"
