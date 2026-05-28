@@ -2,101 +2,115 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
              xmlns:views="using:IziProxy.GUI.Views"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.Views.MainView"
              x:DataType="vm:MainViewModel"
              x:Name="RootControl"
              SizeChanged="Control_OnSizeChanged">
 
-  <UserControl.Styles>
-    <!-- Базовые стили меню -->
-    <Style Selector="ListBox.Menu">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="0" />
-    </Style>
-
-    <Style Selector="ListBox.Menu ListBoxItem">
-      <Setter Property="Padding" Value="16,12" />
-      <Setter Property="Margin" Value="4,2" />
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="HorizontalContentAlignment" Value="Center" />
-      <Setter Property="VerticalContentAlignment" Value="Center" />
-      <Setter Property="Cursor" Value="Hand" />
-    </Style>
-
-    <!-- Десктопный режим (боковая панель) -->
-    <Style Selector="Border.NavigationPanel">
-      <Setter Property="DockPanel.Dock" Value="Left" />
-      <Setter Property="Width" Value="200" />
-      <Setter Property="Height" Value="NaN" />
-      <Setter Property="BorderThickness" Value="0,0,1,0" />
-      <Setter Property="BorderBrush" Value="#333" />
-      <Setter Property="Background" Value="#1A1A1A" />
-    </Style>
-    <Style Selector="ListBox.Menu">
-      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-    </Style>
-    <Style Selector="ListBox.Menu ListBoxItem">
-      <Setter Property="HorizontalContentAlignment" Value="Left" />
-    </Style>
-
-    <!-- Мобильный режим (ширина < 700) -->
-    <Style Selector="UserControl.IsNarrow Border.NavigationPanel">
-      <Setter Property="DockPanel.Dock" Value="Bottom" />
-      <Setter Property="Width" Value="NaN" />
-      <Setter Property="Height" Value="NaN" />
-      <Setter Property="BorderThickness" Value="0,1,0,0" />
-      <Setter Property="Background" Value="#1E1E2E" />
-    </Style>
-    <Style Selector="UserControl.IsNarrow ListBox.Menu">
-      <Setter Property="ItemsPanel">
-        <ItemsPanelTemplate>
-          <UniformGrid Rows="1" />
-        </ItemsPanelTemplate>
-      </Setter>
-    </Style>
-    <Style Selector="UserControl.IsNarrow ListBox.Menu ListBoxItem">
-      <Setter Property="HorizontalContentAlignment" Value="Center" />
-      <Setter Property="Margin" Value="2,4" />
-    </Style>
-  </UserControl.Styles>
-
-  <DockPanel>
-    <!-- Панель навигации -->
-    <Border Classes="NavigationPanel">
-      <ListBox Classes="Menu" SelectedIndex="{Binding SelectedTabIndex}">
-        <ListBoxItem>
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="🚀" />
-            <TextBlock Text="Deploy" />
-          </StackPanel>
-        </ListBoxItem>
-        <ListBoxItem>
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="📋" />
-            <TextBlock Text="Logs" />
-          </StackPanel>
-        </ListBoxItem>
-        <ListBoxItem>
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="📊" />
-            <TextBlock Text="Dashboard" />
-          </StackPanel>
-        </ListBoxItem>
-      </ListBox>
+  <Grid RowDefinitions="Auto,*">
+    
+    <!-- Top Mobile Bar (Visible ONLY on narrow screens / mobile) -->
+    <Border Grid.Row="0"
+            Height="64"
+            Background="{StaticResource M3SurfaceContainerBrush}"
+            BorderBrush="{StaticResource OutlineVariantBrush}"
+            BorderThickness="0,0,0,1"
+            IsVisible="{Binding IsNarrowMode}">
+      <Grid ColumnDefinitions="Auto,*,Auto" Margin="12,0">
+        <!-- Hamburger Menu Button -->
+        <Button Grid.Column="0"
+                Command="{Binding ToggleMenuPaneCommand}"
+                Background="Transparent"
+                BorderThickness="0"
+                Width="48" Height="48"
+                CornerRadius="24">
+          <materialIcons:MaterialIcon Kind="Menu" Width="24" Height="24" Foreground="{StaticResource TextBrush}"/>
+        </Button>
+        
+        <!-- App Title -->
+        <TextBlock Grid.Column="1"
+                   Text="IziProxy"
+                   FontSize="20"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   Margin="12,0,0,0"
+                   Foreground="{StaticResource TextBrush}"/>
+        
+        <!-- Status Indicator in Top Bar -->
+        <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
+          <Ellipse Width="10" Height="10" Fill="{Binding Dashboard.StatusColorHex, FallbackValue=Gray}"/>
+        </StackPanel>
+      </Grid>
     </Border>
 
-    <!-- Основной контент -->
-    <ContentControl Classes="MainContent">
-      <!-- Переключение View на основе SelectedTabIndex -->
-      <Panel>
-        <views:DeployView DataContext="{Binding Deploy}"
-                          IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDeployVisible}" />
-        <views:LogsView DataContext="{Binding Logs}"
-                        IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsLogsVisible}" />
-        <views:DashboardView DataContext="{Binding Dashboard}"
-                             IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDashboardVisible}" />
-      </Panel>
-    </ContentControl>
-  </DockPanel>
+    <!-- Main Workspace with SplitView Drawer/Sidebar -->
+    <SplitView Grid.Row="1"
+               IsPaneOpen="{Binding IsMenuPaneOpen, Mode=TwoWay}"
+               DisplayMode="{Binding MenuDisplayMode}"
+               OpenPaneLength="260"
+               PanePlacement="Left"
+               Background="{StaticResource M3BgBrush}">
+               
+      <!-- SplitView Navigation Pane (Sidebar / Drawer) -->
+      <SplitView.Pane>
+        <Border Background="{StaticResource M3SurfaceBrush}"
+                BorderBrush="{StaticResource OutlineVariantBrush}"
+                BorderThickness="0,0,1,0">
+          <DockPanel>
+            <!-- Logo Section (Only shown on Desktop) -->
+            <StackPanel DockPanel.Dock="Top"
+                        Orientation="Horizontal" 
+                        Spacing="12" 
+                        Margin="24,32,24,24" 
+                        IsVisible="{Binding !IsNarrowMode}">
+              <Border Background="{StaticResource PrimaryContainerBrush}"
+                      Width="40" Height="40"
+                      CornerRadius="12">
+                <materialIcons:MaterialIcon Kind="ServerNetwork" Width="22" Height="22" Foreground="{StaticResource M3Primary}"/>
+              </Border>
+              <TextBlock Text="IziProxy" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+            </StackPanel>
+
+            <!-- Navigation Links -->
+            <ListBox Classes="Menu" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent">
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <materialIcons:MaterialIcon Kind="RocketLaunch" Width="22" Height="22" />
+                  <TextBlock Text="Deploy" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"/>
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <materialIcons:MaterialIcon Kind="ListBoxOutline" Width="22" Height="22" />
+                  <TextBlock Text="Logs" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"/>
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <materialIcons:MaterialIcon Kind="ChartBoxOutline" Width="22" Height="22" />
+                  <TextBlock Text="Dashboard" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"/>
+                </StackPanel>
+              </ListBoxItem>
+            </ListBox>
+          </DockPanel>
+        </Border>
+      </SplitView.Pane>
+
+      <!-- Content Area -->
+      <SplitView.Content>
+        <ContentControl Margin="0" Background="Transparent">
+          <Panel>
+            <views:DeployView DataContext="{Binding Deploy}"
+                              IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDeployVisible}" />
+            <views:LogsView DataContext="{Binding Logs}"
+                            IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsLogsVisible}" />
+            <views:DashboardView DataContext="{Binding Dashboard}"
+                                 IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDashboardVisible}" />
+          </Panel>
+        </ContentControl>
+      </SplitView.Content>
+      
+    </SplitView>
+  </Grid>
 </UserControl>
