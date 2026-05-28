@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -35,9 +36,76 @@ public partial class DeployViewModel : ObservableObject
     public SSH? ActiveSsh { get; private set; }
     public ServerConfig? ActiveConfig { get; private set; }
 
+    // ── Профили ──────────────────────────────────────────────────────
+    public ObservableCollection<VdsProfile> Profiles { get; } = new();
+    [ObservableProperty] private VdsProfile? _selectedProfile;
+    [ObservableProperty] private string _newProfileName = string.Empty;
+
+    partial void OnSelectedProfileChanged(VdsProfile? value)
+    {
+        if (value == null) return;
+        Host = value.Host;
+        Username = value.Username;
+        Password = value.Password;
+        SshKeyPath = value.SshKeyPath;
+        NewProfileName = value.Name;
+    }
+
+    [RelayCommand]
+    private void SaveCurrentProfile()
+    {
+        if (string.IsNullOrWhiteSpace(Host) || string.IsNullOrWhiteSpace(NewProfileName)) return;
+
+        var existing = Profiles.FirstOrDefault(p => p.Name.Equals(NewProfileName, StringComparison.OrdinalIgnoreCase));
+        if (existing != null)
+        {
+            existing.Host = Host;
+            existing.Username = Username;
+            existing.Password = Password;
+            existing.SshKeyPath = SshKeyPath;
+        }
+        else
+        {
+            var profile = new VdsProfile
+            {
+                Name = NewProfileName,
+                Host = Host,
+                Username = Username,
+                Password = Password,
+                SshKeyPath = SshKeyPath
+            };
+            Profiles.Add(profile);
+        }
+        VdsProfileService.SaveProfiles(Profiles.ToList());
+        
+        var savedName = NewProfileName;
+        LoadProfilesFromDisk();
+        SelectedProfile = Profiles.FirstOrDefault(p => p.Name == savedName);
+    }
+
+    [RelayCommand]
+    private void DeleteProfile()
+    {
+        if (SelectedProfile == null) return;
+        Profiles.Remove(SelectedProfile);
+        VdsProfileService.SaveProfiles(Profiles.ToList());
+        SelectedProfile = null;
+        NewProfileName = string.Empty;
+    }
+
+    private void LoadProfilesFromDisk()
+    {
+        Profiles.Clear();
+        foreach (var profile in VdsProfileService.LoadProfiles())
+        {
+            Profiles.Add(profile);
+        }
+    }
+
     public DeployViewModel(LogsViewModel logsVm)
     {
         _logsVm = logsVm;
+        LoadProfilesFromDisk();
     }
 
     [RelayCommand(CanExecute = nameof(CanDeploy))]

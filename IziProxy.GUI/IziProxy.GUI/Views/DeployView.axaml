@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
              xmlns:views="using:IziProxy.GUI.Views"
+             xmlns:gui="using:IziProxy.GUI"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.Views.DeployView"
              x:DataType="vm:DeployViewModel">
@@ -18,6 +19,43 @@
         </Border>
         <TextBlock Text="Развертывание" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
       </StackPanel>
+
+      <!-- Управление профилями -->
+      <Border Classes="M3Card" Padding="20">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Профили серверов" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+          <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
+            <ComboBox Grid.Column="0"
+                      ItemsSource="{Binding Profiles}"
+                      SelectedItem="{Binding SelectedProfile}"
+                      HorizontalAlignment="Stretch"
+                      PlaceholderText="Выберите сохраненный профиль">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="gui:VdsProfile">
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="1"
+                    Content="❌ Удалить"
+                    Classes="Tonal"
+                    Margin="8,0,0,0"
+                    Command="{Binding DeleteProfileCommand}"
+                    IsEnabled="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+          </Grid>
+          
+          <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+            <TextBox Grid.Column="0"
+                     Text="{Binding NewProfileName}"
+                     PlaceholderText="Имя нового профиля (например: Мой VDS)"/>
+            <Button Grid.Column="1"
+                    Content="💾 Сохранить"
+                    Classes="Tonal"
+                    Margin="8,0,0,0"
+                    Command="{Binding SaveCurrentProfileCommand}"/>
+          </Grid>
+        </StackPanel>
+      </Border>
 
       <!-- Форма ввода -->
       <Border Classes="M3Card" Padding="24">
