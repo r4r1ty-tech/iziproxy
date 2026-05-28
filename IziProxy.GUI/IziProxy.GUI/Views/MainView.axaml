@@ -1,16 +1,102 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:views="using:IziProxy.GUI.Views"
              x:Class="IziProxy.GUI.Views.MainView"
-             x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
-         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
+             x:DataType="vm:MainViewModel"
+             x:Name="RootControl"
+             SizeChanged="Control_OnSizeChanged">
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <UserControl.Styles>
+    <!-- Базовые стили меню -->
+    <Style Selector="ListBox.Menu">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="ListBox.Menu ListBoxItem">
+      <Setter Property="Padding" Value="16,12" />
+      <Setter Property="Margin" Value="4,2" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <!-- Десктопный режим (боковая панель) -->
+    <Style Selector="Border.NavigationPanel">
+      <Setter Property="DockPanel.Dock" Value="Left" />
+      <Setter Property="Width" Value="200" />
+      <Setter Property="Height" Value="NaN" />
+      <Setter Property="BorderThickness" Value="0,0,1,0" />
+      <Setter Property="BorderBrush" Value="#333" />
+      <Setter Property="Background" Value="#1A1A1A" />
+    </Style>
+    <Style Selector="ListBox.Menu">
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+    <Style Selector="ListBox.Menu ListBoxItem">
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+
+    <!-- Мобильный режим (ширина < 700) -->
+    <Style Selector="UserControl.IsNarrow Border.NavigationPanel">
+      <Setter Property="DockPanel.Dock" Value="Bottom" />
+      <Setter Property="Width" Value="NaN" />
+      <Setter Property="Height" Value="NaN" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+      <Setter Property="Background" Value="#1E1E2E" />
+    </Style>
+    <Style Selector="UserControl.IsNarrow ListBox.Menu">
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <UniformGrid Rows="1" />
+        </ItemsPanelTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="UserControl.IsNarrow ListBox.Menu ListBoxItem">
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Margin" Value="2,4" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <!-- Панель навигации -->
+    <Border Classes="NavigationPanel">
+      <ListBox Classes="Menu" SelectedIndex="{Binding SelectedTabIndex}">
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="🚀" />
+            <TextBlock Text="Deploy" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="📋" />
+            <TextBlock Text="Logs" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="📊" />
+            <TextBlock Text="Dashboard" />
+          </StackPanel>
+        </ListBoxItem>
+      </ListBox>
+    </Border>
+
+    <!-- Основной контент -->
+    <ContentControl Classes="MainContent">
+      <!-- Переключение View на основе SelectedTabIndex -->
+      <Panel>
+        <views:DeployView DataContext="{Binding Deploy}"
+                          IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDeployVisible}" />
+        <views:LogsView DataContext="{Binding Logs}"
+                        IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsLogsVisible}" />
+        <views:DashboardView DataContext="{Binding Dashboard}"
+                             IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDashboardVisible}" />
+      </Panel>
+    </ContentControl>
+  </DockPanel>
 </UserControl>
