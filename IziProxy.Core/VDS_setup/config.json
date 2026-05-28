@@ -2,6 +2,18 @@
   "log": {
     "loglevel": "warning"
   },
+  "api": {
+    "tag": "api",
+    "listen": "127.0.0.1:10085",
+    "services": ["StatsService"]
+  },
+  "stats": {},
+  "policy": {
+    "system": {
+      "statsInboundUplink": true,
+      "statsInboundDownlink": true
+    }
+  },
   "inbounds": [
     {
       "listen": "0.0.0.0",
@@ -134,6 +146,11 @@
   "routing": {
     "domainStrategy": "IPIfNonMatch",
     "rules": [
+      {
+        "type": "field",
+        "outboundTag": "api",
+        "inboundTag": ["api"]
+      },
       {
         "type": "field",
         "outboundTag": "direct",
