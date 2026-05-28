@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:IziProxy.GUI.ViewModels"
+             x:Class="IziProxy.GUI.Views.DeployView"
+             x:DataType="vm:DeployViewModel">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="12" Margin="16">
+
+      <!-- Заголовок -->
+      <TextBlock Text="🚀 Развертывание IziProxy"
+                 FontSize="20" FontWeight="Bold" Margin="0,4,0,8"/>
+
+      <!-- Форма ввода -->
+      <Border Background="#1E1E2E" CornerRadius="12" Padding="16">
+        <StackPanel Spacing="10">
+
+          <TextBlock Text="IP-адрес сервера" FontSize="12" Foreground="#888"/>
+          <TextBox Text="{Binding Host}"
+                   PlaceholderText="1.2.3.4"
+                   IsEnabled="{Binding !IsDeploying}"/>
+
+          <TextBlock Text="Имя пользователя" FontSize="12" Foreground="#888"/>
+          <TextBox Text="{Binding Username}"
+                   PlaceholderText="root"
+                   IsEnabled="{Binding !IsDeploying}"/>
+
+          <TextBlock Text="Пароль" FontSize="12" Foreground="#888"/>
+          <TextBox Text="{Binding Password}"
+                   PasswordChar="●"
+                   PlaceholderText="пароль (или оставьте пустым при использовании ключа)"
+                   IsEnabled="{Binding !IsDeploying}"/>
+
+          <TextBlock Text="SSH-ключ (необязательно)" FontSize="12" Foreground="#888"/>
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0"
+                     Text="{Binding SshKeyPath}"
+                     PlaceholderText="~/.ssh/id_rsa  или  C:\Users\...\id_rsa"
+                     IsEnabled="{Binding !IsDeploying}"/>
+          </Grid>
+
+        </StackPanel>
+      </Border>
+
+      <!-- Кнопка + статус -->
+      <Button Command="{Binding DeployCommand}"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              Height="48"
+              FontSize="16" FontWeight="SemiBold">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Установить" VerticalAlignment="Center"/>
+          <ProgressBar IsIndeterminate="True"
+                       Width="20" Height="20"
+                       IsVisible="{Binding IsDeploying}"/>
+        </StackPanel>
+      </Button>
+
+      <TextBlock Text="{Binding StatusText}"
+                 HorizontalAlignment="Center"
+                 FontSize="14"
+                 IsVisible="{Binding StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+      <!-- VLESS ссылки -->
+      <StackPanel IsVisible="{Binding IsCompleted}" Spacing="8">
+        <TextBlock Text="🔗 VLESS ссылки"
+                   FontSize="18" FontWeight="Bold" Margin="0,12,0,4"/>
+
+        <ItemsControl ItemsSource="{Binding VlessLinks}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:VlessLinkItem">
+              <Border Background="#1E1E2E" CornerRadius="10" Padding="12" Margin="0,4">
+                <StackPanel Spacing="6">
+                  <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="13"/>
+                  <TextBox Text="{Binding Link}"
+                           IsReadOnly="True"
+                           TextWrapping="Wrap"
+                           FontFamily="Monospace"
+                           FontSize="11"/>
+                  <Button Content="{Binding CopyLabel}"
+                          Command="{Binding CopyLinkCommand}"
+                          HorizontalAlignment="Right"/>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
