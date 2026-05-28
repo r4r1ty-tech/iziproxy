@@ -1,57 +1,70 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.Views.DeployView"
              x:DataType="vm:DeployViewModel">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="12" Margin="16">
+    <StackPanel Spacing="16" Margin="20">
 
       <!-- Заголовок -->
-      <TextBlock Text="🚀 Развертывание IziProxy"
-                 FontSize="20" FontWeight="Bold" Margin="0,4,0,8"/>
+      <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,8">
+        <Border Background="{StaticResource PrimaryContainerBrush}"
+                Width="48" Height="48"
+                CornerRadius="16">
+          <materialIcons:MaterialIcon Kind="ServerPlus" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+        </Border>
+        <TextBlock Text="Развертывание" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+      </StackPanel>
 
       <!-- Форма ввода -->
-      <Border Background="#1E1E2E" CornerRadius="12" Padding="16">
-        <StackPanel Spacing="10">
+      <Border Classes="M3Card" Padding="24">
+        <StackPanel Spacing="16">
 
-          <TextBlock Text="IP-адрес сервера" FontSize="12" Foreground="#888"/>
-          <TextBox Text="{Binding Host}"
-                   PlaceholderText="1.2.3.4"
-                   IsEnabled="{Binding !IsDeploying}"/>
+          <StackPanel Spacing="6">
+            <TextBlock Text="IP-адрес сервера" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBox Text="{Binding Host}"
+                     PlaceholderText="1.2.3.4"
+                     IsEnabled="{Binding !IsDeploying}"/>
+          </StackPanel>
 
-          <TextBlock Text="Имя пользователя" FontSize="12" Foreground="#888"/>
-          <TextBox Text="{Binding Username}"
-                   PlaceholderText="root"
-                   IsEnabled="{Binding !IsDeploying}"/>
+          <StackPanel Spacing="6">
+            <TextBlock Text="Имя пользователя" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBox Text="{Binding Username}"
+                     PlaceholderText="root"
+                     IsEnabled="{Binding !IsDeploying}"/>
+          </StackPanel>
 
-          <TextBlock Text="Пароль" FontSize="12" Foreground="#888"/>
-          <TextBox Text="{Binding Password}"
-                   PasswordChar="●"
-                   PlaceholderText="пароль (или оставьте пустым при использовании ключа)"
-                   IsEnabled="{Binding !IsDeploying}"/>
+          <StackPanel Spacing="6">
+            <TextBlock Text="Пароль" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBox Text="{Binding Password}"
+                     PasswordChar="●"
+                     PlaceholderText="пароль (или оставьте пустым при использовании ключа)"
+                     IsEnabled="{Binding !IsDeploying}"/>
+          </StackPanel>
 
-          <TextBlock Text="SSH-ключ (необязательно)" FontSize="12" Foreground="#888"/>
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBox Grid.Column="0"
-                     Text="{Binding SshKeyPath}"
+          <StackPanel Spacing="6">
+            <TextBlock Text="SSH-ключ (необязательно)" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SshKeyPath}"
                      PlaceholderText="~/.ssh/id_rsa  или  C:\Users\...\id_rsa"
                      IsEnabled="{Binding !IsDeploying}"/>
-          </Grid>
+          </StackPanel>
 
         </StackPanel>
       </Border>
 
       <!-- Кнопка + статус -->
-      <Button Command="{Binding DeployCommand}"
+      <Button Classes="Primary"
+              Command="{Binding DeployCommand}"
               HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Center"
-              Height="48"
-              FontSize="16" FontWeight="SemiBold">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Установить" VerticalAlignment="Center"/>
+              Height="52"
+              Margin="0,8,0,0">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <TextBlock Text="Установить" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
           <ProgressBar IsIndeterminate="True"
                        Width="20" Height="20"
+                       Foreground="{StaticResource OnPrimaryBrush}"
                        IsVisible="{Binding IsDeploying}"/>
         </StackPanel>
       </Button>
@@ -59,25 +72,31 @@
       <TextBlock Text="{Binding StatusText}"
                  HorizontalAlignment="Center"
                  FontSize="14"
+                 Foreground="{StaticResource PrimaryBrush}"
+                 FontWeight="SemiBold"
                  IsVisible="{Binding StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
       <!-- VLESS ссылки -->
-      <StackPanel IsVisible="{Binding IsCompleted}" Spacing="8">
-        <TextBlock Text="🔗 VLESS ссылки"
-                   FontSize="18" FontWeight="Bold" Margin="0,12,0,4"/>
+      <StackPanel IsVisible="{Binding IsCompleted}" Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,4">
+          <materialIcons:MaterialIcon Kind="LinkVariant" Width="22" Height="22" Foreground="#81C784"/>
+          <TextBlock Text="VLESS ссылки" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+        </StackPanel>
 
         <ItemsControl ItemsSource="{Binding VlessLinks}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:VlessLinkItem">
-              <Border Background="#1E1E2E" CornerRadius="10" Padding="12" Margin="0,4">
-                <StackPanel Spacing="6">
-                  <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="13"/>
+              <Border Classes="M3Card" Padding="16" Margin="0,4">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="{Binding Label}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextBrush}"/>
                   <TextBox Text="{Binding Link}"
                            IsReadOnly="True"
                            TextWrapping="Wrap"
-                           FontFamily="Monospace"
-                           FontSize="11"/>
+                           FontFamily="Cascadia Code, Consolas, Monospace"
+                           FontSize="12"
+                           Background="{StaticResource M3SurfaceContainerHighBrush}"/>
                   <Button Content="{Binding CopyLabel}"
+                          Classes="Tonal"
                           Command="{Binding CopyLinkCommand}"
                           HorizontalAlignment="Right"/>
                 </StackPanel>
