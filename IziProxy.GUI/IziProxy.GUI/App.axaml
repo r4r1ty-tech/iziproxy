@@ -211,5 +211,41 @@
           <Setter Property="Background" Value="{StaticResource M3SurfaceContainerHighestBrush}" />
           <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         </Style>
+
+        <!-- ===== Адаптивные стили для мобильного режима (IsNarrow) ===== -->
+
+        <!-- Уменьшаем заголовки страниц -->
+        <Style Selector="UserControl.IsNarrow TextBlock[FontSize=26]">
+          <Setter Property="FontSize" Value="20"/>
+        </Style>
+        <Style Selector="UserControl.IsNarrow TextBlock[FontSize=22]">
+          <Setter Property="FontSize" Value="18"/>
+        </Style>
+        <Style Selector="UserControl.IsNarrow TextBlock[FontSize=20]">
+          <Setter Property="FontSize" Value="16"/>
+        </Style>
+        <Style Selector="UserControl.IsNarrow TextBlock[FontSize=18]">
+          <Setter Property="FontSize" Value="15"/>
+        </Style>
+
+        <!-- Уменьшаем padding у карточек на мобиле -->
+        <Style Selector="UserControl.IsNarrow Border.M3Card">
+          <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <!-- Кнопки растягиваем на всю ширину на мобиле -->
+        <Style Selector="UserControl.IsNarrow Button.Primary">
+          <Setter Property="HorizontalAlignment" Value="Stretch"/>
+          <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="UserControl.IsNarrow Button.Tonal">
+          <Setter Property="HorizontalAlignment" Value="Stretch"/>
+          <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- TextBox — растягиваем -->
+        <Style Selector="UserControl.IsNarrow TextBox">
+          <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
     </Application.Styles>
 </Application>

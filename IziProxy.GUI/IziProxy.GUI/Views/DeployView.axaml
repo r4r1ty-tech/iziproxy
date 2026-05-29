@@ -8,7 +8,7 @@
              x:DataType="vm:DeployViewModel">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="16" Margin="12">
+    <StackPanel Spacing="16" Margin="12,12,12,24">
 
       <!-- Заголовок -->
       <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,8">
@@ -80,7 +80,8 @@
             <TextBox Text="{Binding Password}"
                      PasswordChar="●"
                      PlaceholderText="пароль (или оставьте пустым при использовании ключа)"
-                     IsEnabled="{Binding !IsDeploying}"/>
+                     IsEnabled="{Binding !IsDeploying}"
+                     TextWrapping="Wrap"/>
           </StackPanel>
 
           <StackPanel Spacing="6">
@@ -103,18 +104,20 @@
         </StackPanel>
       </Border>
 
-      <!-- Кнопка + статус -->
-      <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+      <!-- Кнопки действий -->
+      <StackPanel Spacing="8" Margin="0,8,0,0">
         <Button Content="⚡ Проверить соединение"
                 Classes="Tonal"
                 Command="{Binding TestConnectionCommand}"
                 IsEnabled="{Binding !IsDeploying}"
                 Height="52"
-                Margin="0,0,8,8"/>
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"/>
         <Button Classes="Primary"
                 Command="{Binding DeployCommand}"
                 Height="52"
-                Margin="0,0,0,8">
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center">
           <StackPanel Orientation="Horizontal" Spacing="12">
             <TextBlock Text="Установить" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
             <ProgressBar IsIndeterminate="True"
@@ -123,7 +126,7 @@
                          IsVisible="{Binding IsDeploying}"/>
           </StackPanel>
         </Button>
-      </WrapPanel>
+      </StackPanel>
 
       <TextBlock Text="{Binding StatusText}"
                  HorizontalAlignment="Center"

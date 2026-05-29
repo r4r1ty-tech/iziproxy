@@ -7,7 +7,7 @@
              x:DataType="vm:DashboardViewModel">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="16" Margin="20">
+    <StackPanel Spacing="16" Margin="12,12,12,24">
 
       <!-- Заголовок -->
       <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,8">
@@ -26,7 +26,7 @@
               Padding="20"
               IsVisible="{Binding !IsConnected}">
         <StackPanel Orientation="Horizontal" Spacing="12">
-          <materialIcons:MaterialIcon Kind="AlertCircleOutline" Width="24" Height="24" Foreground="#FFD54F" VerticalAlignment="Center"/>
+          <materialIcons:MaterialIcon Kind="AlertCircleOutline" Width="24" Height="24" Foreground="#FFD54F" VerticalAlignment="Top" Margin="0,2,0,0"/>
           <TextBlock Text="Сначала выполните деплой на вкладке «Deploy», чтобы установить SSH-соединение."
                      TextWrapping="Wrap"
                      FontSize="14"
@@ -57,15 +57,18 @@
           </StackPanel>
 
           <!-- Кнопки -->
-          <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <WrapPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal"
+                     HorizontalAlignment="Right" VerticalAlignment="Center">
             <Button Content="🔄 Обновить"
                     Classes="Tonal"
                     Command="{Binding RefreshStatusCommand}"
-                    IsEnabled="{Binding !IsBusy}"/>
+                    IsEnabled="{Binding !IsBusy}"
+                    Margin="0,0,8,8"/>
             <Button Content="♻️ Перезапустить"
                     Command="{Binding RestartServiceCommand}"
-                    IsEnabled="{Binding !IsBusy}"/>
-          </StackPanel>
+                    IsEnabled="{Binding !IsBusy}"
+                    Margin="0,0,0,8"/>
+          </WrapPanel>
 
           <ProgressBar Grid.Row="1" Grid.ColumnSpan="2"
                        IsIndeterminate="True"
@@ -89,7 +92,8 @@
                     Classes="Tonal"
                     Command="{Binding ValidateConfigCommand}"
                     IsEnabled="{Binding !IsBusy}"
-                    VerticalAlignment="Center"/>
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Top"/>
           </Grid>
 
           <Border Background="{StaticResource M3SurfaceContainerHighBrush}"
