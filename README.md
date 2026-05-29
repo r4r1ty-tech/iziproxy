@@ -1,108 +1,136 @@
-# IziProxy 🚀 — Xray Reality Auto-Deployer & Dashboard
+# IziProxy
 
-**IziProxy** — это кроссплатформенное приложение на C# (.NET 10) для быстрого автоматического развертывания прокси-серверов **Xray (VLESS + XHTTP + REALITY)** на чистых VDS/VPS серверах (Ubuntu/Debian) и удобного управления ими через современный интерфейс.
+Cross-platform C# tool for automated deployment and management of **Xray VLESS + XHTTP + REALITY** proxy servers on Ubuntu/Debian VPS.
 
-Интерфейс построен по гайдлайнам **Material 3 Dark (Android 17 / Material You)** и автоматически адаптируется как под ПК, так и под мобильные экраны.
-
----
-
-## ✨ Ключевые возможности
-
-### 🎨 Дизайн и Юзабилити (Material 3 Dark)
-* **Android 17 / Material You эстетика**: Благородные матовые тона контейнеров, акценты на нежно-сиреневом (`#D0BCFF`), сплошные поверхности контейнеров без шума и сильного размытия.
-* **Карточный интерфейс (Surface Containers)**: Выразительные карточки с большими скруглениями углов (**20-24px**).
-* **Адаптивный SplitView**:
-  * **ПК / Планшеты**: Фиксированная левая навигационная панель (**Sidebar**).
-  * **Смартфоны / Узкие окна**: Collapsible-панель (**Drawer**), которая скрыта по умолчанию и выдвигается сбоку с помощью Hamburger-кнопки в **Top App Bar**, автоматически закрываясь при клике на любой пункт.
-
-### ⚡ Функционал панели развертывания (Deploy)
-* **Сохранение профилей серверов**: Больше не нужно каждый раз вводить IP, имя пользователя и пароль. Добавлено локальное сохранение профилей в зашифрованный JSON-файл в `%localappdata%/IziProxy`.
-* **Выбор SSH-ключа через Проводник**: Добавлена кнопка выбора приватного SSH-ключа через стандартный файловый диалог операционной системы.
-* **Быстрая проверка SSH-соединения**: Кнопка «Проверить соединение» позволяет мгновенно протестировать авторизацию до начала выполнения тяжелых скриптов установки.
-* **Генератор QR-кодов для VLESS ссылок**: Офлайн-рендеринг QR-кодов прямо в интерфейсе с помощью `QRCoder` (без отправки ваших приватных ссылок на сторонние веб-API). Позволяет импортировать настройки на телефон за пару секунд.
-
-### 📊 Мониторинг и Дашборд (Dashboard)
-* **Системный статус**: Мониторинг состояния демона Xray в реальном времени.
-* **Проверка конфигурации**: Кнопка тестирования валидности JSON-конфига на удаленном сервере (`xray -test -config`).
-* **Мониторинг трафика**: Парсинг израсходованного трафика по каждому входящему (inbound) порту с помощью встроенного в Xray gRPC API (команда `xray api statsquery`). Выводит аккуратные плашки с раздельными счетчиками загрузки и отдачи трафика.
-
-### ⚙️ Интеллектуальный бэкэнд (Deploy.sh)
-* **Скрытный протокол**: Использует современный **VLESS + XHTTP + REALITY**, полностью маскирующий трафик под обычную защищенную сессию HTTPS.
-* **Автоподбор домена маскировки (SNI)**: Скрипт тестирует скорость и TLS-параметры списка сайтов прямо с самого VPS и выбирает лучший домен.
-* **Оптимизация TCP BBR**: Включение алгоритма BBR на уровне ядра Linux для минимизации пинга и потерь пакетов.
-* **Управление портами и UFW**: Автоматическая очистка правил брандмауэра и настройка портов для корректной работы прокси.
+The GUI is built with **Avalonia UI** and runs on Windows, Linux, and Android from a single shared codebase.
 
 ---
 
-## 🏗 Архитектура проекта
+## What it does
 
-Проект разделен на три логических слоя:
-
-1. **[IziProxy.Core](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.Core)** (Библиотека логики):
-   - [SSH.cs](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.Core/SSH.cs) — обертка над SSH/SFTP (Renci.SshNet) для работы с сервером.
-   - [DeployScripts.cs](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.Core/DeploySckripts.cs) — загрузка и запуск bash-скриптов.
-   - [XrayMonitor.cs](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.Core/XrayMonitor.cs) — gRPC-запросы статистики трафика и проверка статусов.
-   - [VDS_setup/](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.Core/VDS_setup) — шаблоны конфигураций и bash-скрипты установки.
-2. **[IziProxy.GUI](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.GUI/IziProxy.GUI)** (Общая UI часть на Avalonia UI):
-   - [ViewModels/](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.GUI/IziProxy.GUI/ViewModels) — реактивная бизнес-логика экранов (`Deploy`, `Logs`, `Dashboard`) на базе CommunityToolkit.Mvvm.
-   - [Views/](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.GUI/IziProxy.GUI/Views) — XAML-разметка представлений и стилей.
-   - [VdsProfileService.cs](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.GUI/IziProxy.GUI/VdsProfileService.cs) — сериализатор профилей серверов.
-3. **[IziProxy.GUI.Desktop](file:///c:/Users/6alex/OneDrive/Desktop/хйня/IziProxy/IziProxy.GUI/IziProxy.GUI.Desktop)** (Точка входа для Windows/Linux/macOS).
+1. **Connects to a bare VPS via SSH/SFTP** and uploads deployment scripts.
+2. **Runs a Bash setup script** (`Deploy.sh`) that installs Xray, enables TCP BBR, probes candidate SNI domains directly from the server, opens firewall ports, and generates an x25519 key pair and UUID.
+3. **Generates `vless://` connection links** (and QR codes) for each inbound so the client app can be configured in seconds.
+4. **Monitors the running server**: Xray service status, config validation via `xray -test -config`, and per-inbound traffic stats via the Xray gRPC stats API.
 
 ---
 
-## 🚀 Быстрый старт
+## Architecture
 
-### Системные требования
-* **.NET 10.0 SDK** (установлен на вашем ПК).
-* Виртуальный сервер **VPS/VDS** под управлением **Ubuntu** (20.04+) или **Debian** (11+).
+```
+IziProxy/
+├── IziProxy.Core/               # Class library — all domain logic
+│   ├── SSH.cs                   # SSH/SFTP wrapper (Renci.SshNet)
+│   ├── DeploySckripts.cs        # Uploads scripts, runs deploy, parses output
+│   ├── XrayMonitor.cs           # Service status, config check, traffic stats
+│   ├── XrayConfigParams.cs      # Key/UUID generation, SNI/port model
+│   ├── VlessLinkGenerator.cs    # Builds vless:// URIs
+│   ├── ServerConfig.cs          # Connection parameters model
+│   └── VDS_setup/               # Deploy.sh, MainInstall.sh, config.json template
+│
+├── IziProxy.GUI/
+│   ├── IziProxy.GUI/            # Shared Avalonia UI (Views, ViewModels, assets)
+│   │   ├── ViewModels/          # CommunityToolkit.Mvvm reactive ViewModels
+│   │   ├── Views/               # AXAML views (Deploy, Dashboard, Logs)
+│   │   └── VdsProfileService.cs # Server profile persistence (JSON, %localappdata%)
+│   ├── IziProxy.GUI.Desktop/    # Entry point — Windows / Linux / macOS
+│   ├── IziProxy.GUI.Android/    # Entry point — Android
+│   └── IziProxy.GUI.Browser/    # Entry point — WebAssembly (experimental)
+│
+├── IziProxy/                    # CLI entry point (console deploy)
+└── tests/IziProxy.Tests/        # xUnit test suite
+```
 
-### Сборка и Запуск
+### Key dependencies
 
-Вы можете запустить как консольную версию, так и графическую.
+| Package | Purpose |
+|---|---|
+| `Avalonia` 11 | Cross-platform UI framework |
+| `CommunityToolkit.Mvvm` 8 | MVVM source generators |
+| `SSH.NET` 2025.1 | SSH/SFTP client |
+| `QRCoder` 1.8 | Offline QR code rendering |
+| `Material.Icons.Avalonia` | Material Design icon set |
 
-#### 1. Графическая версия (GUI Desktop)
-Откройте консоль в корневой папке и выполните:
+---
+
+## Requirements
+
+- **.NET 10 preview SDK** on the build machine.
+- A VPS running **Ubuntu 20.04+** or **Debian 11+** with SSH access.
+
+---
+
+## Run locally
+
+**GUI (desktop):**
 ```bash
 dotnet run --project IziProxy.GUI/IziProxy.GUI.Desktop/IziProxy.GUI.Desktop.csproj
 ```
 
-#### 2. Консольная версия (CLI)
-Если вам нужен быстрый деплой прямо в терминале:
+**CLI:**
 ```bash
 dotnet run --project IziProxy/IziProxy.csproj
 ```
 
 ---
 
-## 🛠️ Руководство по экранам приложения
+## Usage overview
 
-> [!NOTE]
-> При первом запуске рекомендуется сохранить профиль вашего сервера, чтобы не вводить IP-адрес и авторизационные данные повторно.
+### 1. Deploy tab
 
-### Шаг 1. Подготовка и Проверка
-1. Перейдите во вкладку **Deploy**.
-2. В секции **Профили серверов** введите имя (например, `Мой Амстердам`) и нажмите **Сохранить**.
-3. Введите IP сервера, пользователя (обычно `root`) и пароль или укажите приватный ключ с помощью иконки папки 📁.
-4. Нажмите **⚡ Проверить соединение**. Во вкладке **Logs** вы увидите подробный статус авторизации, а над кнопкой высветится сообщение об успешном пинге.
+1. Enter the server IP, SSH username, and password or select a private key file.
+2. Optionally save the server profile — credentials are stored in `%localappdata%/IziProxy/profiles.json`.
+3. Click **Test connection** to verify SSH/SFTP access before running the full install.
+4. Click **Install**. The script runs on the server and streams output to the Logs tab. When finished, `vless://` links and QR codes appear at the bottom.
 
-### Шаг 2. Развертывание
-1. Нажмите **Установить**.
-2. Начнется автоматический процесс:
-   - Включение алгоритма BBR для ускорения сети.
-   - Установка ядра Xray.
-   - Тестирование и выбор самого стабильного домена маскировки.
-   - Генерация криптографических пар x25519 и UUID.
-3. После завершения деплоя снизу появятся карточки с готовыми ссылками `vless://`. Вы можете нажать **Скопировать** или нажать **QR-код**, чтобы отсканировать ссылку камерой телефона.
+### 2. Dashboard tab
 
-### Шаг 3. Мониторинг
-1. Перейдите на вкладку **Dashboard**.
-2. Здесь вы увидите статус сервиса Xray. В случае падения вы можете перезапустить его удаленно кнопкой **♻️ Перезапустить**.
-3. Кнопка **Проверить конфиг** выполнит удаленную синтаксическую валидацию файлов конфигурации.
-4. В секции **Трафик по inbound'ам** отображается количество принятых и отданных байтов по каждому настроенному Reality-порту.
+- Shows live Xray service status (`systemctl is-active xray`).
+- **Restart** button: `systemctl restart xray`.
+- **Check config** button: runs `xray -test -config /etc/xray/config.json` and shows any errors.
+- **Traffic** section: queries `xray api statsquery` over gRPC and displays per-inbound uplink/downlink byte counters.
 
 ---
 
-## 📄 Лицензия
+## Tests
 
-Проект распространяется по лицензии MIT и предназначен исключительно для частного использования в образовательных и ознакомительных целях.
+```bash
+dotnet test
+```
+
+Test coverage in [`tests/IziProxy.Tests/`](tests/IziProxy.Tests/):
+
+| File | What is tested |
+|---|---|
+| `VlessLinkGeneratorTests.cs` | Correct `vless://` URI construction |
+| `ServerConfigTests.cs` | `ServerConfig` model validation |
+| `SshTests.cs` | SSH failure paths — returns `false` / throws when not connected |
+| `DeployScriptsTests.cs` | Deploy behaviour without an active connection |
+| `XrayConfigParamsTests.cs` | Xray params model |
+
+---
+
+## CI/CD
+
+GitHub Actions builds are triggered manually (`workflow_dispatch`):
+
+| Workflow | Runner | Output |
+|---|---|---|
+| [`linux-build.yml`](.github/workflows/linux-build.yml) | `ubuntu-latest` | `IziProxy-Linux-x86_64.AppImage` uploaded to release `v1.0.0` |
+| [`android-build.yml`](.github/workflows/android-build.yml) | `windows-latest` | Signed `.apk` uploaded to release `v1.0.0` |
+
+Both workflows use `dotnet publish` with `--self-contained` and upload artifacts via `gh release upload`.
+
+---
+
+## Protocol notes
+
+- **VLESS + XHTTP + REALITY** — transport looks like a regular TLS HTTPS session to a real domain (SNI), making traffic hard to fingerprint.
+- The deploy script probes a list of candidate domains from the VPS itself and selects the one with the best latency and valid TLS parameters.
+- Three inbounds are configured (ports 443, 8443, and a random port) with distinct SNI domains, giving the client three independent connection options.
+
+---
+
+## License
+
+MIT — for educational and personal use.
