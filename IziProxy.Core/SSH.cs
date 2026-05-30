@@ -87,7 +87,8 @@ public class SSH : IDisposable
         {
             await Task.Run(() =>
             {
-                using var file = File.OpenRead("VDS_setup/MainInstall.sh");
+                string scriptPath = Path.Combine(AppContext.BaseDirectory, "VDS_setup", "MainInstall.sh");
+                using var file = File.OpenRead(scriptPath);
                 string targetPath;
                 // Определяем домашнюю директорию в зависимости от имени пользователя
                 if (serverConfig.Username == "root")
