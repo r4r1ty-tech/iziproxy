@@ -170,14 +170,17 @@ public partial class DeployViewModel : ObservableObject
             catch { /* не критично */ }
 
             // 6. Генерация VLESS-ссылок
+            progress.Report("\nГенерация VLESS-ссылок...");
             var links = VlessLinkGenerator.GenerateRealityLinks(config, xrayParams);
             for (int i = 0; i < links.Count; i++)
             {
+                string label = $"Ссылка {i + 1}  |  Порт: {xrayParams.Ports[i]}  |  SNI: {xrayParams.Snis[i]}";
                 VlessLinks.Add(new VlessLinkItem
                 {
-                    Label = $"Ссылка {i + 1}  |  Порт: {xrayParams.Ports[i]}  |  SNI: {xrayParams.Snis[i]}",
+                    Label = label,
                     Link  = links[i]
                 });
+                progress.Report($"✓ {label}");
             }
 
             // Сохраняем SSH для Dashboard
@@ -185,6 +188,11 @@ public partial class DeployViewModel : ObservableObject
             ActiveConfig = config;
             IsCompleted  = true;
             StatusText   = "✅ Деплой завершён!";
+            
+            progress.Report("\n=================================================");
+            progress.Report("✅ ДЕПЛОЙ УСПЕШНО ЗАВЕРШЕН!");
+            progress.Report("Перейдите на вкладку 'Deploy', чтобы скопировать ссылки подключения.");
+            progress.Report("=================================================");
         }
         catch (Exception ex)
         {
