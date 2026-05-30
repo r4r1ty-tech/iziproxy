@@ -1,0 +1,235 @@
+name: Release v1.0.1
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # ────────────────────────────────────────────────
+  # 1. Создаём релиз (один раз, до всех билдов)
+  # ────────────────────────────────────────────────
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      upload_url: ${{ steps.create.outputs.upload_url }}
+    steps:
+      - name: Create GitHub Release v1.0.1
+        id: create
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v1.0.1
+          release_name: "IziProxy v1.0.1"
+          body: |
+            ## IziProxy v1.0.1
+
+            ### Исправления
+            - Исправлены пути к VDS_setup файлам (MainInstall.sh, Deploy.sh, config.json) — теперь используется AppContext.BaseDirectory
+            - Исправлен путь временного файла temp_config.json → системная temp-папка
+            - Обновлены правила маршрутизации: добавлены 43 популярных RU-домена в direct-bypass
+
+            ### Загрузки
+            | Платформа | Файл |
+            |-----------|------|
+            | Windows x86 | IziProxy-win-x86.exe |
+            | Windows ARM64 | IziProxy-win-arm64.exe |
+            | Linux x64 | IziProxy-Linux-x86_64.AppImage |
+            | Android | IziProxy.apk |
+          draft: false
+          prerelease: false
+
+  # ────────────────────────────────────────────────
+  # 2. Windows x86 — один EXE, self-contained
+  # ────────────────────────────────────────────────
+  build-windows-x86:
+    needs: create-release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Windows x86
+        run: |
+          dotnet publish IziProxy.GUI/IziProxy.GUI.Desktop/IziProxy.GUI.Desktop.csproj `
+            -c Release `
+            -r win-x86 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -o publish_win_x86
+
+      - name: Rename EXE
+        run: Rename-Item publish_win_x86\IziProxy.GUI.Desktop.exe IziProxy-win-x86.exe
+
+      - name: Upload Windows x86
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: publish_win_x86\IziProxy-win-x86.exe
+          asset_name: IziProxy-win-x86.exe
+          asset_content_type: application/octet-stream
+
+  # ────────────────────────────────────────────────
+  # 3. Windows ARM64 — один EXE, self-contained
+  # ────────────────────────────────────────────────
+  build-windows-arm64:
+    needs: create-release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Windows ARM64
+        run: |
+          dotnet publish IziProxy.GUI/IziProxy.GUI.Desktop/IziProxy.GUI.Desktop.csproj `
+            -c Release `
+            -r win-arm64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -o publish_win_arm64
+
+      - name: Rename EXE
+        run: Rename-Item publish_win_arm64\IziProxy.GUI.Desktop.exe IziProxy-win-arm64.exe
+
+      - name: Upload Windows ARM64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: publish_win_arm64\IziProxy-win-arm64.exe
+          asset_name: IziProxy-win-arm64.exe
+          asset_content_type: application/octet-stream
+
+  # ────────────────────────────────────────────────
+  # 4. Linux x64 — AppImage, self-contained
+  # ────────────────────────────────────────────────
+  build-linux:
+    needs: create-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Linux x64
+        run: |
+          dotnet publish IziProxy.GUI/IziProxy.GUI.Desktop/IziProxy.GUI.Desktop.csproj \
+            -c Release \
+            -r linux-x64 \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:EnableCompressionInSingleFile=true \
+            -o publish_linux
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y wget
+
+      - name: Build AppImage
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp publish_linux/IziProxy.GUI.Desktop AppDir/usr/bin/IziProxy
+          chmod +x AppDir/usr/bin/IziProxy
+
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          exec "${HERE}/usr/bin/IziProxy" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+          cat > AppDir/IziProxy.desktop << 'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=IziProxy
+          Exec=IziProxy
+          Icon=iziproxy
+          Categories=Network;
+          EOF
+
+          cat > AppDir/iziproxy.svg << 'EOF'
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="40" fill="#6200EA" />
+          </svg>
+          EOF
+
+          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
+          chmod +x appimagetool
+          ./appimagetool --appimage-extract
+          ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-Linux-x86_64.AppImage
+
+      - name: Upload Linux AppImage
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: IziProxy-Linux-x86_64.AppImage
+          asset_name: IziProxy-Linux-x86_64.AppImage
+          asset_content_type: application/octet-stream
+
+  # ────────────────────────────────────────────────
+  # 5. Android APK
+  # ────────────────────────────────────────────────
+  build-android:
+    needs: create-release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Android Workload
+        run: dotnet workload install android
+
+      - name: Publish Android APK
+        run: |
+          dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
+            -c Release `
+            -f net10.0-android `
+            -p:AndroidPackageFormat=apk
+
+      - name: Find and upload APK
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
+          if (-not $apk) {
+            $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*.apk" | Select-Object -First 1
+          }
+          if ($apk) {
+            gh release upload v1.0.1 $apk.FullName --clobber
+          } else {
+            Write-Error "APK not found!"
+            exit 1
+          }

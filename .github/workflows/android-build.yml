@@ -30,7 +30,7 @@ jobs:
       run: |
         $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
         if ($apk) {
-          gh release upload v1.0.0 $apk.FullName --clobber
+          gh release upload v1.0.1 $apk.FullName --clobber
         } else {
           Write-Error "APK not found!"
         }
