@@ -10,4 +10,11 @@
     <PackageReference Include="SSH.NET" Version="2025.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Скрипты встроены прямо в exe — никаких файлов рядом не нужно -->
+    <EmbeddedResource Include="VDS_setup\MainInstall.sh" />
+    <EmbeddedResource Include="VDS_setup\Deploy.sh" />
+    <EmbeddedResource Include="VDS_setup\config.json" />
+  </ItemGroup>
+
 </Project>

@@ -21,7 +21,7 @@ public class DeployScripts
     public async Task<bool> DeployAndConfigure(SSH sshClient, ServerConfig serverConfig, XrayConfigParams xrayParams, IProgress<string>? progress = null)
     {
         progress?.Report("Загрузка Deploy.sh...");
-        bool isDeployUploaded = await sshClient.UploadFile(Path.Combine(AppContext.BaseDirectory, "VDS_setup", "Deploy.sh"), "Deploy.sh", serverConfig, progress);
+        bool isDeployUploaded = await sshClient.UploadFile(EmbeddedScripts.OpenDeploy(), "Deploy.sh", serverConfig, progress);
 
         if (!isDeployUploaded)
         {
@@ -30,7 +30,7 @@ public class DeployScripts
         }
 
         progress?.Report("Формирование config.json...");
-        string configContent = await Task.Run(() => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "VDS_setup", "config.json")));
+        string configContent = await Task.Run(() => EmbeddedScripts.ReadConfigJson());
 
         configContent = configContent.Replace("__UUID__", xrayParams.Uuid)
                                      .Replace("__PRIVATE_KEY__", xrayParams.PrivateKey)

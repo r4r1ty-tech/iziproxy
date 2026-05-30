@@ -87,8 +87,7 @@ public class SSH : IDisposable
         {
             await Task.Run(() =>
             {
-                string scriptPath = Path.Combine(AppContext.BaseDirectory, "VDS_setup", "MainInstall.sh");
-                using var file = File.OpenRead(scriptPath);
+                using var file = EmbeddedScripts.OpenMainInstall();
                 string targetPath;
                 // Определяем домашнюю директорию в зависимости от имени пользователя
                 if (serverConfig.Username == "root")
@@ -139,6 +138,40 @@ public class SSH : IDisposable
 
                 _sftpClient.UploadFile(file, targetPath, true); // true = overwrite (перезаписать при наличии)
                 progress?.Report($"Файл {localFilePath} загружен успешно в {targetPath}");
+            });
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            progress?.Report(ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Загружает поток данных на удаленный сервер через SFTP (для embedded resources).
+    /// </summary>
+    public async Task<bool> UploadFile(Stream stream, string remoteFileName, ServerConfig serverConfig, IProgress<string>? progress = null)
+    {
+        if (_sftpClient == null || !_sftpClient.IsConnected)
+        {
+            progress?.Report("SFTP-клиент не подключен.");
+            return false;
+        }
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                string targetPath;
+                if (serverConfig.Username == "root")
+                    targetPath = $"/root/{remoteFileName}";
+                else
+                    targetPath = remoteFileName;
+
+                _sftpClient.UploadFile(stream, targetPath, true);
+                progress?.Report($"{remoteFileName} загружен успешно в {targetPath}");
             });
 
             return true;
