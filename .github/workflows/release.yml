@@ -5,46 +5,9 @@ on:
 
 jobs:
   # ────────────────────────────────────────────────
-  # 1. Создаём релиз (один раз, до всех билдов)
-  # ────────────────────────────────────────────────
-  create-release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      upload_url: ${{ steps.create.outputs.upload_url }}
-    steps:
-      - name: Create GitHub Release v1.0.1
-        id: create
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v1.0.1
-          release_name: "IziProxy v1.0.1"
-          body: |
-            ## IziProxy v1.0.1
-
-            ### Исправления
-            - Исправлены пути к VDS_setup файлам (MainInstall.sh, Deploy.sh, config.json) — теперь используется AppContext.BaseDirectory
-            - Исправлен путь временного файла temp_config.json → системная temp-папка
-            - Обновлены правила маршрутизации: добавлены 43 популярных RU-домена в direct-bypass
-
-            ### Загрузки
-            | Платформа | Файл |
-            |-----------|------|
-            | Windows x86 | IziProxy-win-x86.exe |
-            | Windows ARM64 | IziProxy-win-arm64.exe |
-            | Linux x64 | IziProxy-Linux-x86_64.AppImage |
-            | Android | IziProxy.apk |
-          draft: false
-          prerelease: false
-
-  # ────────────────────────────────────────────────
-  # 2. Windows x86 — один EXE, self-contained
+  # 1. Windows x86 — один EXE, self-contained
   # ────────────────────────────────────────────────
   build-windows-x86:
-    needs: create-release
     runs-on: windows-latest
     permissions:
       contents: write
@@ -70,21 +33,16 @@ jobs:
       - name: Rename EXE
         run: Rename-Item publish_win_x86\IziProxy.GUI.Desktop.exe IziProxy-win-x86.exe
 
-      - name: Upload Windows x86
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: publish_win_x86\IziProxy-win-x86.exe
-          asset_name: IziProxy-win-x86.exe
-          asset_content_type: application/octet-stream
+          name: win-x86
+          path: publish_win_x86\IziProxy-win-x86.exe
 
   # ────────────────────────────────────────────────
-  # 3. Windows ARM64 — один EXE, self-contained
+  # 2. Windows ARM64 — один EXE, self-contained
   # ────────────────────────────────────────────────
   build-windows-arm64:
-    needs: create-release
     runs-on: windows-latest
     permissions:
       contents: write
@@ -110,21 +68,16 @@ jobs:
       - name: Rename EXE
         run: Rename-Item publish_win_arm64\IziProxy.GUI.Desktop.exe IziProxy-win-arm64.exe
 
-      - name: Upload Windows ARM64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: publish_win_arm64\IziProxy-win-arm64.exe
-          asset_name: IziProxy-win-arm64.exe
-          asset_content_type: application/octet-stream
+          name: win-arm64
+          path: publish_win_arm64\IziProxy-win-arm64.exe
 
   # ────────────────────────────────────────────────
-  # 4. Linux x64 — AppImage, self-contained
+  # 3. Linux x64 — AppImage, self-contained
   # ────────────────────────────────────────────────
   build-linux:
-    needs: create-release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -183,21 +136,16 @@ jobs:
           ./appimagetool --appimage-extract
           ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-Linux-x86_64.AppImage
 
-      - name: Upload Linux AppImage
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: IziProxy-Linux-x86_64.AppImage
-          asset_name: IziProxy-Linux-x86_64.AppImage
-          asset_content_type: application/octet-stream
+          name: linux-appimage
+          path: IziProxy-Linux-x86_64.AppImage
 
   # ────────────────────────────────────────────────
-  # 5. Android APK
+  # 4. Android APK
   # ────────────────────────────────────────────────
   build-android:
-    needs: create-release
     runs-on: windows-latest
     permissions:
       contents: write
@@ -219,17 +167,59 @@ jobs:
             -f net10.0-android `
             -p:AndroidPackageFormat=apk
 
-      - name: Find and upload APK
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find APK and stage it
         run: |
           $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
           if (-not $apk) {
             $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*.apk" | Select-Object -First 1
           }
           if ($apk) {
-            gh release upload v1.0.1 $apk.FullName --clobber
+            Copy-Item $apk.FullName "IziProxy.apk"
           } else {
-            Write-Error "APK not found!"
-            exit 1
+            Write-Error "APK not found!"; exit 1
           }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: IziProxy.apk
+
+  # ────────────────────────────────────────────────
+  # 5. Создаём релиз и загружаем все артефакты
+  # ────────────────────────────────────────────────
+  publish-release:
+    needs: [build-windows-x86, build-windows-arm64, build-linux, build-android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release and upload assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create v1.0.1 \
+            --title "IziProxy v1.0.1" \
+            --notes "## IziProxy v1.0.1
+
+          ### Исправления
+          - Скрипты VDS_setup встроены прямо в exe (EmbeddedResource) — никаких файлов рядом не нужно
+          - Обновлены правила маршрутизации: 43 популярных RU-домена в direct-bypass
+
+          ### Загрузки
+          | Платформа | Файл |
+          |-----------|------|
+          | Windows x86 | IziProxy-win-x86.exe |
+          | Windows ARM64 | IziProxy-win-arm64.exe |
+          | Linux x64 | IziProxy-Linux-x86_64.AppImage |
+          | Android | IziProxy.apk |" \
+            artifacts/win-x86/IziProxy-win-x86.exe \
+            artifacts/win-arm64/IziProxy-win-arm64.exe \
+            artifacts/linux-appimage/IziProxy-Linux-x86_64.AppImage \
+            artifacts/android-apk/IziProxy.apk
