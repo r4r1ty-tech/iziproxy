@@ -154,12 +154,59 @@
       {
         "type": "field",
         "outboundTag": "direct",
+        "domain": [
+          "domain:vedomosti.ru",
+          "domain:mk.ru",
+          "domain:rg.ru",
+          "domain:ria.ru",
+          "domain:tass.ru",
+          "domain:kommersant.ru",
+          "domain:iz.ru",
+          "domain:1tv.ru",
+          "domain:vgtrk.com",
+          "domain:ntv.ru",
+          "domain:rt.com",
+          "domain:ren.tv",
+          "domain:5-tv.ru",
+          "domain:mash.ru",
+          "domain:gazeta.ru",
+          "domain:lenta.ru",
+          "domain:interfax.ru",
+          "domain:fontanka.ru",
+          "domain:kp.ru",
+          "domain:aif.ru",
+          "domain:rambler.ru",
+          "domain:mail.ru",
+          "domain:ok.ru",
+          "domain:vk.com",
+          "domain:yandex.ru",
+          "domain:ya.ru",
+          "domain:gosuslugi.ru",
+          "domain:nalog.ru",
+          "domain:pfr.gov.ru",
+          "domain:cbr.ru",
+          "domain:sberbank.ru",
+          "domain:tinkoff.ru",
+          "domain:alfabank.ru",
+          "domain:vtb.ru",
+          "domain:ozon.ru",
+          "domain:wildberries.ru",
+          "domain:avito.ru",
+          "domain:hh.ru",
+          "domain:2gis.ru",
+          "domain:drom.ru",
+          "domain:kinopoisk.ru"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
         "domain": ["geosite:ru"]
       },
       {
         "type": "field",
         "outboundTag": "direct",
-        "ip": ["geoip:ru"]
+        "ip": ["geoip:ru", "geoip:private"]
       }
     ]
   }
