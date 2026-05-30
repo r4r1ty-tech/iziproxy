@@ -1,5 +1,15 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+	<!-- Разрешения -->
 	<uses-permission android:name="android.permission.INTERNET" />
-	<application android:label="IziProxy.GUI" android:icon="@drawable/Icon" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+	<!-- Объявляем что нужен интернет (для фильтрации в Google Play) -->
+	<uses-feature android:name="android.hardware.wifi" android:required="false" />
+
+	<application
+		android:label="IziProxy"
+		android:icon="@drawable/Icon"
+		android:allowBackup="false">
+	</application>
 </manifest>

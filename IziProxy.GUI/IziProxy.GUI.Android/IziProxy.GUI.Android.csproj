@@ -8,7 +8,13 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <!-- AOT: значительно ускоряет холодный старт на Android -->
+    <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+    <!-- Trimming: убирает неиспользуемые сборки, уменьшает размер APK -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <!-- Отключаем тяжёлые ICU-данные глобализации (не нужны для ru/en) -->
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>

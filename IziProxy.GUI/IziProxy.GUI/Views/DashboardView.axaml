@@ -61,10 +61,12 @@
                     Classes="Tonal"
                     Command="{Binding RefreshStatusCommand}"
                     IsEnabled="{Binding !IsBusy}"
+                    MinHeight="48"
                     Margin="0,0,8,8"/>
             <Button Content="♻️ Перезапустить"
                     Command="{Binding RestartServiceCommand}"
                     IsEnabled="{Binding !IsBusy}"
+                    MinHeight="48"
                     Margin="0,0,0,8"/>
           </WrapPanel>
 
@@ -136,8 +138,9 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="core:InboundTrafficStat">
               <Border Classes="M3Card" Padding="16" Margin="0,4">
-                <Grid ColumnDefinitions="*,Auto,Auto">
-                  <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                <StackPanel Spacing="8">
+                  <!-- Inbound Name -->
+                  <StackPanel Orientation="Horizontal" Spacing="10">
                     <Border Background="{StaticResource PrimaryContainerBrush}"
                             Width="36" Height="36"
                             CornerRadius="18"
@@ -150,20 +153,21 @@
                                VerticalAlignment="Center"
                                Foreground="{StaticResource TextBrush}"/>
                   </StackPanel>
-                  
-                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+
+                  <!-- Traffic Stats -->
+                  <StackPanel Orientation="Horizontal" Spacing="20" Margin="46,0,0,0">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                      <materialIcons:MaterialIcon Kind="ArrowUp" Width="16" Height="16" Foreground="#81C784"/>
+                      <materialIcons:MaterialIcon Kind="ArrowUp" Width="16" Height="16" Foreground="#81C784" VerticalAlignment="Center"/>
                       <TextBlock Text="{Binding UplinkFormatted}"
                                  FontSize="14" FontWeight="SemiBold" Foreground="#81C784" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                      <materialIcons:MaterialIcon Kind="ArrowDown" Width="16" Height="16" Foreground="#64B5F6"/>
+                      <materialIcons:MaterialIcon Kind="ArrowDown" Width="16" Height="16" Foreground="#64B5F6" VerticalAlignment="Center"/>
                       <TextBlock Text="{Binding DownlinkFormatted}"
                                  FontSize="14" FontWeight="SemiBold" Foreground="#64B5F6" VerticalAlignment="Center"/>
                     </StackPanel>
                   </StackPanel>
-                </Grid>
+                </StackPanel>
               </Border>
             </DataTemplate>
           </ItemsControl.ItemTemplate>

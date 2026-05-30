@@ -8,62 +8,73 @@
              x:Name="RootControl"
              SizeChanged="Control_OnSizeChanged">
 
-  <Grid RowDefinitions="Auto,*">
-    
-    <!-- Top Mobile Bar (Visible ONLY on narrow screens / mobile) -->
+  <UserControl.Styles>
+    <!-- Bottom Nav pill: inactive by default -->
+    <Style Selector="Border.BottomNavPill">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.15"/>
+        </Transitions>
+      </Setter>
+    </Style>
+    <!-- Active pill -->
+    <Style Selector="Border.BottomNavPill.Active">
+      <Setter Property="Background" Value="{StaticResource PrimaryContainerBrush}"/>
+    </Style>
+    <!-- Bottom Nav label: inactive -->
+    <Style Selector="TextBlock.BottomNavLabel">
+      <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    <!-- Bottom Nav label: active -->
+    <Style Selector="TextBlock.BottomNavLabel.Active">
+      <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- Top Bar: Mobile only (показывает название вкладки, без hamburger) -->
     <Border Grid.Row="0"
             Height="64"
             Background="{StaticResource M3SurfaceContainerBrush}"
             BorderBrush="{StaticResource OutlineVariantBrush}"
             BorderThickness="0,0,0,1"
             IsVisible="{Binding IsNarrowMode}">
-      <Grid ColumnDefinitions="Auto,*,Auto" Margin="12,0">
-        <!-- Hamburger Menu Button -->
-        <Button Grid.Column="0"
-                Command="{Binding ToggleMenuPaneCommand}"
-                Background="Transparent"
-                BorderThickness="0"
-                Width="48" Height="48"
-                CornerRadius="24">
-          <materialIcons:MaterialIcon Kind="Menu" Width="24" Height="24" Foreground="{StaticResource TextBrush}"/>
-        </Button>
-        
-        <!-- App Title -->
-        <TextBlock Grid.Column="1"
-                   Text="IziProxy"
+      <Grid ColumnDefinitions="*,Auto" Margin="20,0,16,0">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding CurrentTabName}"
                    FontSize="20"
                    FontWeight="SemiBold"
                    VerticalAlignment="Center"
-                   Margin="12,0,0,0"
                    Foreground="{StaticResource TextBrush}"/>
-        
-        <!-- Status Indicator in Top Bar -->
-        <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
-          <Ellipse Width="10" Height="10" Fill="{Binding Dashboard.StatusColorHex, FallbackValue=Gray}"/>
-        </StackPanel>
+        <Ellipse Grid.Column="1" Width="10" Height="10"
+                 VerticalAlignment="Center"
+                 Fill="{Binding Dashboard.StatusColorHex, FallbackValue=Gray}"/>
       </Grid>
     </Border>
 
-    <!-- Main Workspace with SplitView Drawer/Sidebar -->
+    <!-- Main content: SplitView (Desktop sidebar + Content) -->
     <SplitView Grid.Row="1"
                IsPaneOpen="{Binding IsMenuPaneOpen, Mode=TwoWay}"
                DisplayMode="{Binding MenuDisplayMode}"
                OpenPaneLength="260"
                PanePlacement="Left"
                Background="{StaticResource M3BgBrush}">
-               
-      <!-- SplitView Navigation Pane (Sidebar / Drawer) -->
+
+      <!-- Desktop Sidebar -->
       <SplitView.Pane>
         <Border Background="{StaticResource M3SurfaceBrush}"
                 BorderBrush="{StaticResource OutlineVariantBrush}"
                 BorderThickness="0,0,1,0">
           <DockPanel>
-            <!-- Logo Section (Only shown on Desktop) -->
+            <!-- Logo -->
             <StackPanel DockPanel.Dock="Top"
-                        Orientation="Horizontal" 
-                        Spacing="12" 
-                        Margin="24,32,24,24" 
-                        IsVisible="{Binding !IsNarrowMode}">
+                        Orientation="Horizontal"
+                        Spacing="12"
+                        Margin="24,32,24,24">
               <Border Background="{StaticResource PrimaryContainerBrush}"
                       Width="40" Height="40"
                       CornerRadius="12">
@@ -72,7 +83,7 @@
               <TextBlock Text="IziProxy" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
             </StackPanel>
 
-            <!-- Navigation Links -->
+            <!-- Nav Links -->
             <ListBox Classes="Menu" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent">
               <ListBoxItem>
                 <StackPanel Orientation="Horizontal" Spacing="16">
@@ -110,7 +121,65 @@
           </Panel>
         </ContentControl>
       </SplitView.Content>
-      
+
     </SplitView>
+
+    <!-- Bottom Navigation Bar (Mobile/Android, M3 pattern) -->
+    <Border Grid.Row="2"
+            Background="{StaticResource M3SurfaceContainerBrush}"
+            BorderBrush="{StaticResource OutlineVariantBrush}"
+            BorderThickness="0,1,0,0"
+            IsVisible="{Binding IsNarrowMode}">
+      <Grid ColumnDefinitions="*,*,*" Height="72" Margin="0,6,0,10">
+
+        <!-- Deploy -->
+        <Button Grid.Column="0" Classes="BottomNavBtn" Command="{Binding GoToDeployCommand}"
+                x:Name="BtnDeploy">
+          <StackPanel Spacing="3" HorizontalAlignment="Center">
+            <Border Classes="BottomNavPill"
+                    Classes.Active="{Binding IsDeployVisible}"
+                    HorizontalAlignment="Center" Width="64" Height="32" CornerRadius="16">
+              <materialIcons:MaterialIcon Kind="RocketLaunch" Width="20" Height="20"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Foreground="{StaticResource TextBrush}"/>
+            </Border>
+            <TextBlock Classes="BottomNavLabel" Classes.Active="{Binding IsDeployVisible}"
+                       Text="Deploy" FontSize="11" HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <!-- Logs -->
+        <Button Grid.Column="1" Classes="BottomNavBtn" Command="{Binding GoToLogsCommand}">
+          <StackPanel Spacing="3" HorizontalAlignment="Center">
+            <Border Classes="BottomNavPill"
+                    Classes.Active="{Binding IsLogsVisible}"
+                    HorizontalAlignment="Center" Width="64" Height="32" CornerRadius="16">
+              <materialIcons:MaterialIcon Kind="ListBoxOutline" Width="20" Height="20"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Foreground="{StaticResource TextBrush}"/>
+            </Border>
+            <TextBlock Classes="BottomNavLabel" Classes.Active="{Binding IsLogsVisible}"
+                       Text="Логи" FontSize="11" HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <!-- Dashboard -->
+        <Button Grid.Column="2" Classes="BottomNavBtn" Command="{Binding GoToDashboardCommand}">
+          <StackPanel Spacing="3" HorizontalAlignment="Center">
+            <Border Classes="BottomNavPill"
+                    Classes.Active="{Binding IsDashboardVisible}"
+                    HorizontalAlignment="Center" Width="64" Height="32" CornerRadius="16">
+              <materialIcons:MaterialIcon Kind="ChartBoxOutline" Width="20" Height="20"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Foreground="{StaticResource TextBrush}"/>
+            </Border>
+            <TextBlock Classes="BottomNavLabel" Classes.Active="{Binding IsDashboardVisible}"
+                       Text="Dashboard" FontSize="11" HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+      </Grid>
+    </Border>
+
   </Grid>
 </UserControl>

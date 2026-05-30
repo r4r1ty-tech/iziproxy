@@ -17,7 +17,7 @@ public partial class MainView : UserControl
         if (DataContext is MainViewModel vm)
         {
             // Устанавливаем флаг мобильного режима
-            bool isNarrow = e.NewSize.Width < 700;
+            bool isNarrow = e.NewSize.Width < 600;
             vm.IsNarrowMode = isNarrow;
 
             // Добавляем или убираем CSS-класс "IsNarrow" для изменения Layout

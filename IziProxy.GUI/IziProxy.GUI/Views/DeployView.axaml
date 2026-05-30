@@ -24,9 +24,10 @@
       <Border Classes="M3Card" Padding="16">
         <StackPanel Spacing="12">
           <TextBlock Text="Профили серверов" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-          <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
-            <ComboBox Grid.Column="0"
-                      ItemsSource="{Binding Profiles}"
+
+          <!-- Выбор + Удалить -->
+          <StackPanel Spacing="8">
+            <ComboBox ItemsSource="{Binding Profiles}"
                       SelectedItem="{Binding SelectedProfile}"
                       HorizontalAlignment="Stretch"
                       PlaceholderText="Выберите сохраненный профиль">
@@ -36,24 +37,24 @@
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
-            <Button Grid.Column="1"
-                    Content="❌ Удалить"
+            <Button Content="❌ Удалить"
                     Classes="Tonal"
-                    Margin="8,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
                     Command="{Binding DeleteProfileCommand}"
                     IsEnabled="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-          </Grid>
-          
-          <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
-            <TextBox Grid.Column="0"
-                     Text="{Binding NewProfileName}"
+          </StackPanel>
+
+          <!-- Имя + Сохранить -->
+          <StackPanel Spacing="8" Margin="0,4,0,0">
+            <TextBox Text="{Binding NewProfileName}"
                      PlaceholderText="Имя нового профиля (напр. Мой VDS)"/>
-            <Button Grid.Column="1"
-                    Content="💾 Сохранить"
+            <Button Content="💾 Сохранить"
                     Classes="Tonal"
-                    Margin="8,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
                     Command="{Binding SaveCurrentProfileCommand}"/>
-          </Grid>
+          </StackPanel>
         </StackPanel>
       </Border>
 
@@ -86,7 +87,8 @@
 
           <StackPanel Spacing="6">
             <TextBlock Text="SSH-ключ (необязательно)" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
-            <Grid ColumnDefinitions="*,Auto">
+            <!-- На десктопе: поле + кнопка файлового диалога -->
+            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !IsNarrowMode}">
               <TextBox Grid.Column="0"
                        Text="{Binding SshKeyPath}"
                        PlaceholderText="Путь к id_rsa"
@@ -99,10 +101,16 @@
                       Command="{Binding $parent[views:DeployView].BrowseSshKey}"
                       IsEnabled="{Binding !IsDeploying}"/>
             </Grid>
+            <!-- На Android/мобиле: только текстовое поле (файловый диалог неработает) -->
+            <TextBox IsVisible="{Binding IsNarrowMode}"
+                     Text="{Binding SshKeyPath}"
+                     PlaceholderText="Путь к SSH-ключу, напр. /sdcard/id_rsa"
+                     IsEnabled="{Binding !IsDeploying}"/>
           </StackPanel>
 
         </StackPanel>
       </Border>
+
 
       <!-- Кнопки действий -->
       <StackPanel Spacing="8" Margin="0,8,0,0">
@@ -156,7 +164,7 @@
                            Background="{StaticResource M3SurfaceContainerHighBrush}"/>
                   <!-- QR Code Display -->
                   <Image Source="{Binding QrCodeImage}"
-                         Width="180" Height="180"
+                         Width="220" Height="220"
                          HorizontalAlignment="Center"
                          Margin="0,8"
                          IsVisible="{Binding QrCodeImage, Converter={x:Static ObjectConverters.IsNotNull}}"/>

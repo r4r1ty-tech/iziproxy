@@ -23,6 +23,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDeployVisible));
         OnPropertyChanged(nameof(IsLogsVisible));
         OnPropertyChanged(nameof(IsDashboardVisible));
+        OnPropertyChanged(nameof(CurrentTabName));
 
         // Автоматически закрываем Drawer при клике на пункт меню на мобилках
         if (IsNarrowMode)
@@ -34,6 +35,17 @@ public partial class MainViewModel : ObservableObject
     public bool IsDeployVisible => SelectedTabIndex == 0;
     public bool IsLogsVisible => SelectedTabIndex == 1;
     public bool IsDashboardVisible => SelectedTabIndex == 2;
+
+    /// <summary>
+    /// Название текущей вкладки для отображения в TopBar мобилки.
+    /// </summary>
+    public string CurrentTabName => SelectedTabIndex switch
+    {
+        0 => "Deploy",
+        1 => "Логи",
+        2 => "Dashboard",
+        _ => "IziProxy"
+    };
 
     // ── Адаптивный режим и SplitView ──────────────────────────────────
     /// <summary>
@@ -47,6 +59,9 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(MenuDisplayMode));
         // На десктопе меню должно быть открыто всегда, на мобилке по умолчанию скрыто
         IsMenuPaneOpen = !value;
+        // Передаём флаг дочерним VM, которые адаптируют свой UI
+        Deploy.IsNarrowMode = value;
+        Logs.IsNarrowMode = value;
     }
 
     /// <summary>

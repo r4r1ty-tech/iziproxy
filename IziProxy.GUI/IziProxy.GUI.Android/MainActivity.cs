@@ -1,4 +1,4 @@
-﻿using Android.App;
+using Android.App;
 using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
@@ -6,11 +6,13 @@ using Avalonia.Android;
 namespace IziProxy.GUI.Android;
 
 [Activity(
-    Label = "IziProxy.GUI.Android",
+    Label = "IziProxy",
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+    WindowSoftInputMode = SoftInput.AdjustResize,
+    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize
+        | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
 public class MainActivity : AvaloniaMainActivity
 {
 }

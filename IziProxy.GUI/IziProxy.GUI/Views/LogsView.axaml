@@ -34,6 +34,7 @@
         <Button Content="Открыть лог-файл"
                 Classes="Tonal"
                 Command="{Binding OpenLogFileCommand}"
+                IsVisible="{Binding !IsNarrowMode}"
                 Margin="0,0,8,8"/>
         <Button Content="Очистить"
                 Classes="Tonal"
@@ -49,11 +50,11 @@
                Background="Transparent"
                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
         <ListBox.ItemTemplate>
-          <DataTemplate>
+          <DataTemplate x:DataType="x:String">
             <TextBlock Text="{Binding}"
                        TextWrapping="Wrap"
                        FontFamily="Cascadia Code, Consolas, Monospace"
-                       FontSize="12"
+                       FontSize="13"
                        Foreground="#E2E2E6"
                        Padding="6,3"/>
           </DataTemplate>

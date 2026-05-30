@@ -147,6 +147,57 @@
           <Setter Property="RenderTransform" Value="scale(0.98)" />
         </Style>
 
+        <!-- M3 ToggleButton style (matches Tonal style, checked state = Primary) -->
+        <Style Selector="ToggleButton">
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerHighBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+          <Setter Property="BorderBrush" Value="{StaticResource OutlineVariantBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="20"/>
+          <Setter Property="Padding" Value="16,10"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="Transitions">
+            <Transitions>
+              <BrushTransition Property="Background" Duration="0:0:0.15" />
+              <BrushTransition Property="Foreground" Duration="0:0:0.15" />
+            </Transitions>
+          </Setter>
+        </Style>
+        <Style Selector="ToggleButton:checked">
+          <Setter Property="Background" Value="{StaticResource PrimaryContainerBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource OnPrimaryContainerBrush}"/>
+          <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton:pointerover">
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerHighestBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton:checked:pointerover">
+          <Setter Property="Background" Value="#6248A3"/>
+          <Setter Property="Foreground" Value="{StaticResource OnPrimaryContainerBrush}"/>
+        </Style>
+
+        <!-- Bottom Navigation Bar button style (transparent, no border, full height) -->
+        <Style Selector="Button.BottomNavBtn">
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="CornerRadius" Value="0"/>
+          <Setter Property="Padding" Value="4,0"/>
+          <Setter Property="HorizontalAlignment" Value="Stretch"/>
+          <Setter Property="VerticalAlignment" Value="Stretch"/>
+          <Setter Property="HorizontalContentAlignment" Value="Center"/>
+          <Setter Property="VerticalContentAlignment" Value="Center"/>
+          <Setter Property="MinHeight" Value="48"/>
+          <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.BottomNavBtn:pointerover">
+          <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.BottomNavBtn:pressed">
+          <Setter Property="Background" Value="{StaticResource M3SurfaceContainerHighBrush}"/>
+          <Setter Property="RenderTransform" Value="scale(0.95)"/>
+        </Style>
+
         <!-- Styled M3 TextBox -->
         <Style Selector="TextBox">
           <Setter Property="CornerRadius" Value="16"/>
@@ -246,6 +297,31 @@
         <!-- TextBox — растягиваем -->
         <Style Selector="UserControl.IsNarrow TextBox">
           <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+
+        <!-- Минимальный размер touch-целей на мобиле (Google HIG: 48dp min) -->
+        <Style Selector="UserControl.IsNarrow Button">
+          <Setter Property="MinHeight" Value="48"/>
+        </Style>
+        <Style Selector="UserControl.IsNarrow ToggleButton">
+          <Setter Property="MinHeight" Value="48"/>
+        </Style>
+
+        <!-- ScrollViewer: скрываем скроллбары на мобиле (кнопки не работают тачем) -->
+        <Style Selector="UserControl.IsNarrow ScrollViewer">
+          <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden"/>
+          <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+          <Setter Property="ScrollViewer.AllowAutoHide" Value="True"/>
+        </Style>
+
+        <!-- ComboBox на мобиле — на всю ширину -->
+        <Style Selector="UserControl.IsNarrow ComboBox">
+          <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+
+        <!-- Убираем горизонтальный скроллбар из ListBox (конфликт жестов) -->
+        <Style Selector="UserControl.IsNarrow ListBox">
+          <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
         </Style>
     </Application.Styles>
 </Application>

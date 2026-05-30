@@ -28,9 +28,11 @@ public partial class DeployViewModel : ObservableObject
     [ObservableProperty] private string _sshKeyPath  = string.Empty;
 
     // ── Состояние ────────────────────────────────────────────────────
-    [ObservableProperty] private bool   _isDeploying = false;
-    [ObservableProperty] private bool   _isCompleted = false;
-    [ObservableProperty] private string _statusText  = string.Empty;
+    [ObservableProperty] private bool   _isDeploying  = false;
+    [ObservableProperty] private bool   _isCompleted  = false;
+    [ObservableProperty] private string _statusText   = string.Empty;
+    /// <summary>Отражает мобильный режим — устанавливается из MainViewModel.</summary>
+    [ObservableProperty] private bool   _isNarrowMode = false;
 
     // ── Результаты ───────────────────────────────────────────────────
     public ObservableCollection<VlessLinkItem> VlessLinks { get; } = new();

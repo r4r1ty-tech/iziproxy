@@ -17,6 +17,8 @@ public partial class LogsViewModel : ObservableObject
     [ObservableProperty] private bool _showDebug = false;
     [ObservableProperty] private bool _showInfo = true;
     [ObservableProperty] private bool _showError = true;
+    /// <summary>Отражает мобильный режим — устанавливается из MainViewModel.</summary>
+    [ObservableProperty] private bool _isNarrowMode = false;
 
     partial void OnShowDebugChanged(bool value) => ApplyFilter();
     partial void OnShowInfoChanged(bool value) => ApplyFilter();
