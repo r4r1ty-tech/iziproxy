@@ -1,4 +1,4 @@
-name: Release v1.0.1
+name: Release v1.0.2
 
 on:
   workflow_dispatch:
@@ -204,9 +204,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release create v1.0.1 \
-            --title "IziProxy v1.0.1" \
-            --notes "## IziProxy v1.0.1
+          gh release create v1.0.2 \
+            --title "IziProxy v1.0.2" \
+            --notes "## IziProxy v1.0.2
 
           ### Исправления
           - Скрипты VDS_setup встроены прямо в exe (EmbeddedResource) — никаких файлов рядом не нужно
