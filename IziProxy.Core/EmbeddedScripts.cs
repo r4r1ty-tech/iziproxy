@@ -4,15 +4,14 @@ namespace IziProxy;
 
 /// <summary>
 /// Предоставляет доступ к скриптам VDS_setup, встроенным в сборку как EmbeddedResource.
-/// Никаких файлов рядом с exe не требуется.
 /// </summary>
 public static class EmbeddedScripts
 {
     private static readonly Assembly _asm = typeof(EmbeddedScripts).Assembly;
 
     // Имена ресурсов совпадают со структурой папок:
-    // IziProxy.VDS_setup.MainInstall.sh
-    private const string Prefix = "IziProxy.VDS_setup.";
+    // IziProxy.Core.VDS_setup.MainInstall.sh
+    private const string Prefix = "IziProxy.Core.VDS_setup.";
 
     /// <summary>Возвращает поток для встроенного скрипта MainInstall.sh.</summary>
     public static Stream OpenMainInstall() => Open("MainInstall.sh");
