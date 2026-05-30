@@ -87,15 +87,20 @@ public class SSH : IDisposable
         {
             await Task.Run(() =>
             {
-                using var file = EmbeddedScripts.OpenMainInstall();
+                using var fileStream = EmbeddedScripts.OpenMainInstall();
+                using var reader = new StreamReader(fileStream);
+                string content = reader.ReadToEnd().Replace("\r\n", "\n");
+                using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
+
                 string targetPath;
                 // Определяем домашнюю директорию в зависимости от имени пользователя
                 if (serverConfig.Username == "root")
-                    targetPath = "/root/MainInstall.sh";
+                    targetPath = $"/root/MainInstall.sh";
                 else
-                    targetPath = "MainInstall.sh"; // Загрузит в домашнюю папку пользователя
+                    targetPath = $"/home/{serverConfig.Username}/MainInstall.sh";
 
-                _sftpClient.UploadFile(file, targetPath);
+                progress?.Report($"[DEBUG] SFTP Uploading MainInstall.sh to {targetPath} (размер потока: {ms.Length} байт, сконвертирован в LF)");
+                _sftpClient.UploadFile(ms, targetPath);
             });
 
             progress?.Report("MainInstall.sh загружен успешно.");
@@ -128,15 +133,17 @@ public class SSH : IDisposable
         {
             await Task.Run(() =>
             {
-                using var file = File.OpenRead(localFilePath);
+                string content = File.ReadAllText(localFilePath).Replace("\r\n", "\n");
+                using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
 
                 string targetPath;
                 if (serverConfig.Username == "root")
                     targetPath = $"/root/{remoteFileName}";
                 else
-                    targetPath = remoteFileName;
+                    targetPath = $"/home/{serverConfig.Username}/{remoteFileName}";
 
-                _sftpClient.UploadFile(file, targetPath, true); // true = overwrite (перезаписать при наличии)
+                progress?.Report($"[DEBUG] SFTP Uploading {localFilePath} to {targetPath} (размер файла: {ms.Length} байт, сконвертирован в LF)");
+                _sftpClient.UploadFile(ms, targetPath, true); // true = overwrite (перезаписать при наличии)
                 progress?.Report($"Файл {localFilePath} загружен успешно в {targetPath}");
             });
 
@@ -164,13 +171,18 @@ public class SSH : IDisposable
         {
             await Task.Run(() =>
             {
+                using var reader = new StreamReader(stream);
+                string content = reader.ReadToEnd().Replace("\r\n", "\n");
+                using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
+
                 string targetPath;
                 if (serverConfig.Username == "root")
                     targetPath = $"/root/{remoteFileName}";
                 else
-                    targetPath = remoteFileName;
+                    targetPath = $"/home/{serverConfig.Username}/{remoteFileName}";
 
-                _sftpClient.UploadFile(stream, targetPath, true);
+                progress?.Report($"[DEBUG] SFTP Uploading stream to {targetPath} (размер потока: {ms.Length} байт, сконвертирован в LF)");
+                _sftpClient.UploadFile(ms, targetPath, true);
                 progress?.Report($"{remoteFileName} загружен успешно в {targetPath}");
             });
 
@@ -199,19 +211,18 @@ public class SSH : IDisposable
 
         try
         {
-            string output = await Task.Run(() =>
+            string homeDir = serverConfig.Username == "root" ? "/root" : $"/home/{serverConfig.Username}";
+            string command = $"chmod +x {homeDir}/MainInstall.sh && bash {homeDir}/MainInstall.sh";
+
+            progress?.Report($"[DEBUG] Выполнение MainInstall.sh: {command}");
+            SshCommand sshCommand = await RunSudoCommand(serverConfig, command);
+            
+            if (!string.IsNullOrWhiteSpace(sshCommand.Error))
             {
-                string command;
-                if (serverConfig.Username == "root")
-                    command = "chmod +x /root/MainInstall.sh && bash /root/MainInstall.sh";
-                else
-                    command = $"chmod +x ~/MainInstall.sh && sudo su - -c \"bash /home/{serverConfig.Username}/MainInstall.sh\"";
-
-                SshCommand sshCommand = _sshClient.RunCommand(command);
-                return sshCommand.Result;
-            });
-
-            progress?.Report(output);
+                progress?.Report($"[DEBUG] Ошибки MainInstall.sh (stderr):\n{sshCommand.Error}");
+            }
+            
+            progress?.Report(sshCommand.Result);
             return true;
         }
         catch (Exception ex)
@@ -236,9 +247,14 @@ public class SSH : IDisposable
 
         string sudoCommand;
         if (serverConfig.Username.Equals("root", StringComparison.OrdinalIgnoreCase))
+        {
             sudoCommand = command;
+        }
         else
-            sudoCommand = $"echo '{serverConfig.Password}' | sudo -S {command}";
+        {
+            string escapedCommand = command.Replace("\"", "\\\"");
+            sudoCommand = $"echo '{serverConfig.Password}' | sudo -S bash -c \"{escapedCommand}\"";
+        }
 
         return await Task.Run(() => _sshClient.RunCommand(sudoCommand));
     }

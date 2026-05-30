@@ -8,8 +8,8 @@
   <Grid RowDefinitions="Auto,*,Auto" Margin="12,12,12,24">
 
     <!-- Заголовок -->
-    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,4,0,16">
-      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+    <StackPanel Grid.Row="0" Spacing="12" Margin="0,4,0,16">
+      <StackPanel Orientation="Horizontal" Spacing="12">
         <Border Background="{StaticResource PrimaryContainerBrush}"
                 Width="48" Height="48"
                 CornerRadius="16">
@@ -17,12 +17,30 @@
         </Border>
         <TextBlock Text="Журнал событий" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
       </StackPanel>
-      <Button Grid.Column="1"
-              Content="Очистить"
-              Classes="Tonal"
-              Command="{Binding ClearLogsCommand}"
-              VerticalAlignment="Center"/>
-    </Grid>
+      
+      <WrapPanel Orientation="Horizontal">
+        <ToggleButton Content="Debug"
+                      IsChecked="{Binding ShowDebug}"
+                      Classes="Tonal"
+                      Margin="0,0,8,8"/>
+        <ToggleButton Content="Info"
+                      IsChecked="{Binding ShowInfo}"
+                      Classes="Tonal"
+                      Margin="0,0,8,8"/>
+        <ToggleButton Content="Error"
+                      IsChecked="{Binding ShowError}"
+                      Classes="Tonal"
+                      Margin="0,0,8,8"/>
+        <Button Content="Открыть лог-файл"
+                Classes="Tonal"
+                Command="{Binding OpenLogFileCommand}"
+                Margin="0,0,8,8"/>
+        <Button Content="Очистить"
+                Classes="Tonal"
+                Command="{Binding ClearLogsCommand}"
+                Margin="0,0,0,8"/>
+      </WrapPanel>
+    </StackPanel>
 
     <!-- Список логов -->
     <Border Grid.Row="1" Classes="M3Card" Padding="12">

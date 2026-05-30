@@ -10,6 +10,11 @@ warn_no_jq(){
     fi
 }
 
+# Останавливаем Xray перед конфигурацией, чтобы освободить порты от старого деплоя
+if systemctl is-active --quiet xray; then
+    systemctl stop xray >/dev/null 2>&1 || true
+fi
+
 
 ufw_open_port(){
     local port="$1"
@@ -104,10 +109,9 @@ setup_ports(){
         can_jq=0
     fi
 
-    if [ -f "$config_path" ] && [ "$can_jq" -eq 1 ]; then
-        previous_port=$(jq -r '.inbounds[0].port // empty' "$config_path")
-    elif [ -f "$config_path" ]; then
-        warn_no_jq
+    if [ -f "$config_path" ]; then
+        # Читаем старый порт через grep (если это не первая установка)
+        previous_port=$(grep -m1 '"port":' "$config_path" | grep -o '[0-9]\+' || true)
     fi
 
     local PORT_1=""
@@ -127,13 +131,10 @@ setup_ports(){
     local PORT_3=""
     PORT_3=$(pick_random_port "$PORT_1" "$PORT_2")
 
-    if [ -f "$config_path" ] && [ "$can_jq" -eq 1 ]; then
-        jq ".inbounds[0].port = $PORT_1
-          | .inbounds[1].port = $PORT_2
-          | .inbounds[2].port = $PORT_3" \
-            "$config_path" > "${config_path}.tmp" && mv "${config_path}.tmp" "$config_path"
-    elif [ -f "$config_path" ]; then
-        warn_no_jq
+    if [ -f "$config_path" ]; then
+        sed -i "s/__PORT_1__/$PORT_1/g" "$config_path"
+        sed -i "s/__PORT_2__/$PORT_2/g" "$config_path"
+        sed -i "s/__PORT_3__/$PORT_3/g" "$config_path"
     fi
 
     setup_firewall "$PORT_1" "$PORT_2" "$PORT_3" "$previous_port"
@@ -368,6 +369,24 @@ select_best_sni(){
     done
     domains=("${filtered[@]}")
 
+    local -a real_domains=()
+    for d in "${domains[@]}"; do
+        [[ "$d" =~ ^__ ]] && continue
+        real_domains+=("$d")
+    done
+    
+    if [ "${#real_domains[@]}" -gt 0 ]; then
+        domains=("${real_domains[@]}")
+    else
+        domains=(
+            speed.cloudflare.com
+            cdn.jsdelivr.net
+            www.microsoft.com
+            addons.mozilla.org
+            www.apple.com
+        )
+    fi
+
     local -a scored_list=()
 
     for d in "${domains[@]}"; do
@@ -387,8 +406,10 @@ select_best_sni(){
     done
 
     if [ "${#scored_list[@]}" -eq 0 ]; then
-        echo "SNI selection failed"
-        return 1
+        echo "SNI selection failed, using fallbacks"
+        scored_list+=("100|${domains[0]}")
+        if [ "${#domains[@]}" -ge 2 ]; then scored_list+=("100|${domains[1]}"); fi
+        if [ "${#domains[@]}" -ge 3 ]; then scored_list+=("100|${domains[2]}"); fi
     fi
 
     local -a sorted_domains=()
@@ -411,17 +432,10 @@ select_best_sni(){
         SNI_3="$SNI_1"
     fi
 
-    if [ -f "$config_path" ] && [ "$can_jq" -eq 1 ]; then
-        jq --arg sni1 "$SNI_1" --arg sni2 "$SNI_2" --arg sni3 "$SNI_3" \
-            '.inbounds[0].streamSettings.realitySettings.dest = ($sni1 + ":443")
-           | .inbounds[0].streamSettings.realitySettings.serverNames = [$sni1]
-           | .inbounds[1].streamSettings.realitySettings.dest = ($sni2 + ":443")
-           | .inbounds[1].streamSettings.realitySettings.serverNames = [$sni2]
-           | .inbounds[2].streamSettings.realitySettings.dest = ($sni3 + ":443")
-           | .inbounds[2].streamSettings.realitySettings.serverNames = [$sni3]' \
-            "$config_path" > "${config_path}.tmp" && mv "${config_path}.tmp" "$config_path"
-    elif [ -f "$config_path" ]; then
-        warn_no_jq
+    if [ -f "$config_path" ]; then
+        sed -i "s/__SNI_1__/$SNI_1/g" "$config_path"
+        sed -i "s/__SNI_2__/$SNI_2/g" "$config_path"
+        sed -i "s/__SNI_3__/$SNI_3/g" "$config_path"
     fi
 
     echo "SNI_SELECTED_1=$SNI_1"

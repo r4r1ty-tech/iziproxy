@@ -42,7 +42,13 @@ public partial class DashboardViewModel : ObservableObject
         _deployVm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(DeployViewModel.ActiveSsh))
+            {
                 OnPropertyChanged(nameof(IsConnected));
+                if (IsConnected)
+                {
+                    _ = RefreshStatus();
+                }
+            }
         };
     }
 
@@ -103,7 +109,7 @@ public partial class DashboardViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            var result = await _deployVm.ActiveSsh.RunSudoCommand(_deployVm.ActiveConfig, "xray -test -config /etc/xray/config.json 2>&1");
+            var result = await _deployVm.ActiveSsh.RunSudoCommand(_deployVm.ActiveConfig, "/usr/local/bin/xray -test -config /usr/local/etc/xray/config.json 2>&1");
             ConfigCheckText = result.Result.Trim();
             IsConfigValid   = !ConfigCheckText.Contains("error", StringComparison.OrdinalIgnoreCase);
             _logsVm.ProgressReporter.Report("Проверка конфига: " + ConfigCheckText);

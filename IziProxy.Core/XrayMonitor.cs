@@ -26,7 +26,7 @@ public class XrayMonitor
 
         // 2. Проверка конфига
         progress?.Report("Проверка конфигурации Xray...");
-        var configCheck = await sshClient.RunSudoCommand(serverConfig, "xray -test -config /etc/xray/config.json 2>&1");
+        var configCheck = await sshClient.RunSudoCommand(serverConfig, "/usr/local/bin/xray -test -config /usr/local/etc/xray/config.json 2>&1");
         status.ConfigCheckOutput = configCheck.Result.Trim();
         status.IsConfigValid = !status.ConfigCheckOutput.Contains("error", StringComparison.OrdinalIgnoreCase)
                                && !status.ConfigCheckOutput.Contains("failed", StringComparison.OrdinalIgnoreCase);
@@ -36,7 +36,7 @@ public class XrayMonitor
         if (status.IsRunning)
         {
             progress?.Report("Запрос статистики трафика...");
-            var statsResult = await sshClient.RunSudoCommand(serverConfig, "xray api statsquery --server=127.0.0.1:10085 2>&1");
+            var statsResult = await sshClient.RunSudoCommand(serverConfig, "/usr/local/bin/xray api statsquery --server=127.0.0.1:10085 2>&1");
             status.TrafficStats = ParseTrafficStats(statsResult.Result);
         }
 

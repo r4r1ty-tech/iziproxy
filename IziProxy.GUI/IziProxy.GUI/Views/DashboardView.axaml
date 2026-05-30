@@ -38,9 +38,8 @@
 
       <!-- Статус сервиса -->
       <Border Classes="M3Card" Padding="20" IsVisible="{Binding IsConnected}">
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
-
-          <StackPanel Grid.Row="0" Grid.Column="0" Spacing="8">
+        <StackPanel Spacing="16">
+          <StackPanel Spacing="8">
             <TextBlock Text="Статус Xray" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
             <StackPanel Orientation="Horizontal" Spacing="10">
               <!-- Цветной индикатор -->
@@ -57,8 +56,7 @@
           </StackPanel>
 
           <!-- Кнопки -->
-          <WrapPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal"
-                     HorizontalAlignment="Right" VerticalAlignment="Center">
+          <WrapPanel Orientation="Horizontal">
             <Button Content="🔄 Обновить"
                     Classes="Tonal"
                     Command="{Binding RefreshStatusCommand}"
@@ -70,13 +68,12 @@
                     Margin="0,0,0,8"/>
           </WrapPanel>
 
-          <ProgressBar Grid.Row="1" Grid.ColumnSpan="2"
-                       IsIndeterminate="True"
+          <ProgressBar IsIndeterminate="True"
                        IsVisible="{Binding IsBusy}"
                        Foreground="{StaticResource PrimaryBrush}"
                        Height="4"
-                       Margin="0,16,0,0"/>
-        </Grid>
+                       Margin="0,8,0,0"/>
+        </StackPanel>
       </Border>
 
       <!-- Проверка конфига -->

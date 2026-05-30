@@ -54,26 +54,19 @@ public class DeployScripts
             return false;
         }
 
-        string runCommand;
-        if (serverConfig.Username == "root")
-            runCommand = "chmod +x /root/Deploy.sh && bash /root/Deploy.sh";
-        else
-            runCommand = $"chmod +x ~/Deploy.sh && sudo su - -c \"bash /home/{serverConfig.Username}/Deploy.sh\"";
+        string homeDir = serverConfig.Username == "root" ? "/root" : $"/home/{serverConfig.Username}";
+        string runCommand = $"chmod +x {homeDir}/Deploy.sh && bash {homeDir}/Deploy.sh";
 
-        progress?.Report("Выполнение Deploy.sh на сервере...");
+        progress?.Report($"[DEBUG] Выполнение Deploy.sh на сервере: {runCommand}");
         var result = await sshClient.RunSudoCommand(serverConfig, runCommand);
         string output = result.Result;
-        progress?.Report(output);
+        progress?.Report($"[DEBUG] Вывод Deploy.sh:\n{output}");
+        if (!string.IsNullOrWhiteSpace(result.Error))
+        {
+            progress?.Report($"[DEBUG] Ошибки Deploy.sh (stderr):\n{result.Error}");
+        }
 
         // Парсим порты и SNI из вывода скрипта.
-        // Скрипт выводит строки вида:
-        //   SELECTED_PORT_1=443
-        //   SELECTED_PORT_2=8443
-        //   SELECTED_PORT_3=31337
-        //   SNI_SELECTED_1=speed.cloudflare.com
-        //   SNI_SELECTED_2=cdn.jsdelivr.net
-        //   SNI_SELECTED_3=www.microsoft.com
-
         string port1 = string.Empty;
         string port2 = string.Empty;
         string port3 = string.Empty;
@@ -96,6 +89,19 @@ public class DeployScripts
             else if (line.StartsWith("SNI_SELECTED_3="))
                 sni3 = line.Substring("SNI_SELECTED_3=".Length).Trim();
         }
+        
+        progress?.Report($"[DEBUG] Спаршены порты: {port1}, {port2}, {port3}");
+        progress?.Report($"[DEBUG] Спаршены SNI: {sni1}, {sni2}, {sni3}");
+
+        if (string.IsNullOrWhiteSpace(port1) || string.IsNullOrWhiteSpace(port2) || string.IsNullOrWhiteSpace(port3))
+        {
+            throw new Exception("Критическая ошибка: скрипт Deploy.sh не вернул порты (или вернул пустые).");
+        }
+
+        if (string.IsNullOrWhiteSpace(sni1) || string.IsNullOrWhiteSpace(sni2) || string.IsNullOrWhiteSpace(sni3))
+        {
+            throw new Exception("Критическая ошибка: скрипт Deploy.sh не вернул SNI (или вернул пустые).");
+        }
 
         xrayParams.Ports.Add(port1);
         xrayParams.Ports.Add(port2);
@@ -104,6 +110,44 @@ public class DeployScripts
         xrayParams.Snis.Add(sni1);
         xrayParams.Snis.Add(sni2);
         xrayParams.Snis.Add(sni3);
+
+        progress?.Report("Применение конфигурации Xray...");
+        string xrayConfDir = "/usr/local/etc/xray";
+        string targetConfPath = $"{xrayConfDir}/config.json";
+        
+        string configSource = serverConfig.Username == "root" ? "/root/config.json" : $"/home/{serverConfig.Username}/config.json";
+        
+        string applyCommand = $@"
+mkdir -p {xrayConfDir} && \
+cp {configSource} {targetConfPath} && \
+systemctl restart xray && \
+sleep 2 && \
+if systemctl is-active --quiet xray; then
+  echo ""XRAY_STATUS=ok""
+else
+  echo ""XRAY_STATUS=failed""
+  journalctl -u xray -n 15 --no-pager --output=cat
+fi
+";
+
+        progress?.Report($"[DEBUG] Копирование конфига и рестарт (с проверкой статуса)...");
+        var applyResult = await sshClient.RunSudoCommand(serverConfig, applyCommand);
+        string applyOutput = applyResult.Result ?? "";
+        
+        progress?.Report($"[DEBUG] Результат рестарта:\n{applyOutput}");
+        if (!string.IsNullOrWhiteSpace(applyResult.Error))
+        {
+            progress?.Report($"[DEBUG] Ошибки рестарта (stderr):\n{applyResult.Error}");
+        }
+
+        if (applyOutput.Contains("XRAY_STATUS=failed"))
+        {
+            int errorIndex = applyOutput.IndexOf("XRAY_STATUS=failed") + "XRAY_STATUS=failed".Length;
+            string errorLog = applyOutput.Substring(errorIndex).Trim();
+            throw new Exception($"Xray упал после рестарта (ошибка конфигурации или портов):\n{errorLog}");
+        }
+
+        progress?.Report("Сервис Xray успешно перезапущен и активен.");
 
         return true;
     }

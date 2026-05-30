@@ -17,7 +17,7 @@
   "inbounds": [
     {
       "listen": "0.0.0.0",
-      "port": 443,
+      "port": __PORT_1__,
       "protocol": "vless",
       "tag": "inbound-1",
       "settings": {
@@ -38,10 +38,10 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "dest": "www.microsoft.com:443",
+          "dest": "__SNI_1__:443",
           "xver": 0,
           "serverNames": [
-            "www.microsoft.com"
+            "__SNI_1__"
           ],
           "privateKey": "__PRIVATE_KEY__",
           "shortIds": [
@@ -56,7 +56,7 @@
     },
     {
       "listen": "0.0.0.0",
-      "port": 8443,
+      "port": __PORT_2__,
       "protocol": "vless",
       "tag": "inbound-2",
       "settings": {
@@ -77,10 +77,10 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "dest": "www.microsoft.com:443",
+          "dest": "__SNI_2__:443",
           "xver": 0,
           "serverNames": [
-            "www.microsoft.com"
+            "__SNI_2__"
           ],
           "privateKey": "__PRIVATE_KEY__",
           "shortIds": [
@@ -95,7 +95,7 @@
     },
     {
       "listen": "0.0.0.0",
-      "port": 10000,
+      "port": __PORT_3__,
       "protocol": "vless",
       "tag": "inbound-3",
       "settings": {
@@ -116,10 +116,10 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "dest": "www.microsoft.com:443",
+          "dest": "__SNI_3__:443",
           "xver": 0,
           "serverNames": [
-            "www.microsoft.com"
+            "__SNI_3__"
           ],
           "privateKey": "__PRIVATE_KEY__",
           "shortIds": [
@@ -201,7 +201,11 @@
       {
         "type": "field",
         "outboundTag": "direct",
-        "domain": ["geosite:ru"]
+        "domain": [
+          "domain:ru",
+          "domain:su",
+          "domain:рф"
+        ]
       },
       {
         "type": "field",

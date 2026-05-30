@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 install_deps() {
     local distro_id distro_like
@@ -10,10 +10,9 @@ install_deps() {
         exit 1
     fi
 
-    local cmd="apt-get update && apt-get install -y"
-
     echo "Устанавливаем утилиты..."
-    $cmd curl unzip wget net-tools ufw jq bc
+    apt-get update -y
+    apt-get install -y curl unzip wget net-tools ufw jq bc
 }
 
 enable_bbr() {
@@ -34,8 +33,21 @@ install_xray() {
     bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 }
 
+update_geo() {
+    echo "Обновляем geo-файлы (Loyalsoldier)..."
+    
+    sudo curl -fsSL -o /usr/local/share/xray/geosite.dat \
+      "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat" \
+      || echo "WARN: geosite update failed"
+
+    sudo curl -fsSL -o /usr/local/share/xray/geoip.dat \
+      "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat" \
+      || echo "WARN: geoip update failed"
+}
+
 install_deps
 enable_bbr
 install_xray
+update_geo
 
 echo "Подготовка VDS завершена"
