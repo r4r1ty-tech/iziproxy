@@ -21,7 +21,7 @@ public class DeployScripts
     public async Task<bool> DeployAndConfigure(SSH sshClient, ServerConfig serverConfig, XrayConfigParams xrayParams, IProgress<string>? progress = null)
     {
         progress?.Report("Загрузка Deploy.sh...");
-        bool isDeployUploaded = await sshClient.UploadFile("VDS_setup/Deploy.sh", "Deploy.sh", serverConfig, progress);
+        bool isDeployUploaded = await sshClient.UploadFile(Path.Combine(AppContext.BaseDirectory, "VDS_setup", "Deploy.sh"), "Deploy.sh", serverConfig, progress);
 
         if (!isDeployUploaded)
         {
@@ -30,13 +30,13 @@ public class DeployScripts
         }
 
         progress?.Report("Формирование config.json...");
-        string configContent = await Task.Run(() => File.ReadAllText("VDS_setup/config.json"));
+        string configContent = await Task.Run(() => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "VDS_setup", "config.json")));
 
         configContent = configContent.Replace("__UUID__", xrayParams.Uuid)
                                      .Replace("__PRIVATE_KEY__", xrayParams.PrivateKey)
                                      .Replace("__SHORT_ID__", xrayParams.ShortId);
 
-        string tempConfigPath = "temp_config.json";
+        string tempConfigPath = Path.Combine(Path.GetTempPath(), "iziproxy_temp_config.json");
         await Task.Run(() => File.WriteAllText(tempConfigPath, configContent));
 
         progress?.Report("Загрузка config.json...");
