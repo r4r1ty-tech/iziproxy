@@ -124,18 +124,24 @@ public partial class DeployViewModel : ObservableObject
         ActiveSsh?.Dispose();
         ActiveSsh = null;
 
-        var progress = _logsVm.ProgressReporter;
+        var rawProgress = _logsVm.ProgressReporter;
+
+        // Строим ServerConfig ДО обёртки progress, чтобы пробросить пароль
+        // в PasswordMasker. Если пароль пустой (используется SSH-ключ) —
+        // маскирование не нужно, передаём rawProgress как есть.
+        var config = new ServerConfig
+        {
+            Host       = Host,
+            Username   = Username,
+            Password   = Password,
+            SshKey     = SshKeyPath
+        };
+        IProgress<string> progress = string.IsNullOrEmpty(Password)
+            ? rawProgress
+            : new PasswordMasker(rawProgress, Password);
 
         try
         {
-            var config = new ServerConfig
-            {
-                Host       = Host,
-                Username   = Username,
-                Password   = Password,
-                SshKey     = SshKeyPath
-            };
-
             var ssh = new SSH();
 
             // 1. Подключение
@@ -193,7 +199,7 @@ public partial class DeployViewModel : ObservableObject
             ActiveSsh    = ssh;
             IsCompleted  = true;
             StatusText   = "✅ Деплой завершён!";
-            
+
             progress.Report("\n=================================================");
             progress.Report("✅ ДЕПЛОЙ УСПЕШНО ЗАВЕРШЕН!");
             progress.Report("Перейдите на вкладку 'Deploy', чтобы скопировать ссылки подключения.");
@@ -223,7 +229,8 @@ public partial class DeployViewModel : ObservableObject
 
         IsDeploying = true;
         StatusText = "Проверка подключения...";
-        _logsVm.ProgressReporter.Report("Начало проверки SSH подключения к " + Host);
+        var rawProgress = _logsVm.ProgressReporter;
+        rawProgress.Report("Начало проверки SSH подключения к " + Host);
 
         try
         {
@@ -235,17 +242,22 @@ public partial class DeployViewModel : ObservableObject
                 SshKey     = SshKeyPath
             };
 
+            // Маскируем пароль в логах на случай если SSH.NET пробросит его в ex.Message
+            IProgress<string> progress = string.IsNullOrEmpty(Password)
+                ? rawProgress
+                : new PasswordMasker(rawProgress, Password);
+
             using var ssh = new SSH();
-            bool connected = await ssh.TestConnection(config, _logsVm.ProgressReporter);
+            bool connected = await ssh.TestConnection(config, progress);
             if (connected)
             {
                 StatusText = "Подключение успешно установлено! ✓";
-                _logsVm.ProgressReporter.Report("SSH Подключение успешно установлено!");
+                progress.Report("SSH Подключение успешно установлено!");
             }
             else
             {
                 StatusText = "Не удалось подключиться к серверу. ✗";
-                _logsVm.ProgressReporter.Report("Ошибка: не удалось авторизоваться по SSH.");
+                progress.Report("Ошибка: не удалось авторизоваться по SSH.");
             }
         }
         catch (Exception ex)

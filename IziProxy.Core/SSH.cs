@@ -236,27 +236,63 @@ public class SSH : IDisposable
     /// Выполняет команду с правами администратора (sudo) на сервере.
     /// Автоматически подставляет пароль пользователя при необходимости (если вход выполнен не под root).
     /// </summary>
+    /// <remarks>
+    /// Пароль передаётся через stdin команды <c>sudo -S</c>, а не через <c>echo</c> в shell —
+    /// это исключает попадание пароля в историю команд и в вывод <c>ps</c> на сервере.
+    /// Перед вызовом прогресс-репортер оборачивается в <see cref="PasswordMasker"/>, чтобы
+    /// пароль не утек в логи клиента.
+    /// </remarks>
     /// <param name="serverConfig">Конфигурация сервера.</param>
     /// <param name="command">Выполняемая команда.</param>
+    /// <param name="progress">Получатель прогресса и сообщений об ошибках (автоматически маскируется).</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Объект <see cref="SshCommand"/> с результатом выполнения команды.</returns>
     /// <exception cref="InvalidOperationException">Бросается, если клиент не подключен.</exception>
-    public async Task<SshCommand> RunSudoCommand(ServerConfig serverConfig, string command)
+    public async Task<SshCommand> RunSudoCommand(
+        ServerConfig serverConfig,
+        string command,
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         if (_sshClient == null || !_sshClient.IsConnected)
             throw new InvalidOperationException("SSH-клиент не подключен.");
 
-        string sudoCommand;
+        // Root: выполняем как есть, без обёрток.
         if (serverConfig.Username.Equals("root", StringComparison.OrdinalIgnoreCase))
         {
-            sudoCommand = command;
-        }
-        else
-        {
-            string escapedCommand = command.Replace("\"", "\\\"");
-            sudoCommand = $"echo '{serverConfig.Password}' | sudo -S bash -c \"{escapedCommand}\"";
+            return await Task.Run(() => _sshClient.RunCommand(command), cancellationToken);
         }
 
-        return await Task.Run(() => _sshClient.RunCommand(sudoCommand));
+        // Не-root: используем sudo с паролем через stdin. Промпт sudo отключаем
+        // флагом -p '' — нам не нужно видеть "[sudo] password for user:", иначе он
+        // смешается с stdout команды и сломает парсинг результата.
+        // Аргумент bash -c всегда в одинарных кавычках, экранируем вложенные '.
+        string bashArg = "'" + command.Replace("'", "'\\''") + "'";
+        string sudoCommand = $"sudo -S -p '' bash -c {bashArg}";
+
+        // Прогресс-репортер оборачиваем, чтобы пароль (если случайно попадёт в
+        // строку лога через ex.Message, ssh error и т.п.) был замаскирован.
+        var maskedProgress = progress == null ? null : new PasswordMasker(progress, serverConfig.Password);
+        maskedProgress?.Report("[DEBUG] sudo через stdin (пароль НЕ в shell-истории сервера)");
+
+        return await Task.Run(() =>
+        {
+            using var sshCommand = _sshClient.CreateCommand(sudoCommand);
+            using (var input = sshCommand.CreateInputStream())
+            {
+                // Запускаем асинхронно и параллельно пишем пароль. SSH.NET
+                // буферизует ввод — даже если sudo ещё не начал читать, пароль
+                // будет ждать в pipe.
+                var executeTask = sshCommand.ExecuteAsync(cancellationToken);
+                var passwordBytes = System.Text.Encoding.UTF8.GetBytes(serverConfig.Password + "\n");
+                input.Write(passwordBytes, 0, passwordBytes.Length);
+                // Закрытие stream (через using) сообщает sudo, что stdin кончился —
+                // после прочтения пароля sudo запустит bash, а bash увидит EOF на stdin
+                // и команда выполнится без блокировки.
+                executeTask.Wait(cancellationToken);
+            }
+            return sshCommand;
+        }, cancellationToken);
     }
 
     /// <summary>
