@@ -56,17 +56,36 @@ public class XrayMonitor
     }
 
     /// <summary>
-    /// Парсит вывод команды xray api statsquery.
-    /// Пример строк вывода:
-    ///   stat:{name:"inbound>>>inbound-1>>>traffic>>>uplink" value:12345}
+    /// Парсит вывод команды <c>/usr/local/bin/xray api statsquery</c>.
+    /// Возвращает список статистики трафика по каждому inbound.
     /// </summary>
-    private static List<InboundTrafficStat> ParseTrafficStats(string raw)
+    /// <remarks>
+    /// Формат строки вывода (реальный формат xray-core):
+    /// <code>
+    /// stat: {name: "inbound>>>inbound-1>>>traffic>>>uplink", value: 12345}
+    /// stat: {name: "inbound>>>inbound-1>>>traffic>>>downlink", value: 67890}
+    /// </code>
+    /// <para>
+    /// Текущий regex ожидает формат без пробелов (старая версия xray):
+    /// <c>name:"inbound>>>TAG>>>traffic>>>dir" value:N</c>. Если xray обновит
+    /// формат и начнёт ставить пробелы после <c>name:</c> и <c>value:</c> —
+    /// парсер сломается. Задокументировано в <c>ParseTrafficStatsTests</c>.
+    /// </para>
+    /// </remarks>
+    /// <param name="raw">Полный stdout от <c>xray api statsquery</c>.</param>
+    /// <returns>Список <see cref="InboundTrafficStat"/>, отсортированный по Tag.</returns>
+    public static List<InboundTrafficStat> ParseTrafficStats(string raw)
     {
         var dict = new Dictionary<string, InboundTrafficStat>();
 
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return dict.Values.OrderBy(s => s.Tag).ToList();
+        }
+
         foreach (var line in raw.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            // ищем строки вида: name:"inbound>>>TAG>>>traffic>>>uplink"  value:12345
+            // Ищем строки вида: name:"inbound>>>TAG>>>traffic>>>dir"  value:N
             var nameMatch = System.Text.RegularExpressions.Regex.Match(line, @"name:""inbound>>>([^>]+)>>>traffic>>>(uplink|downlink)""");
             var valueMatch = System.Text.RegularExpressions.Regex.Match(line, @"value:(\d+)");
 
