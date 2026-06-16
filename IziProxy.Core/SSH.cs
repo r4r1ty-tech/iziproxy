@@ -233,6 +233,36 @@ public class SSH : IDisposable
     }
 
     /// <summary>
+    /// Формирует финальную строку команды, которую <c>_sshClient.RunCommand</c>
+    /// отправит на сервер. Под root команда выполняется как есть,
+    /// для остальных — оборачивается в <c>sudo -S -p '' bash -c '...'</c> с
+    /// правильным POSIX-escape одинарных кавычек.
+    /// </summary>
+    /// <remarks>
+    /// Выделен в отдельный internal-метод чтобы его можно было покрыть
+    /// юнит-тестами без поднятия sshd (см. <c>BuildSudoCommandTests</c>).
+    /// Пароль через stdin подаётся отдельно в <see cref="RunSudoCommand"/>;
+    /// здесь только формирование shell-строки.
+    /// </remarks>
+    /// <param name="username">Имя пользователя SSH (если "root" — без sudo-обвязки).</param>
+    /// <param name="command">Команда, которую нужно выполнить.</param>
+    /// <returns>Готовая строка для <c>SshClient.RunCommand</c> или <c>CreateCommand</c>.</returns>
+    public static string BuildSudoCommand(string username, string command)
+    {
+        if (username.Equals("root", StringComparison.OrdinalIgnoreCase))
+        {
+            return command;
+        }
+
+        // Аргумент bash -c всегда в одинарных кавычках. Внутри single-quoted
+        // строки одинарная кавычка экранируется через end-quote, escaped-quote,
+        // start-quote: '\'' . Это POSIX-standard, работает в bash/dash/zsh.
+        // Пример: "echo 'hello'" → "'echo '\\''hello'\\'''"
+        string bashArg = "'" + command.Replace("'", "'\\''") + "'";
+        return $"sudo -S -p '' bash -c {bashArg}";
+    }
+
+    /// <summary>
     /// Выполняет команду с правами администратора (sudo) на сервере.
     /// Автоматически подставляет пароль пользователя при необходимости (если вход выполнен не под root).
     /// </summary>
@@ -265,10 +295,9 @@ public class SSH : IDisposable
 
         // Не-root: используем sudo с паролем через stdin. Промпт sudo отключаем
         // флагом -p '' — нам не нужно видеть "[sudo] password for user:", иначе он
-        // смешается с stdout команды и сломает парсинг результата.
-        // Аргумент bash -c всегда в одинарных кавычках, экранируем вложенные '.
-        string bashArg = "'" + command.Replace("'", "'\\''") + "'";
-        string sudoCommand = $"sudo -S -p '' bash -c {bashArg}";
+        // смешается с stdout команды и сломает парсинг результата. Формирование
+        // shell-строки вынесено в BuildSudoCommand для покрытия юнит-тестами.
+        string sudoCommand = BuildSudoCommand(serverConfig.Username, command);
 
         // Прогресс-репортер оборачиваем, чтобы пароль (если случайно попадёт в
         // строку лога через ex.Message, ssh error и т.п.) был замаскирован.
