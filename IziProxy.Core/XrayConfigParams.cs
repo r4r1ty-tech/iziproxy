@@ -42,6 +42,83 @@ public class XrayConfigParams
     public List<string> Snis { get; set; } = new List<string>();
 
     /// <summary>
+    /// Парсит вывод команды <c>/usr/local/bin/xray x25519</c> и возвращает
+    /// пару (PrivateKey, PublicKey).
+    /// </summary>
+    /// <remarks>
+    /// Xray-core менял формат вывода между версиями:
+    /// <list type="bullet">
+    /// <item>Старый формат: <c>PrivateKey: ...</c> + <c>Password (PublicKey): ...</c></item>
+    /// <item>Альтернативный старый: <c>Private key: ...</c> + <c>Public key: ...</c></item>
+    /// <item>Новый (xray v25.3.6+): <c>PrivateKey: ...</c> + <c>Password: ...</c> + <c>Hash32: ...</c></item>
+    /// </list>
+    /// Эта функция принимает все три формата. Если ни один не распознан —
+    /// кидает <see cref="FormatException"/> с указанием ожидаемых префиксов.
+    /// </remarks>
+    /// <param name="raw">Полный вывод <c>xray x25519</c> (stdout).</param>
+    /// <returns>Tuple (PrivateKey, PublicKey) — base64-строки.</returns>
+    /// <exception cref="ArgumentException">Пустой или null вход.</exception>
+    /// <exception cref="FormatException">Не найден ни PrivateKey, ни PublicKey.</exception>
+    public static (string PrivateKey, string PublicKey) ParseX25519Output(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            throw new ArgumentException(
+                "xray x25519 вернул пустой результат. Проверьте установку Xray.",
+                nameof(raw));
+        }
+
+        string? privateKey = null;
+        string? publicKey = null;
+
+        foreach (string line in raw.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            string trimmed = line.Trim();
+
+            // PrivateKey. Поддерживаем оба варианта написания: "PrivateKey:"
+            // (основной) и "Private key:" (встречается в старых выводах).
+            if (trimmed.StartsWith("PrivateKey:", StringComparison.Ordinal))
+            {
+                privateKey = trimmed["PrivateKey:".Length..].Trim();
+            }
+            else if (trimmed.StartsWith("Private key:", StringComparison.Ordinal))
+            {
+                privateKey = trimmed["Private key:".Length..].Trim();
+            }
+
+            // PublicKey. Три варианта:
+            //   - "Password (PublicKey):" — длинный формат (старый xray)
+            //   - "Password:" — короткий формат (xray v25.3.6+, появился вместе с Hash32)
+            //   - "Public key:" — альтернативный старый
+            // Проверяем "Password (PublicKey):" ПЕРЕД "Password:" чтобы не
+            // захватить лишнее "(PublicKey)" в base64.
+            else if (trimmed.StartsWith("Password (PublicKey):", StringComparison.Ordinal))
+            {
+                publicKey = trimmed["Password (PublicKey):".Length..].Trim();
+            }
+            else if (trimmed.StartsWith("Password:", StringComparison.Ordinal)
+                     && !trimmed.StartsWith("Password (", StringComparison.Ordinal))
+            {
+                publicKey = trimmed["Password:".Length..].Trim();
+            }
+            else if (trimmed.StartsWith("Public key:", StringComparison.Ordinal))
+            {
+                publicKey = trimmed["Public key:".Length..].Trim();
+            }
+        }
+
+        if (string.IsNullOrEmpty(privateKey) || string.IsNullOrEmpty(publicKey))
+        {
+            throw new FormatException(
+                $"Не удалось найти PrivateKey/PublicKey в выводе xray x25519. " +
+                $"Ожидаются префиксы 'PrivateKey:'/'Password:' или 'Private key:'/'Public key:'. " +
+                $"Вывод был:\n{raw}");
+        }
+
+        return (privateKey, publicKey);
+    }
+
+    /// <summary>
     /// Генерирует криптографические ключи, UUID и ShortID, выполняя команды на удаленном сервере через SSH.
     /// </summary>
     /// <param name="sshClient">Подключенный SSH-клиент.</param>
@@ -61,37 +138,12 @@ public class XrayConfigParams
         string x25519Output = x25519Result.Result;
         progress?.Report($"[DEBUG] Вывод генерации x25519:\n{x25519Output}");
 
-        if (string.IsNullOrWhiteSpace(x25519Output))
-        {
-            throw new Exception("Ошибка: xray x25519 вернул пустой результат. Проверьте установку Xray.");
-        }
-
-        progress?.Report("[DEBUG] Парсинг ключей x25519...");
-        string[] lines = x25519Output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (string line in lines)
-        {
-            if (line.StartsWith("PrivateKey:"))
-            {
-                xrayConfig.PrivateKey = line.Substring("PrivateKey:".Length).Trim();
-            }
-            else if (line.StartsWith("Password (PublicKey):"))
-            {
-                xrayConfig.Password = line.Substring("Password (PublicKey):".Length).Trim();
-            }
-            else if (line.StartsWith("Private key:"))
-            {
-                xrayConfig.PrivateKey = line.Substring("Private key:".Length).Trim();
-            }
-            else if (line.StartsWith("Public key:"))
-            {
-                xrayConfig.Password = line.Substring("Public key:".Length).Trim();
-            }
-        }
-
-        if (string.IsNullOrWhiteSpace(xrayConfig.PrivateKey) || string.IsNullOrWhiteSpace(xrayConfig.Password))
-        {
-            throw new Exception($"Ошибка: Не удалось найти Private key или Public key в выводе команды. Вывод был:\n{x25519Output}");
-        }
+        // Парсинг ключей. Поддерживает три формата вывода: старый
+        // "PrivateKey:/Password (PublicKey):", альтернативный "Private key:/Public key:",
+        // и новый (xray v25.3.6+) "PrivateKey:/Password:/Hash32:".
+        (string privateKey, string publicKey) = ParseX25519Output(x25519Output);
+        xrayConfig.PrivateKey = privateKey;
+        xrayConfig.Password = publicKey;
 
         progress?.Report($"[DEBUG] Успешно найден PrivateKey (длина: {xrayConfig.PrivateKey.Length}) и Password/PublicKey (длина: {xrayConfig.Password.Length})");
 
