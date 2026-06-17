@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Diagnostics;
 
 namespace IziProxy;
 
@@ -24,16 +25,20 @@ public static class EmbeddedScripts
     {
         using var stream = Open("config.json");
         using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        string content = reader.ReadToEnd();
+        Debug.WriteLine($"[DEBUG] EmbeddedScripts.ReadConfigJson: прочитан шаблон config.json, длина={content.Length} байт");
+        return content;
     }
 
     private static Stream Open(string fileName)
     {
         string resourceName = Prefix + fileName;
+        Debug.WriteLine($"[DEBUG] EmbeddedScripts.Open: ищу ресурс '{resourceName}'");
         var stream = _asm.GetManifestResourceStream(resourceName)
             ?? throw new FileNotFoundException(
                 $"Встроенный ресурс '{resourceName}' не найден. " +
                 $"Доступные ресурсы: {string.Join(", ", _asm.GetManifestResourceNames())}");
+        Debug.WriteLine($"[DEBUG] EmbeddedScripts.Open: ресурс '{resourceName}' найден, открыт Stream длиной {stream.Length} байт");
         return stream;
     }
 }
