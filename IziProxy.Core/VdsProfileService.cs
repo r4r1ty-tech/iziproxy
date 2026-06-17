@@ -154,39 +154,67 @@ public static class VdsProfileService
     private static readonly Lazy<SecureField> _secureField = new(
         () => new SecureField("IziProxy.VdsProfile.Password"));
 
-    public static List<VdsProfile> LoadProfiles(string? filePath = null)
+    public static List<VdsProfile> LoadProfiles(string? filePath = null, IProgress<string>? progress = null)
     {
         var path = filePath ?? DefaultFilePath;
+        progress?.Report($"[TRACE] VdsProfileService.LoadProfiles вход: path={path}");
         try
         {
-            if (!File.Exists(path)) return new List<VdsProfile>();
+            if (!File.Exists(path))
+            {
+                progress?.Report($"[INFO] Файл профилей не найден ({path}) — возвращаем пустой список");
+                return new List<VdsProfile>();
+            }
+
             string json = File.ReadAllText(path);
+            progress?.Report($"[DEBUG] Прочитан JSON профилей, длина={json.Length} байт");
+
             var loaded = JsonSerializer.Deserialize<List<VdsProfile>>(json)
                 ?? new List<VdsProfile>();
+            progress?.Report($"[DEBUG] Десериализовано {loaded.Count} профилей из JSON");
 
             // Расшифровываем Password у каждого профиля. Legacy plain-text
             // (без префикса enc:v1:) SecureField.Unprotect вернёт as is.
             var sf = _secureField.Value;
+            int legacyCount = 0;
             foreach (var p in loaded)
             {
+                string before = p.Password;
                 p.Password = sf.Unprotect(p.Password);
+                // SecureField не помечает legacy plain vs decrypted — на
+                // глаз их не отличить, считаем legacy все, что не начинается
+                // с префикса enc:v1:. Не критично, просто статистика.
+                if (!string.IsNullOrEmpty(before) && !before.StartsWith(SecureField.Prefix, StringComparison.Ordinal))
+                {
+                    legacyCount++;
+                }
             }
+            if (legacyCount > 0)
+            {
+                progress?.Report($"[WARN] Загружено {legacyCount} профилей в legacy plaintext — будут перешифрованы при следующем Save");
+            }
+            progress?.Report($"[INFO] Загружено {loaded.Count} профилей из {path}");
             return loaded;
         }
-        catch
+        catch (Exception ex)
         {
+            progress?.Report($"[ERROR] Не удалось загрузить профили из {path}: {ex.Message} — возвращаем пустой список");
             return new List<VdsProfile>();
         }
     }
 
-    public static void SaveProfiles(List<VdsProfile> profiles, string? filePath = null)
+    public static void SaveProfiles(List<VdsProfile> profiles, string? filePath = null, IProgress<string>? progress = null)
     {
         var path = filePath ?? DefaultFilePath;
+        progress?.Report($"[TRACE] VdsProfileService.SaveProfiles вход: profiles={profiles.Count}, path={path}");
         try
         {
             var dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
                 Directory.CreateDirectory(dir);
+                progress?.Report($"[DEBUG] Создана директория {dir}");
+            }
 
             // Шифруем Password каждого профиля перед сериализацией.
             // Делаем копию чтобы не мутировать переданный список (UI
@@ -204,9 +232,11 @@ public static class VdsProfileService
                     SshKeyPath = p.SshKeyPath,
                 });
             }
+            progress?.Report($"[DEBUG] Зашифровано {toSerialize.Count} паролей через DataProtection");
 
             string json = JsonSerializer.Serialize(toSerialize, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, json);
+            progress?.Report($"[DEBUG] JSON записан в {path}, размер={json.Length} байт");
 
             // Ограничиваем доступ к файлу: на Linux/macOS ставим 0600
             // (read/write только владельцу). На Windows File.SetUnixFileMode
@@ -216,10 +246,14 @@ public static class VdsProfileService
             if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() || OperatingSystem.IsFreeBSD())
             {
                 File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                progress?.Report("[DEBUG] Установлен режим файла 0600 (только владелец)");
             }
+
+            progress?.Report($"[INFO] Сохранено {profiles.Count} профилей в {path}");
         }
-        catch
+        catch (Exception ex)
         {
+            progress?.Report($"[ERROR] Не удалось сохранить профили в {path}: {ex.Message}");
             // Игнорируем ошибки записи
         }
     }
