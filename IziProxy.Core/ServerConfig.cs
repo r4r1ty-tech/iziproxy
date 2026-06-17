@@ -39,15 +39,48 @@ public class ServerConfig
     /// <summary>
     /// Запрашивает у пользователя через консоль параметры подключения к серверу.
     /// </summary>
-    public void SetServer()
+    /// <param name="progress">Получатель логов (опционально). User-prompts идут в Console всегда,
+    /// но в лог пишется итоговое состояние заполненных полей.</param>
+    public void SetServer(IProgress<string>? progress = null)
     {
+        progress?.Report("[TRACE] ServerConfig.SetServer вход: интерактивный ввод параметров сервера");
+
         Console.WriteLine("Введите IP сервера");
         host = Console.ReadLine() ?? string.Empty;
+        progress?.Report($"[DEBUG] ServerConfig: введён Host='{host}'");
+
         Console.WriteLine("Введите username пользователя");
         username = Console.ReadLine() ?? string.Empty;
+        progress?.Report($"[DEBUG] ServerConfig: введён Username='{username}'");
+
         Console.WriteLine("Введите пароль от указанного пользователя");
         password = Console.ReadLine() ?? string.Empty;
+        // Никогда не пишем сам пароль в лог — только факт что введён, и его длину.
+        progress?.Report($"[DEBUG] ServerConfig: введён Password (длина={password.Length})");
+
         Console.WriteLine("Укажите путь до файла SSH ключ если он есть, если нет нажмите Enter");
         sshKey = Console.ReadLine() ?? string.Empty;
+        progress?.Report($"[DEBUG] ServerConfig: введён SshKey='{sshKey}'");
+
+        // Проверка итогового состояния. Не валидируем по правилам POSIX
+        // (это делает VdsProfile.Validate), но сигналим о явных проблемах
+        // чтобы оператор заметил опечатку до попытки подключения.
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            progress?.Report("[WARN] ServerConfig: Host пустой — подключение заведомо провалится");
+        }
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            progress?.Report("[WARN] ServerConfig: Username пустой — подключение заведомо провалится");
+        }
+        if (string.IsNullOrEmpty(password) && string.IsNullOrWhiteSpace(sshKey))
+        {
+            progress?.Report("[ERROR] ServerConfig: не указан ни пароль, ни SSH-ключ — аутентификация невозможна");
+        }
+        else
+        {
+            string auth = string.IsNullOrWhiteSpace(sshKey) ? "password" : $"sshkey ({sshKey})";
+            progress?.Report($"[INFO] ServerConfig заполнен: host={host}, user={username}, auth={auth}, port={port}");
+        }
     }
 }
