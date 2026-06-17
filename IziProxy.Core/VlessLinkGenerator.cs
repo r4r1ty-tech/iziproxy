@@ -15,18 +15,35 @@ public class VlessLinkGenerator
     /// <param name="serverConfig">Конфигурация целевого сервера VDS.</param>
     /// <param name="xrayParams">Параметры ключей и настроек Xray. Должны быть заполнены Ports и Snis.</param>
     /// <param name="connectionName">Базовое название подключения, отображаемое на клиенте.</param>
+    /// <param name="progress">Получатель прогресса (опционально).</param>
     /// <returns>Список готовых ссылок формата vless:// для импорта в клиентское ПО (v2rayN, Nekobox и др.).</returns>
-    public static List<string> GenerateRealityLinks(ServerConfig serverConfig, XrayConfigParams xrayParams, string connectionName = "IziProxy_VDS")
+    public static List<string> GenerateRealityLinks(ServerConfig serverConfig, XrayConfigParams xrayParams, string connectionName = "IziProxy_VDS", IProgress<string>? progress = null)
     {
-        var links = new List<string>();
+        progress?.Report($"[TRACE] VlessLinkGenerator.GenerateRealityLinks вход: ports={xrayParams.Ports.Count}, snis={xrayParams.Snis.Count}");
 
-        for (int i = 0; i < xrayParams.Ports.Count; i++)
+        if (xrayParams.Ports.Count == 0 || xrayParams.Snis.Count == 0)
+        {
+            progress?.Report("[ERROR] Нет портов или SNI для генерации VLESS-ссылок");
+            return new List<string>();
+        }
+
+        if (xrayParams.Ports.Count != xrayParams.Snis.Count)
+        {
+            progress?.Report($"[WARN] Количество портов ({xrayParams.Ports.Count}) не совпадает с количеством SNI ({xrayParams.Snis.Count}) — будут сгенерированы ссылки только по минимальному количеству");
+        }
+
+        var links = new List<string>();
+        int linkCount = Math.Min(xrayParams.Ports.Count, xrayParams.Snis.Count);
+        progress?.Report($"[INFO] Генерация {linkCount} VLESS-ссылок (xhttp+REALITY) для {serverConfig.Host}");
+
+        for (int i = 0; i < linkCount; i++)
         {
             string port = xrayParams.Ports[i];
             string sni = xrayParams.Snis[i];
 
             if (string.IsNullOrWhiteSpace(sni))
             {
+                progress?.Report($"[WARN] SNI #{i + 1} пустой — подставляем fallback www.microsoft.com");
                 sni = "www.microsoft.com";
             }
 
@@ -34,8 +51,10 @@ public class VlessLinkGenerator
 
             string link = BuildLink(serverConfig.Host, port, xrayParams.Uuid, xrayParams.Password, sni, xrayParams.ShortId, linkName);
             links.Add(link);
+            progress?.Report($"[DEBUG] Ссылка #{i + 1} собрана: port={port}, sni={sni}, name={linkName}, длина={link.Length}");
         }
 
+        progress?.Report($"[INFO] Сгенерировано {links.Count} VLESS-ссылок");
         return links;
     }
 
