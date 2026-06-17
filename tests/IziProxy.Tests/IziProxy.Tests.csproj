@@ -14,6 +14,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <!-- SkippableFact: для integration-тестов которые skip'аются
+         если TEST_SSHD_HOST не задан (см. SshIntegrationTests). -->
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.61" />
   </ItemGroup>
 
   <ItemGroup>

@@ -6,6 +6,7 @@ namespace IziProxy;
 public class ServerConfig
 {
     private string host = "";
+    private int port = 22; // SSH по умолчанию
     private string username = "";
     private string password = "";
     private string sshKey = "";
@@ -14,6 +15,12 @@ public class ServerConfig
     /// IP-адрес или хост удаленного сервера.
     /// </summary>
     public string Host { get => host; set => host = value; }
+
+    /// <summary>
+    /// Порт SSH. По умолчанию 22 (стандартный SSH). Можно переопределить
+    /// для нестандартных серверов или integration-тестов (TEST_SSHD_PORT=2222).
+    /// </summary>
+    public int Port { get => port; set => port = value; }
 
     /// <summary>
     /// Имя пользователя для SSH/SFTP подключения.

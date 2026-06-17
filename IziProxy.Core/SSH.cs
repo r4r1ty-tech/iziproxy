@@ -35,19 +35,19 @@ public class SSH : IDisposable
                 var privateKey = new PrivateKeyFile(sshKeyPath);
                 var keyAuth = new PrivateKeyAuthenticationMethod(serverConfig.Username, privateKey);
 
-                connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Username, keyAuth)
+                connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Port, serverConfig.Username, keyAuth)
+                    {
+                        Timeout = TimeSpan.FromSeconds(5)
+                    };
+                }
+                else
                 {
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
-            }
-            else
-            {
-                connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Username,
+                connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Port, serverConfig.Username,
                     new PasswordAuthenticationMethod(serverConfig.Username, serverConfig.Password))
-                {
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
-            }
+                    {
+                        Timeout = TimeSpan.FromSeconds(5)
+                    };
+                }
 
             await Task.Run(() =>
             {
