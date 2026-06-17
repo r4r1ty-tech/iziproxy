@@ -15,29 +15,40 @@ public class XrayMonitor
     /// <param name="progress">Получатель прогресса.</param>
     public static async Task<XrayStatus> GetStatus(SSH sshClient, ServerConfig serverConfig, IProgress<string>? progress = null)
     {
+        progress?.Report("[TRACE] XrayMonitor.GetStatus вход: запрашиваем статус Xray");
         var status = new XrayStatus();
 
-        progress?.Report("Проверка статуса сервиса Xray...");
+        progress?.Report("[INFO] Проверка статуса сервиса Xray");
 
         // 1. Статус сервиса
+        progress?.Report("[DEBUG] Выполняем: systemctl is-active xray");
         var serviceResult = await sshClient.RunSudoCommand(serverConfig, "systemctl is-active xray");
         status.IsRunning = serviceResult.Result.Trim().Equals("active", StringComparison.OrdinalIgnoreCase);
-        progress?.Report(status.IsRunning ? "Xray: запущен ✓" : "Xray: остановлен ✗");
+        progress?.Report(status.IsRunning
+            ? "[INFO] Xray: запущен ✓"
+            : "[WARN] Xray: остановлен ✗");
 
         // 2. Проверка конфига
-        progress?.Report("Проверка конфигурации Xray...");
+        progress?.Report("[INFO] Проверка конфигурации Xray через xray -test");
         var configCheck = await sshClient.RunSudoCommand(serverConfig, "/usr/local/bin/xray -test -config /usr/local/etc/xray/config.json 2>&1");
         status.ConfigCheckOutput = configCheck.Result.Trim();
         status.IsConfigValid = !status.ConfigCheckOutput.Contains("error", StringComparison.OrdinalIgnoreCase)
                                && !status.ConfigCheckOutput.Contains("failed", StringComparison.OrdinalIgnoreCase);
-        progress?.Report(status.IsConfigValid ? "Конфиг валиден ✓" : $"Проблема конфига: {status.ConfigCheckOutput}");
+        progress?.Report(status.IsConfigValid
+            ? "[INFO] Конфиг валиден ✓"
+            : $"[ERROR] Проблема конфига: {status.ConfigCheckOutput}");
 
         // 3. Статистика трафика (требует api+stats в config.json)
         if (status.IsRunning)
         {
-            progress?.Report("Запрос статистики трафика...");
+            progress?.Report("[INFO] Запрос статистики трафика через xray api statsquery");
             var statsResult = await sshClient.RunSudoCommand(serverConfig, "/usr/local/bin/xray api statsquery --server=127.0.0.1:10085 2>&1");
             status.TrafficStats = ParseTrafficStats(statsResult.Result);
+            progress?.Report($"[DEBUG] Спарсено {status.TrafficStats.Count} inbound'ов со статистикой");
+        }
+        else
+        {
+            progress?.Report("[DEBUG] Сервис не запущен — статистика трафика пропущена");
         }
 
         return status;
@@ -48,10 +59,18 @@ public class XrayMonitor
     /// </summary>
     public static async Task<bool> RestartService(SSH sshClient, ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report("Перезапуск Xray...");
+        progress?.Report("[TRACE] XrayMonitor.RestartService вход: systemctl restart xray");
+        progress?.Report("[INFO] Перезапуск Xray");
         var result = await sshClient.RunSudoCommand(serverConfig, "systemctl restart xray");
         bool success = string.IsNullOrWhiteSpace(result.Error);
-        progress?.Report(success ? "Xray перезапущен ✓" : $"Ошибка: {result.Error}");
+        if (success)
+        {
+            progress?.Report("[INFO] Xray перезапущен ✓");
+        }
+        else
+        {
+            progress?.Report($"[ERROR] Ошибка перезапуска: {result.Error}");
+        }
         return success;
     }
 
