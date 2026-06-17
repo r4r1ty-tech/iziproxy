@@ -84,26 +84,30 @@ public class DeployScripts
     /// <returns>True, если деплой выполнен успешно; иначе false.</returns>
     public async Task<bool> DeployAndConfigure(SSH sshClient, ServerConfig serverConfig, XrayConfigParams xrayParams, IProgress<string>? progress = null)
     {
-        progress?.Report("Загрузка Deploy.sh...");
+        progress?.Report("[TRACE] DeployScripts.DeployAndConfigure вход: x25519-ключи и UUID уже сгенерированы, отправляем конфиг на сервер");
+        progress?.Report("[INFO] Загрузка Deploy.sh на сервер");
+
         bool isDeployUploaded = await sshClient.UploadFile(EmbeddedScripts.OpenDeploy(), "Deploy.sh", serverConfig, progress);
 
         if (!isDeployUploaded)
         {
-            progress?.Report("Не удалось загрузить Deploy.sh");
+            progress?.Report("[ERROR] Не удалось загрузить Deploy.sh");
             return false;
         }
 
-        progress?.Report("Формирование config.json...");
+        progress?.Report("[INFO] Формирование config.json из шаблона");
         string configContent = await Task.Run(() => EmbeddedScripts.ReadConfigJson());
 
         configContent = configContent.Replace("__UUID__", xrayParams.Uuid)
                                      .Replace("__PRIVATE_KEY__", xrayParams.PrivateKey)
                                      .Replace("__SHORT_ID__", xrayParams.ShortId);
+        progress?.Report($"[DEBUG] config.json: подставлены UUID/PrivateKey/ShortId, размер={configContent.Length} байт");
 
         string tempConfigPath = Path.Combine(Path.GetTempPath(), "iziproxy_temp_config.json");
         await Task.Run(() => File.WriteAllText(tempConfigPath, configContent));
+        progress?.Report($"[DEBUG] Временный config.json сохранен: {tempConfigPath}");
 
-        progress?.Report("Загрузка config.json...");
+        progress?.Report("[INFO] Загрузка config.json на сервер");
         bool isConfigUploaded = await sshClient.UploadFile(tempConfigPath, "config.json", serverConfig, progress);
 
         await Task.Run(() =>
@@ -111,10 +115,11 @@ public class DeployScripts
             if (File.Exists(tempConfigPath))
                 File.Delete(tempConfigPath);
         });
+        progress?.Report("[DEBUG] Временный config.json удалён");
 
         if (!isConfigUploaded)
         {
-            progress?.Report("Не удалось загрузить config.json");
+            progress?.Report("[ERROR] Не удалось загрузить config.json");
             return false;
         }
 
@@ -124,10 +129,10 @@ public class DeployScripts
         progress?.Report($"[DEBUG] Выполнение Deploy.sh на сервере: {runCommand}");
         var result = await sshClient.RunSudoCommand(serverConfig, runCommand);
         string output = result.Result;
-        progress?.Report($"[DEBUG] Вывод Deploy.sh:\n{output}");
+        progress?.Report($"[DEBUG] Вывод Deploy.sh (длина={output?.Length ?? 0}):\n{output}");
         if (!string.IsNullOrWhiteSpace(result.Error))
         {
-            progress?.Report($"[DEBUG] Ошибки Deploy.sh (stderr):\n{result.Error}");
+            progress?.Report($"[WARN] Ошибки Deploy.sh (stderr):\n{result.Error}");
         }
 
         // Парсим порты и SNI из вывода скрипта через ParseDeployOutput.
@@ -144,11 +149,13 @@ public class DeployScripts
 
         if (string.IsNullOrWhiteSpace(port1) || string.IsNullOrWhiteSpace(port2) || string.IsNullOrWhiteSpace(port3))
         {
+            progress?.Report("[ERROR] Deploy.sh не вернул порты (или вернул пустые)");
             throw new Exception("Критическая ошибка: скрипт Deploy.sh не вернул порты (или вернул пустые).");
         }
 
         if (string.IsNullOrWhiteSpace(sni1) || string.IsNullOrWhiteSpace(sni2) || string.IsNullOrWhiteSpace(sni3))
         {
+            progress?.Report("[ERROR] Deploy.sh не вернул SNI (или вернул пустые)");
             throw new Exception("Критическая ошибка: скрипт Deploy.sh не вернул SNI (или вернул пустые).");
         }
 
@@ -159,13 +166,14 @@ public class DeployScripts
         xrayParams.Snis.Add(sni1);
         xrayParams.Snis.Add(sni2);
         xrayParams.Snis.Add(sni3);
+        progress?.Report($"[INFO] Параметры inbound'ов получены: ports=[{port1},{port2},{port3}], snis=[{sni1},{sni2},{sni3}]");
 
-        progress?.Report("Применение конфигурации Xray...");
+        progress?.Report("[INFO] Применение конфигурации Xray...");
         string xrayConfDir = "/usr/local/etc/xray";
         string targetConfPath = $"{xrayConfDir}/config.json";
-        
+
         string configSource = serverConfig.Username == "root" ? "/root/config.json" : $"/home/{serverConfig.Username}/config.json";
-        
+
         string applyCommand = $@"
 mkdir -p {xrayConfDir} && \
 cp {configSource} {targetConfPath} && \
@@ -179,25 +187,25 @@ else
 fi
 ";
 
-        progress?.Report($"[DEBUG] Копирование конфига и рестарт (с проверкой статуса)...");
+        progress?.Report($"[DEBUG] Копирование конфига в {targetConfPath} и рестарт (с проверкой статуса)...");
         var applyResult = await sshClient.RunSudoCommand(serverConfig, applyCommand);
         string applyOutput = applyResult.Result ?? "";
-        
-        progress?.Report($"[DEBUG] Результат рестарта:\n{applyOutput}");
+
+        progress?.Report($"[DEBUG] Результат рестарта (длина={applyOutput.Length}):\n{applyOutput}");
         if (!string.IsNullOrWhiteSpace(applyResult.Error))
         {
-            progress?.Report($"[DEBUG] Ошибки рестарта (stderr):\n{applyResult.Error}");
+            progress?.Report($"[WARN] Ошибки рестарта (stderr):\n{applyResult.Error}");
         }
 
         if (applyOutput.Contains("XRAY_STATUS=failed"))
         {
             int errorIndex = applyOutput.IndexOf("XRAY_STATUS=failed") + "XRAY_STATUS=failed".Length;
             string errorLog = applyOutput.Substring(errorIndex).Trim();
+            progress?.Report("[ERROR] Xray упал после рестарта");
             throw new Exception($"Xray упал после рестарта (ошибка конфигурации или портов):\n{errorLog}");
         }
 
-        progress?.Report("Сервис Xray успешно перезапущен и активен.");
-
+        progress?.Report("[INFO] Сервис Xray успешно перезапущен и активен");
         return true;
     }
 }
