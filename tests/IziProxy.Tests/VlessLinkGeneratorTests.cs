@@ -195,12 +195,14 @@ public class VlessLinkGeneratorTests
     }
 
     [Fact]
-    public void GenerateRealityLink_PortsMoreThanSnis_ThrowsOnSecondIteration()
+    public void GenerateRealityLink_PortsMoreThanSnis_GeneratesMinCountAndLogsWarn()
     {
-        // Обратный случай: Ports.Count > Snis.Count. Цикл идёт до Ports.Count
-        // и на i >= Snis.Count падает с IndexOutOfRangeException на Snis[i].
-        // Это наша вина — Deploy.sh гарантирует что они одинаковой длины,
-        // но UI должен это проверять. Документируем реальное поведение.
+        // Раньше: Ports.Count > Snis.Count → IndexOutOfRangeException на Snis[i].
+        // Сейчас (после feat(log)): берём Math.Min(Ports, Snis), генерируем
+        // что можем, в лог пишем [WARN] о расхождении. Это лучше, чем throw —
+        // caller (DeployScripts.DeployAndConfigure) уже валидирует что оба
+        // списка одинаковой длины до вызова, но если он это пропустил —
+        // получим не падение, а warning + частичный результат.
         var serverConfig = new ServerConfig { Host = "vds.com" };
         var xrayParams = new XrayConfigParams
         {
@@ -211,8 +213,17 @@ public class VlessLinkGeneratorTests
             Snis = new List<string> { "sni1.com" }           // 1 sni
         };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            VlessLinkGenerator.GenerateRealityLinks(serverConfig, xrayParams));
+        // Прогресс-репортер нужен чтобы поймать [WARN] от новой логики.
+        var warnings = new List<string>();
+        IProgress<string> progress = new Progress<string>(m => warnings.Add(m));
+
+        var links = VlessLinkGenerator.GenerateRealityLinks(serverConfig, xrayParams, "IziProxy_VDS", progress);
+
+        // Сгенерировано по минимуму — 1 ссылка, по единственному SNI.
+        Assert.Single(links);
+        Assert.Contains("sni=sni1.com", links[0]);
+        // В лог ушёл warning о расхождении длин.
+        Assert.Contains(warnings, w => w.Contains("[WARN]") && w.Contains("SNI"));
     }
 
     [Fact]
