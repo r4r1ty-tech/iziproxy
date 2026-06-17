@@ -19,12 +19,20 @@
       </StackPanel>
       
       <WrapPanel Orientation="Horizontal">
+        <ToggleButton Content="Trace"
+                      IsChecked="{Binding ShowTrace}"
+                      Classes="Tonal"
+                      Margin="0,0,8,8"/>
         <ToggleButton Content="Debug"
                       IsChecked="{Binding ShowDebug}"
                       Classes="Tonal"
                       Margin="0,0,8,8"/>
         <ToggleButton Content="Info"
                       IsChecked="{Binding ShowInfo}"
+                      Classes="Tonal"
+                      Margin="0,0,8,8"/>
+        <ToggleButton Content="Warn"
+                      IsChecked="{Binding ShowWarn}"
                       Classes="Tonal"
                       Margin="0,0,8,8"/>
         <ToggleButton Content="Error"
