@@ -1,0 +1,236 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:IziProxy.GUI.ViewModels"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="IziProxy.GUI.Views.TroubleshootView"
+             x:DataType="vm:TroubleshootViewModel">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="16" Margin="12,12,12,24">
+
+      <!-- Заголовок -->
+      <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,8">
+        <Border Background="{StaticResource PrimaryContainerBrush}"
+                Width="48" Height="48"
+                CornerRadius="16">
+          <materialIcons:MaterialIcon Kind="WrenchCog" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+        </Border>
+        <TextBlock Text="Troubleshoot" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+      </StackPanel>
+
+      <!-- Нет подключения -->
+      <Border Classes="M3Card"
+              Background="#30FFB000"
+              BorderBrush="#40FFB000"
+              Padding="20"
+              IsVisible="{Binding !IsConnected}">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <materialIcons:MaterialIcon Kind="AlertCircleOutline" Width="24" Height="24"
+                                      Foreground="#FFD54F" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <TextBlock Text="Сначала выполните деплой на вкладке «Deploy», чтобы установить SSH-соединение."
+                     TextWrapping="Wrap"
+                     FontSize="14"
+                     FontWeight="SemiBold"
+                     Foreground="#FFE082"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Статус и кнопка обновления -->
+      <Border Classes="M3Card" Padding="20" IsVisible="{Binding IsConnected}">
+        <StackPanel Spacing="14">
+
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Spacing="4">
+              <TextBlock Text="Состояние сервера" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+              <TextBlock Text="{Binding StatusSummary}"
+                         FontSize="14"
+                         TextWrapping="Wrap"
+                         Foreground="{StaticResource MutedTextBrush}"/>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Classes="Tonal"
+                    Command="{Binding RefreshAllCommand}"
+                    IsEnabled="{Binding !IsBusy}"
+                    MinHeight="44"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <materialIcons:MaterialIcon Kind="Refresh" Width="18" Height="18"/>
+                <TextBlock Text="Обновить" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <TextBlock Text="{Binding LastUpdated, StringFormat='Обновлено: {0}'}"
+                     FontSize="11"
+                     Foreground="{StaticResource MutedTextBrush}"/>
+
+          <ProgressBar IsIndeterminate="True"
+                       IsVisible="{Binding IsBusy}"
+                       Foreground="{StaticResource PrimaryBrush}"
+                       Height="4"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Список SNI-профилей -->
+      <StackPanel IsVisible="{Binding IsConnected}" Spacing="10">
+
+        <!-- Заголовок секции -->
+        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+          <Border Background="{StaticResource PrimaryContainerBrush}"
+                  Width="36" Height="36"
+                  CornerRadius="10">
+            <materialIcons:MaterialIcon Kind="ShieldLockOutline" Width="18" Height="18"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <StackPanel VerticalAlignment="Center" Spacing="2">
+            <TextBlock Text="Профили SNI" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="Замените SNI если VPN не подключается или заблокирован провайдером"
+                       FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Пустой список -->
+        <Border Classes="M3Card" Padding="20"
+                IsVisible="{Binding Profiles.Count, Converter={x:Static ObjectConverters.IsNull}}">
+          <TextBlock Text="Профили не загружены. Нажмите «Обновить»."
+                     FontSize="13"
+                     Foreground="{StaticResource MutedTextBrush}"
+                     HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- Карточки профилей -->
+        <ItemsControl ItemsSource="{Binding Profiles}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:TroubleshootProfileItem">
+              <Border Classes="M3Card" Padding="0" Margin="0,0,0,8">
+                <StackPanel>
+
+                  <!-- Шапка карточки -->
+                  <Grid ColumnDefinitions="Auto,*,Auto" Margin="16,14,16,14">
+
+                    <!-- Иконка -->
+                    <Border Grid.Column="0"
+                            Background="{StaticResource PrimaryContainerBrush}"
+                            Width="40" Height="40"
+                            CornerRadius="12"
+                            Margin="0,0,12,0">
+                      <materialIcons:MaterialIcon Kind="ServerNetwork" Width="20" Height="20"
+                                                  Foreground="{StaticResource PrimaryBrush}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Тег и текущий SNI -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding Tag}"
+                                   FontSize="15" FontWeight="Bold"
+                                   Foreground="{StaticResource TextBrush}"/>
+                        <Border Background="{StaticResource M3SurfaceContainerHighBrush}"
+                                CornerRadius="6" Padding="6,2">
+                          <TextBlock Text="{Binding Port, StringFormat=':{0}'}"
+                                     FontSize="12"
+                                     Foreground="{StaticResource MutedTextBrush}"
+                                     VerticalAlignment="Center"/>
+                        </Border>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <materialIcons:MaterialIcon Kind="Shield" Width="14" Height="14"
+                                                    Foreground="{StaticResource MutedTextBrush}"
+                                                    VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentSni}"
+                                   FontSize="13"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </StackPanel>
+
+                    <!-- Индикатор загрузки -->
+                    <ProgressBar Grid.Column="2"
+                                 IsIndeterminate="True"
+                                 Width="60"
+                                 Height="4"
+                                 IsVisible="{Binding IsBusy}"
+                                 Foreground="{StaticResource PrimaryBrush}"
+                                 VerticalAlignment="Center"/>
+                  </Grid>
+
+                  <!-- Разделитель -->
+                  <Border Height="1" Background="{StaticResource OutlineVariantBrush}" Margin="16,0"/>
+
+                  <!-- Панель замены SNI -->
+                  <StackPanel Margin="16,14,16,16" Spacing="12">
+
+                    <!-- Статус операции -->
+                    <Border Background="{StaticResource M3SurfaceContainerHighBrush}"
+                            CornerRadius="8" Padding="10,8"
+                            IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                      <TextBlock Text="{Binding StatusMessage}"
+                                 FontSize="13"
+                                 TextWrapping="Wrap"
+                                 Foreground="{StaticResource TextBrush}"/>
+                    </Border>
+
+                    <!-- Автозамена SNI -->
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Автозамена SNI"
+                                 FontSize="13" FontWeight="SemiBold"
+                                 Foreground="{StaticResource TextBrush}"/>
+                      <TextBlock Text="Подберёт быстрый домен с сервера и применит его. Текущий SNI будет исключён из кандидатов."
+                                 FontSize="12"
+                                 TextWrapping="Wrap"
+                                 Foreground="{StaticResource MutedTextBrush}"/>
+                      <Button Command="{Binding AutoReplaceSniCommand}"
+                              IsEnabled="{Binding !IsBusy}"
+                              MinHeight="44"
+                              HorizontalAlignment="Left"
+                              Margin="0,4,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <materialIcons:MaterialIcon Kind="AutoFix" Width="18" Height="18"/>
+                          <TextBlock Text="Автозамена (исключая текущий)" VerticalAlignment="Center"/>
+                        </StackPanel>
+                      </Button>
+                    </StackPanel>
+
+                    <!-- Кастомный SNI -->
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Кастомный SNI"
+                                 FontSize="13" FontWeight="SemiBold"
+                                 Foreground="{StaticResource TextBrush}"/>
+                      <TextBlock Text="Введите домен вручную (например: www.microsoft.com)"
+                                 FontSize="12"
+                                 Foreground="{StaticResource MutedTextBrush}"/>
+                      <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding CustomSni}"
+                                 PlaceholderText="Введите домен..."
+                                 IsEnabled="{Binding !IsBusy}"
+                                 Margin="0,0,8,0"/>
+                        <Button Grid.Column="1"
+                                Classes="Tonal"
+                                Command="{Binding ApplyCustomSniCommand}"
+                                IsEnabled="{Binding !IsBusy}"
+                                MinHeight="44">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="Check" Width="18" Height="18"/>
+                            <TextBlock Text="Применить" VerticalAlignment="Center"/>
+                          </StackPanel>
+                        </Button>
+                      </Grid>
+                    </StackPanel>
+
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>

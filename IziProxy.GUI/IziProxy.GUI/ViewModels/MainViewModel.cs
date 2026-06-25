@@ -10,9 +10,10 @@ namespace IziProxy.GUI.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     // ── Дочерние VM ─────────────────────────────────────────────────
-    public LogsViewModel      Logs      { get; }
-    public DeployViewModel    Deploy    { get; }
-    public DashboardViewModel Dashboard { get; }
+    public LogsViewModel           Logs         { get; }
+    public DeployViewModel         Deploy       { get; }
+    public DashboardViewModel      Dashboard    { get; }
+    public TroubleshootViewModel   Troubleshoot { get; }
 
     // ── Навигация ────────────────────────────────────────────────────
     /// <summary>0 = Deploy, 1 = Logs, 2 = Dashboard</summary>
@@ -23,6 +24,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDeployVisible));
         OnPropertyChanged(nameof(IsLogsVisible));
         OnPropertyChanged(nameof(IsDashboardVisible));
+        OnPropertyChanged(nameof(IsTroubleshootVisible));
         OnPropertyChanged(nameof(CurrentTabName));
 
         // Автоматически закрываем Drawer при клике на пункт меню на мобилках
@@ -32,9 +34,10 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    public bool IsDeployVisible => SelectedTabIndex == 0;
-    public bool IsLogsVisible => SelectedTabIndex == 1;
-    public bool IsDashboardVisible => SelectedTabIndex == 2;
+    public bool IsDeployVisible      => SelectedTabIndex == 0;
+    public bool IsLogsVisible         => SelectedTabIndex == 1;
+    public bool IsDashboardVisible    => SelectedTabIndex == 2;
+    public bool IsTroubleshootVisible => SelectedTabIndex == 3;
 
     /// <summary>
     /// Название текущей вкладки для отображения в TopBar мобилки.
@@ -44,6 +47,7 @@ public partial class MainViewModel : ObservableObject
         0 => "Deploy",
         1 => "Логи",
         2 => "Dashboard",
+        3 => "Troubleshoot",
         _ => "IziProxy"
     };
 
@@ -82,15 +86,17 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel()
     {
-        Logs      = new LogsViewModel();
-        Deploy    = new DeployViewModel(Logs);
-        Dashboard = new DashboardViewModel(Deploy, Logs);
-        
+        Logs         = new LogsViewModel();
+        Deploy       = new DeployViewModel(Logs);
+        Dashboard    = new DashboardViewModel(Deploy, Logs);
+        Troubleshoot = new TroubleshootViewModel(Deploy, Logs);
+
         // Инициализируем начальное состояние на основе режима
         IsMenuPaneOpen = !IsNarrowMode;
     }
 
-    [RelayCommand] void GoToDeploy()    => SelectedTabIndex = 0;
-    [RelayCommand] void GoToLogs()      => SelectedTabIndex = 1;
-    [RelayCommand] void GoToDashboard() => SelectedTabIndex = 2;
+    [RelayCommand] void GoToDeploy()       => SelectedTabIndex = 0;
+    [RelayCommand] void GoToLogs()         => SelectedTabIndex = 1;
+    [RelayCommand] void GoToDashboard()    => SelectedTabIndex = 2;
+    [RelayCommand] void GoToTroubleshoot() => SelectedTabIndex = 3;
 }

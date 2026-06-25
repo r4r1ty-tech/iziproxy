@@ -1,106 +1,185 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:IziProxy.GUI.ViewModels"
-             xmlns:views="using:IziProxy.GUI.Views"
-             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-             x:Class="IziProxy.GUI.Views.MainView"
-             x:DataType="vm:MainViewModel"
-             x:Name="RootControl"
-             SizeChanged="Control_OnSizeChanged">
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:IziProxy.GUI.ViewModels"
+    xmlns:views="using:IziProxy.GUI.Views"
+    xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    x:Class="IziProxy.GUI.Views.MainView"
+    x:DataType="vm:MainViewModel"
+    x:Name="RootControl"
+    SizeChanged="Control_OnSizeChanged"
+>
 
   <UserControl.Styles>
     <!-- Bottom Nav pill: inactive by default -->
     <Style Selector="Border.BottomNavPill">
-      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Background" Value="Transparent" />
       <Setter Property="Transitions">
         <Transitions>
-          <BrushTransition Property="Background" Duration="0:0:0.15"/>
+          <BrushTransition Property="Background" Duration="0:0:0.15" />
         </Transitions>
       </Setter>
     </Style>
     <!-- Active pill -->
     <Style Selector="Border.BottomNavPill.Active">
-      <Setter Property="Background" Value="{StaticResource PrimaryContainerBrush}"/>
+      <Setter
+                Property="Background"
+                Value="{StaticResource PrimaryContainerBrush}"
+            />
     </Style>
     <!-- Bottom Nav label: inactive -->
     <Style Selector="TextBlock.BottomNavLabel">
-      <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
-      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+      <Setter Property="FontWeight" Value="Normal" />
     </Style>
     <!-- Bottom Nav label: active -->
     <Style Selector="TextBlock.BottomNavLabel.Active">
-      <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
   </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,*,Auto">
 
     <!-- Top Bar: Mobile only (показывает название вкладки, без hamburger) -->
-    <Border Grid.Row="0"
+    <Border
+            Grid.Row="0"
             Height="64"
             Background="{StaticResource M3SurfaceContainerBrush}"
             BorderBrush="{StaticResource OutlineVariantBrush}"
             BorderThickness="0,0,0,1"
-            IsVisible="{Binding IsNarrowMode}">
+            IsVisible="{Binding IsNarrowMode}"
+        >
       <Grid ColumnDefinitions="*,Auto" Margin="20,0,16,0">
-        <TextBlock Grid.Column="0"
-                   Text="{Binding CurrentTabName}"
-                   FontSize="20"
-                   FontWeight="SemiBold"
-                   VerticalAlignment="Center"
-                   Foreground="{StaticResource TextBrush}"/>
-        <Ellipse Grid.Column="1" Width="10" Height="10"
-                 VerticalAlignment="Center"
-                 Fill="{Binding Dashboard.StatusColorHex, FallbackValue=Gray}"/>
+        <TextBlock
+                    Grid.Column="0"
+                    Text="{Binding CurrentTabName}"
+                    FontSize="20"
+                    FontWeight="SemiBold"
+                    VerticalAlignment="Center"
+                    Foreground="{StaticResource TextBrush}"
+                />
+        <Ellipse
+                    Grid.Column="1"
+                    Width="10"
+                    Height="10"
+                    VerticalAlignment="Center"
+                    Fill="{Binding Dashboard.StatusColorHex, FallbackValue=Gray}"
+                />
       </Grid>
     </Border>
 
     <!-- Main content: SplitView (Desktop sidebar + Content) -->
-    <SplitView Grid.Row="1"
-               IsPaneOpen="{Binding IsMenuPaneOpen, Mode=TwoWay}"
-               DisplayMode="{Binding MenuDisplayMode}"
-               OpenPaneLength="260"
-               PanePlacement="Left"
-               Background="{StaticResource M3BgBrush}">
+    <SplitView
+            Grid.Row="1"
+            IsPaneOpen="{Binding IsMenuPaneOpen, Mode=TwoWay}"
+            DisplayMode="{Binding MenuDisplayMode}"
+            OpenPaneLength="260"
+            PanePlacement="Left"
+            Background="{StaticResource M3BgBrush}"
+        >
 
       <!-- Desktop Sidebar -->
       <SplitView.Pane>
-        <Border Background="{StaticResource M3SurfaceBrush}"
-                BorderBrush="{StaticResource OutlineVariantBrush}"
-                BorderThickness="0,0,1,0">
+        <Border
+                    Background="{StaticResource M3SurfaceBrush}"
+                    BorderBrush="{StaticResource OutlineVariantBrush}"
+                    BorderThickness="0,0,1,0"
+                >
           <DockPanel>
             <!-- Logo -->
-            <StackPanel DockPanel.Dock="Top"
-                        Orientation="Horizontal"
-                        Spacing="12"
-                        Margin="24,32,24,24">
-              <Border Background="{StaticResource PrimaryContainerBrush}"
-                      Width="40" Height="40"
-                      CornerRadius="12">
-                <materialIcons:MaterialIcon Kind="ServerNetwork" Width="22" Height="22" Foreground="{StaticResource M3Primary}"/>
+            <StackPanel
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal"
+                            Spacing="12"
+                            Margin="24,32,24,24"
+                        >
+              <Border
+                                Background="{StaticResource PrimaryContainerBrush}"
+                                Width="40"
+                                Height="40"
+                                CornerRadius="12"
+                            >
+                <materialIcons:MaterialIcon
+                                    Kind="ServerNetwork"
+                                    Width="22"
+                                    Height="22"
+                                    Foreground="{StaticResource M3Primary}"
+                                />
               </Border>
-              <TextBlock Text="IziProxy" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+              <TextBlock
+                                Text="IziProxy"
+                                FontSize="22"
+                                FontWeight="Bold"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource TextBrush}"
+                            />
             </StackPanel>
 
             <!-- Nav Links -->
-            <ListBox Classes="Menu" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent">
+            <ListBox
+                            Classes="Menu"
+                            SelectedIndex="{Binding SelectedTabIndex}"
+                            Background="Transparent"
+                        >
               <ListBoxItem>
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                  <materialIcons:MaterialIcon Kind="RocketLaunch" Width="22" Height="22" />
-                  <TextBlock Text="Deploy" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"/>
+                  <materialIcons:MaterialIcon
+                                        Kind="RocketLaunch"
+                                        Width="22"
+                                        Height="22"
+                                    />
+                  <TextBlock
+                                        Text="Deploy"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                    />
                 </StackPanel>
               </ListBoxItem>
               <ListBoxItem>
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                  <materialIcons:MaterialIcon Kind="ListBoxOutline" Width="22" Height="22" />
-                  <TextBlock Text="Logs" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"/>
+                  <materialIcons:MaterialIcon
+                                        Kind="ListBoxOutline"
+                                        Width="22"
+                                        Height="22"
+                                    />
+                  <TextBlock
+                                        Text="Logs"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                    />
                 </StackPanel>
               </ListBoxItem>
               <ListBoxItem>
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                  <materialIcons:MaterialIcon Kind="ChartBoxOutline" Width="22" Height="22" />
-                  <TextBlock Text="Dashboard" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"/>
+                  <materialIcons:MaterialIcon
+                                        Kind="ChartBoxOutline"
+                                        Width="22"
+                                        Height="22"
+                                    />
+                  <TextBlock
+                                        Text="Dashboard"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                    />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <materialIcons:MaterialIcon
+                                        Kind="WrenchCog"
+                                        Width="22"
+                                        Height="22"
+                                    />
+                  <TextBlock
+                                        Text="Troubleshoot"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                    />
                 </StackPanel>
               </ListBoxItem>
             </ListBox>
@@ -112,12 +191,22 @@
       <SplitView.Content>
         <ContentControl Margin="0" Background="Transparent">
           <Panel>
-            <views:DeployView DataContext="{Binding Deploy}"
-                              IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDeployVisible}" />
-            <views:LogsView DataContext="{Binding Logs}"
-                            IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsLogsVisible}" />
-            <views:DashboardView DataContext="{Binding Dashboard}"
-                                 IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDashboardVisible}" />
+            <views:DeployView
+                            DataContext="{Binding Deploy}"
+                            IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDeployVisible}"
+                        />
+            <views:LogsView
+                            DataContext="{Binding Logs}"
+                            IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsLogsVisible}"
+                        />
+            <views:DashboardView
+                            DataContext="{Binding Dashboard}"
+                            IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsDashboardVisible}"
+                        />
+            <views:TroubleshootView
+                            DataContext="{Binding Troubleshoot}"
+                            IsVisible="{Binding #RootControl.((vm:MainViewModel)DataContext).IsTroubleshootVisible}"
+                        />
           </Panel>
         </ContentControl>
       </SplitView.Content>
@@ -125,56 +214,149 @@
     </SplitView>
 
     <!-- Bottom Navigation Bar (Mobile/Android, M3 pattern) -->
-    <Border Grid.Row="2"
+    <Border
+            Grid.Row="2"
             Background="{StaticResource M3SurfaceContainerBrush}"
             BorderBrush="{StaticResource OutlineVariantBrush}"
             BorderThickness="0,1,0,0"
-            IsVisible="{Binding IsNarrowMode}">
-      <Grid ColumnDefinitions="*,*,*" Height="72" Margin="0,6,0,10">
+            IsVisible="{Binding IsNarrowMode}"
+        >
+      <Grid ColumnDefinitions="*,*,*,*" Height="72" Margin="0,6,0,10">
 
         <!-- Deploy -->
-        <Button Grid.Column="0" Classes="BottomNavBtn" Command="{Binding GoToDeployCommand}"
-                x:Name="BtnDeploy">
+        <Button
+                    Grid.Column="0"
+                    Classes="BottomNavBtn"
+                    Command="{Binding GoToDeployCommand}"
+                    x:Name="BtnDeploy"
+                >
           <StackPanel Spacing="3" HorizontalAlignment="Center">
-            <Border Classes="BottomNavPill"
-                    Classes.Active="{Binding IsDeployVisible}"
-                    HorizontalAlignment="Center" Width="64" Height="32" CornerRadius="16">
-              <materialIcons:MaterialIcon Kind="RocketLaunch" Width="20" Height="20"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Foreground="{StaticResource TextBrush}"/>
+            <Border
+                            Classes="BottomNavPill"
+                            Classes.Active="{Binding IsDeployVisible}"
+                            HorizontalAlignment="Center"
+                            Width="64"
+                            Height="32"
+                            CornerRadius="16"
+                        >
+              <materialIcons:MaterialIcon
+                                Kind="RocketLaunch"
+                                Width="20"
+                                Height="20"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource TextBrush}"
+                            />
             </Border>
-            <TextBlock Classes="BottomNavLabel" Classes.Active="{Binding IsDeployVisible}"
-                       Text="Deploy" FontSize="11" HorizontalAlignment="Center"/>
+            <TextBlock
+                            Classes="BottomNavLabel"
+                            Classes.Active="{Binding IsDeployVisible}"
+                            Text="Deploy"
+                            FontSize="11"
+                            HorizontalAlignment="Center"
+                        />
           </StackPanel>
         </Button>
 
         <!-- Logs -->
-        <Button Grid.Column="1" Classes="BottomNavBtn" Command="{Binding GoToLogsCommand}">
+        <Button
+                    Grid.Column="1"
+                    Classes="BottomNavBtn"
+                    Command="{Binding GoToLogsCommand}"
+                >
           <StackPanel Spacing="3" HorizontalAlignment="Center">
-            <Border Classes="BottomNavPill"
-                    Classes.Active="{Binding IsLogsVisible}"
-                    HorizontalAlignment="Center" Width="64" Height="32" CornerRadius="16">
-              <materialIcons:MaterialIcon Kind="ListBoxOutline" Width="20" Height="20"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Foreground="{StaticResource TextBrush}"/>
+            <Border
+                            Classes="BottomNavPill"
+                            Classes.Active="{Binding IsLogsVisible}"
+                            HorizontalAlignment="Center"
+                            Width="64"
+                            Height="32"
+                            CornerRadius="16"
+                        >
+              <materialIcons:MaterialIcon
+                                Kind="ListBoxOutline"
+                                Width="20"
+                                Height="20"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource TextBrush}"
+                            />
             </Border>
-            <TextBlock Classes="BottomNavLabel" Classes.Active="{Binding IsLogsVisible}"
-                       Text="Логи" FontSize="11" HorizontalAlignment="Center"/>
+            <TextBlock
+                            Classes="BottomNavLabel"
+                            Classes.Active="{Binding IsLogsVisible}"
+                            Text="Логи"
+                            FontSize="11"
+                            HorizontalAlignment="Center"
+                        />
           </StackPanel>
         </Button>
 
         <!-- Dashboard -->
-        <Button Grid.Column="2" Classes="BottomNavBtn" Command="{Binding GoToDashboardCommand}">
+        <Button
+                    Grid.Column="2"
+                    Classes="BottomNavBtn"
+                    Command="{Binding GoToDashboardCommand}"
+                >
           <StackPanel Spacing="3" HorizontalAlignment="Center">
-            <Border Classes="BottomNavPill"
-                    Classes.Active="{Binding IsDashboardVisible}"
-                    HorizontalAlignment="Center" Width="64" Height="32" CornerRadius="16">
-              <materialIcons:MaterialIcon Kind="ChartBoxOutline" Width="20" Height="20"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Foreground="{StaticResource TextBrush}"/>
+            <Border
+                            Classes="BottomNavPill"
+                            Classes.Active="{Binding IsDashboardVisible}"
+                            HorizontalAlignment="Center"
+                            Width="64"
+                            Height="32"
+                            CornerRadius="16"
+                        >
+              <materialIcons:MaterialIcon
+                                Kind="ChartBoxOutline"
+                                Width="20"
+                                Height="20"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource TextBrush}"
+                            />
             </Border>
-            <TextBlock Classes="BottomNavLabel" Classes.Active="{Binding IsDashboardVisible}"
-                       Text="Dashboard" FontSize="11" HorizontalAlignment="Center"/>
+            <TextBlock
+                            Classes="BottomNavLabel"
+                            Classes.Active="{Binding IsDashboardVisible}"
+                            Text="Dashboard"
+                            FontSize="11"
+                            HorizontalAlignment="Center"
+                        />
+          </StackPanel>
+        </Button>
+
+        <!-- Troubleshoot -->
+        <Button
+                    Grid.Column="3"
+                    Classes="BottomNavBtn"
+                    Command="{Binding GoToTroubleshootCommand}"
+                >
+          <StackPanel Spacing="3" HorizontalAlignment="Center">
+            <Border
+                            Classes="BottomNavPill"
+                            Classes.Active="{Binding IsTroubleshootVisible}"
+                            HorizontalAlignment="Center"
+                            Width="64"
+                            Height="32"
+                            CornerRadius="16"
+                        >
+              <materialIcons:MaterialIcon
+                                Kind="WrenchCog"
+                                Width="20"
+                                Height="20"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource TextBrush}"
+                            />
+            </Border>
+            <TextBlock
+                            Classes="BottomNavLabel"
+                            Classes.Active="{Binding IsTroubleshootVisible}"
+                            Text="Troubleshoot"
+                            FontSize="11"
+                            HorizontalAlignment="Center"
+                        />
           </StackPanel>
         </Button>
 
