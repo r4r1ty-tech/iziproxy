@@ -57,13 +57,13 @@
 
           <!-- Кнопки -->
           <WrapPanel Orientation="Horizontal">
-            <Button Content="🔄 Обновить"
+            <Button Content="Обновить"
                     Classes="Tonal"
                     Command="{Binding RefreshStatusCommand}"
                     IsEnabled="{Binding !IsBusy}"
                     MinHeight="48"
                     Margin="0,0,8,8"/>
-            <Button Content="♻️ Перезапустить"
+            <Button Content="Перезапустить"
                     Command="{Binding RestartServiceCommand}"
                     IsEnabled="{Binding !IsBusy}"
                     MinHeight="48"
@@ -123,6 +123,192 @@
           </Border>
         </StackPanel>
       </Border>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- Починка VPN-ссылок: 3 SNI-профиля                              -->
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <StackPanel IsVisible="{Binding IsConnected}" Spacing="10">
+        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,4">
+          <Border Background="{StaticResource PrimaryContainerBrush}"
+                  Width="40" Height="40"
+                  CornerRadius="12">
+            <materialIcons:MaterialIcon Kind="LinkVariant" Width="22" Height="22" Foreground="{StaticResource PrimaryBrush}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <StackPanel Spacing="2" VerticalAlignment="Center">
+            <TextBlock Text="VPN-профили" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="Замена SNI-домена при блокировке" FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Кнопка загрузки профилей -->
+        <Button Content="Загрузить профили с сервера"
+                Classes="Tonal"
+                Command="{Binding LoadSniProfilesCommand}"
+                IsEnabled="{Binding !IsBusy}"
+                IsVisible="{Binding !SniProfiles.Count}"
+                MinHeight="48"/>
+
+        <ItemsControl ItemsSource="{Binding SniProfiles}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:SniProfileItem">
+              <Border Classes="M3Card" Padding="16" Margin="0,4">
+                <StackPanel Spacing="10">
+                  <!-- Верхняя часть: Tag + Port + текущий SNI -->
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <!-- Иконка -->
+                    <Border Grid.Column="0"
+                            Background="{StaticResource PrimaryContainerBrush}"
+                            Width="40" Height="40"
+                            CornerRadius="20"
+                            VerticalAlignment="Center"
+                            Margin="0,0,12,0">
+                      <materialIcons:MaterialIcon Kind="ServerNetwork" Width="20" Height="20"
+                                                  Foreground="{StaticResource PrimaryBrush}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Info -->
+                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="{Binding Tag}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+                        <Border Background="{StaticResource M3SurfaceContainerHighBrush}"
+                                CornerRadius="8" Padding="8,3">
+                          <TextBlock Text="{Binding Port, StringFormat='Port: {0}'}"
+                                     FontSize="11" FontWeight="SemiBold"
+                                     Foreground="{StaticResource MutedTextBrush}"/>
+                        </Border>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <materialIcons:MaterialIcon Kind="Earth" Width="14" Height="14"
+                                                    Foreground="{StaticResource MutedTextBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentSni}"
+                                   FontSize="13"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   FontFamily="Cascadia Code, Consolas, Monospace"
+                                   VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </StackPanel>
+
+                    <!-- Кнопка "Не работает?" -->
+                    <Button Grid.Column="2"
+                            Command="{Binding ToggleRepairPanelCommand}"
+                            VerticalAlignment="Center"
+                            MinHeight="40">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <materialIcons:MaterialIcon Kind="Wrench" Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="Не работает?" FontSize="12" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+
+                  <!-- Раскрывающаяся панель ремонта -->
+                  <Border IsVisible="{Binding IsExpanded}"
+                          Background="{StaticResource M3SurfaceContainerHighBrush}"
+                          CornerRadius="16"
+                          Padding="16"
+                          Margin="0,4,0,0">
+                    <StackPanel Spacing="12">
+                      <TextBlock Text="Замена SNI-домена"
+                                 FontSize="14" FontWeight="SemiBold"
+                                 Foreground="{StaticResource TextBrush}"/>
+                      <TextBlock Text="Введите новый домен или нажмите «Автоподбор» для автоматического выбора лучшего."
+                                 FontSize="12"
+                                 Foreground="{StaticResource MutedTextBrush}"
+                                 TextWrapping="Wrap"/>
+
+                      <!-- Поле ввода нового SNI -->
+                      <TextBox Text="{Binding NewSni}"
+                               PlaceholderText="Например: speed.cloudflare.com"
+                               IsEnabled="{Binding !IsBusy}"/>
+
+                      <!-- Кнопки -->
+                      <WrapPanel Orientation="Horizontal">
+                        <Button Classes="Primary"
+                                Command="{Binding ApplyManualSniCommand}"
+                                IsEnabled="{Binding !IsBusy}"
+                                MinHeight="44"
+                                Margin="0,0,8,6">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="Check" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Применить" VerticalAlignment="Center"/>
+                          </StackPanel>
+                        </Button>
+                        <Button Classes="Tonal"
+                                Command="{Binding AutoSelectSniCommand}"
+                                IsEnabled="{Binding !IsBusy}"
+                                MinHeight="44"
+                                Margin="0,0,0,6">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="AutoFix" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Автоподбор" VerticalAlignment="Center"/>
+                          </StackPanel>
+                        </Button>
+                      </WrapPanel>
+
+                      <!-- Индикатор загрузки -->
+                      <ProgressBar IsIndeterminate="True"
+                                   IsVisible="{Binding IsBusy}"
+                                   Foreground="{StaticResource PrimaryBrush}"
+                                   Height="4"/>
+
+                      <!-- Статус операции -->
+                      <TextBlock Text="{Binding StatusMessage}"
+                                 FontSize="12"
+                                 Foreground="#81C784"
+                                 TextWrapping="Wrap"
+                                 IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                      <!-- Перегенерированная VLESS-ссылка -->
+                      <Border IsVisible="{Binding GeneratedLink, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                              Background="{StaticResource M3SurfaceContainerBrush}"
+                              CornerRadius="12"
+                              Padding="12"
+                              Margin="0,4,0,0">
+                        <StackPanel Spacing="8">
+                          <TextBlock Text="Новая VLESS-ссылка"
+                                     FontSize="12" FontWeight="SemiBold"
+                                     Foreground="{StaticResource PrimaryBrush}"/>
+                          <TextBlock Text="{Binding GeneratedLink}"
+                                     FontSize="11"
+                                     FontFamily="Cascadia Code, Consolas, Monospace"
+                                     Foreground="#E2E2E6"
+                                     TextWrapping="Wrap"
+                                     MaxLines="3"/>
+
+                          <WrapPanel Orientation="Horizontal">
+                            <Button Command="{Binding CopyLinkCommand}"
+                                    MinHeight="36"
+                                    Margin="0,0,8,0">
+                              <StackPanel Orientation="Horizontal" Spacing="6">
+                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="16" Height="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding CopyLabel}" FontSize="12" VerticalAlignment="Center"/>
+                              </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ToggleQrCommand}"
+                                    MinHeight="36">
+                              <StackPanel Orientation="Horizontal" Spacing="6">
+                                <materialIcons:MaterialIcon Kind="Qrcode" Width="16" Height="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="QR" FontSize="12" VerticalAlignment="Center"/>
+                              </StackPanel>
+                            </Button>
+                          </WrapPanel>
+
+                          <!-- QR-код -->
+                          <Image Source="{Binding QrCodeImage}"
+                                 Width="200" Height="200"
+                                 IsVisible="{Binding QrCodeImage, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                 Margin="0,4,0,0"/>
+                        </StackPanel>
+                      </Border>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
 
       <!-- Трафик -->
       <StackPanel IsVisible="{Binding IsConnected}" Spacing="10">
