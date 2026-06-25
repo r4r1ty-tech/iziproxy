@@ -9,7 +9,9 @@ using IziProxy;
 using Avalonia.Media.Imaging;
 using QRCoder;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 
 namespace IziProxy.GUI.ViewModels;
@@ -40,6 +42,7 @@ public partial class DeployViewModel : ObservableObject
     /// <summary>Общий SSH-клиент: переиспользуется и в DashboardViewModel.</summary>
     [ObservableProperty] private SSH? _activeSsh;
     [ObservableProperty] private ServerConfig? _activeConfig;
+    [ObservableProperty] private XrayConfigParams? _activeXrayParams;
 
     // ── Профили ──────────────────────────────────────────────────────
     public ObservableCollection<VdsProfile> Profiles { get; } = new();
@@ -194,9 +197,10 @@ public partial class DeployViewModel : ObservableObject
                 progress.Report($"✓ {label}");
             }
 
-            // Сохраняем SSH для Dashboard
-            ActiveConfig = config;
-            ActiveSsh    = ssh;
+            // Сохраняем SSH и параметры для Dashboard
+            ActiveConfig     = config;
+            ActiveXrayParams = xrayParams;
+            ActiveSsh        = ssh;
             IsCompleted  = true;
             StatusText   = "✅ Деплой завершён!";
 
@@ -287,10 +291,10 @@ public partial class VlessLinkItem : ObservableObject
     [RelayCommand]
     private async Task CopyLink()
     {
-        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-            desktop.MainWindow?.Clipboard != null)
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+            desktop.MainWindow?.Clipboard is { } clipboard)
         {
-            await desktop.MainWindow.Clipboard.SetTextAsync(Link);
+            await clipboard.SetValueAsync(DataFormat.Text, Link);
         }
         
         CopyLabel = "Скопировано ✓";
