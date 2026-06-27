@@ -10,7 +10,7 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Release signing -->
     <AndroidKeyStore>true</AndroidKeyStore>
-    <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)../../../iziproxy-release.keystore</AndroidSigningKeyStore>
+    <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)../../iziproxy-release.keystore</AndroidSigningKeyStore>
     <AndroidSigningKeyAlias>iziproxy</AndroidSigningKeyAlias>
     <AndroidSigningKeyPass>iziproxy123</AndroidSigningKeyPass>
     <AndroidSigningStorePass>iziproxy123</AndroidSigningStorePass>
