@@ -159,7 +159,7 @@ public class SshIntegrationTests
         // timeout. Главное — НЕ зависнуть.
         var cfg = BuildConfig();
         cfg.Host = cfg.Host; // тот же host
-        cfg.Username = Environment.GetEnvironmentVariable(SshUserEnv);
+        cfg.Username = Environment.GetEnvironmentVariable(SshUserEnv) ?? string.Empty;
 
         // Используем подмену host:port через прямое указание
         string originalHost = Environment.GetEnvironmentVariable(SshHostEnv)!;
