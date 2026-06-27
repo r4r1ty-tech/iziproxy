@@ -29,10 +29,17 @@ public class InboundTrafficStat
     public long UplinkBytes { get; set; }
     public long DownlinkBytes { get; set; }
 
+    public long TotalBytes => UplinkBytes + DownlinkBytes;
+    public string TotalFormatted => FormatBytes(TotalBytes);
+
+    public double UplinkRatio => TotalBytes > 0 ? (double)UplinkBytes / TotalBytes : 0.5;
+    public double DownlinkRatio => TotalBytes > 0 ? (double)DownlinkBytes / TotalBytes : 0.5;
+    public double UplinkPercent => UplinkRatio * 100;
+
     public string UplinkFormatted => FormatBytes(UplinkBytes);
     public string DownlinkFormatted => FormatBytes(DownlinkBytes);
 
-    private static string FormatBytes(long bytes)
+    public static string FormatBytes(long bytes)
     {
         if (bytes >= 1_073_741_824) return $"{bytes / 1_073_741_824.0:F2} GB";
         if (bytes >= 1_048_576)     return $"{bytes / 1_048_576.0:F2} MB";
