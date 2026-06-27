@@ -38,6 +38,21 @@ public partial class DashboardViewModel : ObservableObject
     // ── Трафик ───────────────────────────────────────────────────────
     public ObservableCollection<InboundTrafficStat> TrafficStats { get; } = new();
 
+    [ObservableProperty] private string _totalAllTrafficFormatted = "0 B";
+    [ObservableProperty] private bool _hasTrafficData = false;
+
+    [ObservableProperty] private GridLength _inbound1Width = new GridLength(1, GridUnitType.Star);
+    [ObservableProperty] private GridLength _inbound2Width = new GridLength(1, GridUnitType.Star);
+    [ObservableProperty] private GridLength _inbound3Width = new GridLength(1, GridUnitType.Star);
+
+    [ObservableProperty] private string _inbound1Label = "inbound-1 (0%)";
+    [ObservableProperty] private string _inbound2Label = "inbound-2 (0%)";
+    [ObservableProperty] private string _inbound3Label = "inbound-3 (0%)";
+
+    [ObservableProperty] private double _inbound1Percentage = 0;
+    [ObservableProperty] private double _inbound2Percentage = 0;
+    [ObservableProperty] private double _inbound3Percentage = 0;
+
     // ── SNI-профили ──────────────────────────────────────────────────
     public ObservableCollection<SniProfileItem> SniProfiles { get; } = new();
 
@@ -85,6 +100,8 @@ public partial class DashboardViewModel : ObservableObject
             foreach (var stat in status.TrafficStats)
                 TrafficStats.Add(stat);
 
+            UpdateTrafficChart();
+
             LastUpdated = DateTime.Now.ToString("HH:mm:ss");
         }
         catch (Exception ex)
@@ -95,6 +112,70 @@ public partial class DashboardViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    private void UpdateTrafficChart()
+    {
+        var stats = TrafficStats.Where(s => s.Tag != "api").ToList();
+        if (stats.Count == 0)
+        {
+            HasTrafficData = false;
+            Inbound1Width = new GridLength(1, GridUnitType.Star);
+            Inbound2Width = new GridLength(1, GridUnitType.Star);
+            Inbound3Width = new GridLength(1, GridUnitType.Star);
+            TotalAllTrafficFormatted = "0 B";
+            Inbound1Label = "inbound-1 (0%)";
+            Inbound2Label = "inbound-2 (0%)";
+            Inbound3Label = "inbound-3 (0%)";
+            Inbound1Percentage = 0;
+            Inbound2Percentage = 0;
+            Inbound3Percentage = 0;
+            return;
+        }
+
+        long totalBytes = stats.Sum(s => s.TotalBytes);
+        TotalAllTrafficFormatted = InboundTrafficStat.FormatBytes(totalBytes);
+
+        if (totalBytes == 0)
+        {
+            HasTrafficData = false;
+            Inbound1Width = new GridLength(1, GridUnitType.Star);
+            Inbound2Width = new GridLength(1, GridUnitType.Star);
+            Inbound3Width = new GridLength(1, GridUnitType.Star);
+            Inbound1Label = stats.Count > 0 ? $"{stats[0].Tag} (0%)" : "—";
+            Inbound2Label = stats.Count > 1 ? $"{stats[1].Tag} (0%)" : "—";
+            Inbound3Label = stats.Count > 2 ? $"{stats[2].Tag} (0%)" : "—";
+            Inbound1Percentage = 0;
+            Inbound2Percentage = 0;
+            Inbound3Percentage = 0;
+            return;
+        }
+
+        HasTrafficData = true;
+
+        double p1 = stats.Count > 0 ? (double)stats[0].TotalBytes / totalBytes * 100 : 0;
+        double p2 = stats.Count > 1 ? (double)stats[1].TotalBytes / totalBytes * 100 : 0;
+        double p3 = stats.Count > 2 ? (double)stats[2].TotalBytes / totalBytes * 100 : 0;
+
+        int pct1 = (int)Math.Round(p1);
+        int pct2 = (int)Math.Round(p2);
+        int pct3 = (int)Math.Round(p3);
+
+        int w1 = Math.Max(1, pct1);
+        int w2 = Math.Max(1, pct2);
+        int w3 = Math.Max(1, pct3);
+
+        Inbound1Width = new GridLength(w1, GridUnitType.Star);
+        Inbound2Width = new GridLength(w2, GridUnitType.Star);
+        Inbound3Width = new GridLength(w3, GridUnitType.Star);
+
+        Inbound1Label = stats.Count > 0 ? $"{stats[0].Tag} ({pct1}%)" : "—";
+        Inbound2Label = stats.Count > 1 ? $"{stats[1].Tag} ({pct2}%)" : "—";
+        Inbound3Label = stats.Count > 2 ? $"{stats[2].Tag} ({pct3}%)" : "—";
+
+        Inbound1Percentage = pct1;
+        Inbound2Percentage = pct2;
+        Inbound3Percentage = pct3;
     }
 
     [RelayCommand(CanExecute = nameof(CanExecute))]
