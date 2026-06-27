@@ -1,6 +1,9 @@
-name: Release v1.0.2
+name: Release
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -185,14 +188,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          gh release create v1.0.2 \
-            --title "IziProxy v1.0.2" \
-            --notes "## IziProxy v1.0.2
+          gh release create "$TAG_NAME" \
+            --title "IziProxy $TAG_NAME" \
+            --notes "## IziProxy $TAG_NAME
 
-          ### Исправления
-          - Скрипты VDS_setup встроены прямо в exe (EmbeddedResource) — никаких файлов рядом не нужно
-          - Обновлены правила маршрутизации: 43 популярных RU-домена в direct-bypass
+          ### Новые функции и улучшения
+          - **График интернет-трафика (Stacked Bar Chart)**: Добавлена визуализация трафика по входящим портам на дашборде с красивой цветовой легендой.
+          - **Прогресс-бары Uplink/Downlink**: Отображение соотношения Upload / Download трафика в карточках каждого входящего подключения.
+          - **Исправление VPN-соединения**: Добавлена интерактивная кнопка «Не работает?» для автоматического подбора и обновления SNI-доменов при блокировках.
+          - **Оптимизация и стабильность**: Устранены предупреждения компилятора и предотвращены потенциальные утечки памяти при смене контекста в UI.
 
           ### Загрузки
           | Платформа | Файл |
