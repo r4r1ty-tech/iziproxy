@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -47,10 +47,7 @@ jobs:
           dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
             -c Release `
             -f net10.0-android `
-            -p:AndroidPackageFormat=apk `
-            -p:AndroidLinkMode=None `
-            -p:AndroidEnableProguard=false `
-            -v:diag
+            -p:AndroidPackageFormat=apk
 
       - name: Build Android APK (Debug)
         env:
@@ -59,10 +56,7 @@ jobs:
           dotnet build IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
             -c Debug `
             -f net10.0-android `
-            -p:AndroidPackageFormat=apk `
-            -p:AndroidLinkMode=None `
-            -p:AndroidEnableProguard=false `
-            -v:diag
+            -p:AndroidPackageFormat=apk
 
       - name: Find APKs and stage them
         run: |
