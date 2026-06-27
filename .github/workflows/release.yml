@@ -143,14 +143,14 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Install Android Workload
-          run: dotnet workload install android
+        run: dotnet workload install android
 
-        - name: Decode keystore
-          run: |
-            $bytes = [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
-            [IO.File]::WriteAllBytes("iziproxy-release.keystore", $bytes)
+      - name: Decode keystore
+        run: |
+          $bytes = [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
+          [IO.File]::WriteAllBytes("iziproxy-release.keystore", $bytes)
 
-        - name: Publish Android APK
+      - name: Publish Android APK
         run: |
           dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
             -c Release `
