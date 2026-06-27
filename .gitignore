@@ -1,3 +1,6 @@
+# Android signing keystore (не коммитить!)
+*.keystore
+
 # Dotnet build folders
 [Bb]in/
 [Oo]bj/
