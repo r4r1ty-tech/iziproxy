@@ -14,6 +14,12 @@
     <AndroidSigningKeyAlias>iziproxy</AndroidSigningKeyAlias>
     <AndroidSigningKeyPass>iziproxy123</AndroidSigningKeyPass>
     <AndroidSigningStorePass>iziproxy123</AndroidSigningStorePass>
+    <!-- Дополнительные параметры сборщика Java для предотвращения сбоев java.exe (код 2) -->
+    <AndroidMaximumJavaCompilerHeapSize>2G</AndroidMaximumJavaCompilerHeapSize>
+    <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
+    <!-- Отключение R8/Proguard shrinking для предотвращения крашей рефлексии (SSH-Net, BouncyCastle) -->
+    <AndroidLinkTool></AndroidLinkTool>
+    <AndroidEnableProguard>false</AndroidEnableProguard>
     <!-- AOT: значительно ускоряет холодный старт на Android -->
     <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
     <!-- Trimming: убирает неиспользуемые сборки, уменьшает размер APK -->
