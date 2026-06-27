@@ -11,46 +11,51 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
 
-    - name: Install Android Workload
-      run: dotnet workload install android
+      - name: Install Android Workload
+        run: dotnet workload install android
 
-    - name: Publish Android APK
-      run: |
-        dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
-          -c Release `
-          -f net10.0-android `
-          -p:AndroidPackageFormat=apk
+      - name: Decode keystore
+        run: |
+          $bytes = [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
+          [IO.File]::WriteAllBytes("iziproxy-release.keystore", $bytes)
 
-    - name: Find and rename APK
-      run: |
-        $outDir = "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android"
+      - name: Publish Android APK
+        run: |
+          dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
+            -c Release `
+            -f net10.0-android `
+            -p:AndroidPackageFormat=apk
 
-        # Предпочитаем подписанный APK, иначе любой
-        $apk = Get-ChildItem -Path $outDir -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
-        if (-not $apk) {
-          $apk = Get-ChildItem -Path $outDir -Recurse -Filter "*.apk" | Select-Object -First 1
-        }
+      - name: Find and rename APK
+        run: |
+          $outDir = "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android"
 
-        if ($apk) {
-          Write-Host "Найден APK: $($apk.FullName)"
-          Copy-Item $apk.FullName "IziProxy.apk"
-        } else {
-          Write-Host "Содержимое директории:"
-          Get-ChildItem -Path $outDir -Recurse | ForEach-Object { Write-Host $_.FullName }
-          Write-Error "APK не найден!"
-          exit 1
-        }
+          # Предпочитаем подписанный APK, иначе любой
+          $apk = Get-ChildItem -Path $outDir -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
+          if (-not $apk) {
+            $apk = Get-ChildItem -Path $outDir -Recurse -Filter "*.apk" | Select-Object -First 1
+          }
 
-    - name: Upload APK to Release v1.0.2
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GH_REPO: ${{ github.repository }}
-      run: |
-        gh release upload v1.0.2 IziProxy.apk --clobber
+          if ($apk) {
+            Write-Host "Найден APK: $($apk.FullName)"
+            Copy-Item $apk.FullName "IziProxy.apk"
+          } else {
+            Write-Host "Содержимое директории:"
+            Get-ChildItem -Path $outDir -Recurse | ForEach-Object { Write-Host $_.FullName }
+            Write-Error "APK не найден!"
+            exit 1
+          }
+
+      - name: Upload APK to Release v1.1.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload v1.1.0 IziProxy.apk --clobber
