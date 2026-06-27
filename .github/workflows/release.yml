@@ -148,7 +148,8 @@ jobs:
       - name: Decode keystore
         run: |
           $bytes = [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
-          [IO.File]::WriteAllBytes("iziproxy-release.keystore", $bytes)
+          $keystorePath = Join-Path $env:GITHUB_WORKSPACE "iziproxy-release.keystore"
+          [IO.File]::WriteAllBytes($keystorePath, $bytes)
 
       - name: Publish Android APK
         run: |
