@@ -20,6 +20,10 @@
     <!-- Отключение R8/Proguard shrinking для предотвращения крашей рефлексии (SSH-Net, BouncyCastle) -->
     <AndroidLinkTool></AndroidLinkTool>
     <AndroidEnableProguard>false</AndroidEnableProguard>
+    <!-- Только arm64 — современные устройства, меньше памяти при сборке -->
+    <AndroidSupportedAbis>arm64-v8a</AndroidSupportedAbis>
+    <!-- Увеличиваем heap для D8/R8 дексера -->
+    <JavaMaximumHeapSize>2G</JavaMaximumHeapSize>
     <!-- AOT: значительно ускоряет холодный старт на Android -->
     <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
     <!-- Trimming: убирает неиспользуемые сборки, уменьшает размер APK -->
