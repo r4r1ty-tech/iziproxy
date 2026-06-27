@@ -128,8 +128,8 @@ public class DeployScripts
 
         progress?.Report($"[DEBUG] Выполнение Deploy.sh на сервере: {runCommand}");
         var result = await sshClient.RunSudoCommand(serverConfig, runCommand);
-        string output = result.Result;
-        progress?.Report($"[DEBUG] Вывод Deploy.sh (длина={output?.Length ?? 0}):\n{output}");
+        string output = result.Result ?? "";
+        progress?.Report($"[DEBUG] Вывод Deploy.sh (длина={output.Length}):\n{output}");
         if (!string.IsNullOrWhiteSpace(result.Error))
         {
             progress?.Report($"[WARN] Ошибки Deploy.sh (stderr):\n{result.Error}");
