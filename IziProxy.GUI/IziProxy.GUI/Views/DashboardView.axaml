@@ -332,47 +332,13 @@
               </StackPanel>
             </Grid>
 
-            <!-- Полоса Stacked Bar Chart -->
+            <!-- Полоса Stacked Bar Chart (заполняется из code-behind) -->
             <Border CornerRadius="8" ClipToBounds="True" Height="16" Background="#15FFFFFF">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="{Binding Inbound1Width}"/>
-                  <ColumnDefinition Width="{Binding Inbound2Width}"/>
-                  <ColumnDefinition Width="{Binding Inbound3Width}"/>
-                </Grid.ColumnDefinitions>
-                <!-- Сегмент для inbound-1 -->
-                <Border Grid.Column="0" Background="#9C27B0" ToolTip.Tip="{Binding Inbound1Label}">
-                  <ToolTip.ShowDelay>10</ToolTip.ShowDelay>
-                </Border>
-                <!-- Сегмент для inbound-2 -->
-                <Border Grid.Column="1" Background="#2196F3" ToolTip.Tip="{Binding Inbound2Label}">
-                  <ToolTip.ShowDelay>10</ToolTip.ShowDelay>
-                </Border>
-                <!-- Сегмент для inbound-3 -->
-                <Border Grid.Column="2" Background="#4CAF50" ToolTip.Tip="{Binding Inbound3Label}">
-                  <ToolTip.ShowDelay>10</ToolTip.ShowDelay>
-                </Border>
-              </Grid>
+              <Grid x:Name="ChartBarGrid"/>
             </Border>
 
-            <!-- Легенда под графиком -->
-            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-              <!-- Легенда 1 -->
-              <StackPanel Orientation="Horizontal" Margin="0,0,16,0" Spacing="6">
-                <Ellipse Width="10" Height="10" Fill="#9C27B0" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding Inbound1Label}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
-              </StackPanel>
-              <!-- Легенда 2 -->
-              <StackPanel Orientation="Horizontal" Margin="0,0,16,0" Spacing="6">
-                <Ellipse Width="10" Height="10" Fill="#2196F3" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding Inbound2Label}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
-              </StackPanel>
-              <!-- Легенда 3 -->
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <Ellipse Width="10" Height="10" Fill="#4CAF50" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding Inbound3Label}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
-              </StackPanel>
-            </WrapPanel>
+            <!-- Легенда под графиком (заполняется из code-behind) -->
+            <WrapPanel x:Name="ChartLegendPanel" Orientation="Horizontal" HorizontalAlignment="Center"/>
           </StackPanel>
         </Border>
 
