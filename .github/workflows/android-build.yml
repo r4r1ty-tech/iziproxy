@@ -40,7 +40,7 @@ jobs:
           $keystorePath = Join-Path $env:GITHUB_WORKSPACE "iziproxy-release.keystore"
           [IO.File]::WriteAllBytes($keystorePath, $bytes)
 
-      - name: Publish Android APK
+      - name: Publish Android APK (Release)
         env:
           JAVA_TOOL_OPTIONS: -Xmx4g
         run: |
@@ -52,29 +52,45 @@ jobs:
             -p:AndroidEnableProguard=false `
             -v:diag
 
-      - name: Find and rename APK
+      - name: Build Android APK (Debug)
+        env:
+          JAVA_TOOL_OPTIONS: -Xmx4g
         run: |
-          $outDir = "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android"
+          dotnet build IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
+            -c Debug `
+            -f net10.0-android `
+            -p:AndroidPackageFormat=apk `
+            -p:AndroidLinkMode=None `
+            -p:AndroidEnableProguard=false `
+            -v:diag
 
-          # Предпочитаем подписанный APK, иначе любой
-          $apk = Get-ChildItem -Path $outDir -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
-          if (-not $apk) {
-            $apk = Get-ChildItem -Path $outDir -Recurse -Filter "*.apk" | Select-Object -First 1
+      - name: Find APKs and stage them
+        run: |
+          # Находим Release APK
+          $releaseApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
+          if (-not $releaseApk) {
+            $releaseApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*.apk" | Select-Object -First 1
           }
-
-          if ($apk) {
-            Write-Host "Найден APK: $($apk.FullName)"
-            Copy-Item $apk.FullName "IziProxy.apk"
+          if ($releaseApk) {
+            Copy-Item $releaseApk.FullName "IziProxy-Release.apk"
           } else {
-            Write-Host "Содержимое директории:"
-            Get-ChildItem -Path $outDir -Recurse | ForEach-Object { Write-Host $_.FullName }
-            Write-Error "APK не найден!"
-            exit 1
+            Write-Error "Release APK not found!"; exit 1
           }
 
-      - name: Upload APK to Release v1.1.0
+          # Находим Debug APK
+          $debugApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Debug/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
+          if (-not $debugApk) {
+            $debugApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Debug/net10.0-android/" -Recurse -Filter "*.apk" | Select-Object -First 1
+          }
+          if ($debugApk) {
+            Copy-Item $debugApk.FullName "IziProxy-Debug.apk"
+          } else {
+            Write-Error "Debug APK not found!"; exit 1
+          }
+
+      - name: Upload APKs to Release v1.0.2
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release upload v1.1.0 IziProxy.apk --clobber
+          gh release upload v1.0.2 IziProxy-Release.apk IziProxy-Debug.apk --clobber
