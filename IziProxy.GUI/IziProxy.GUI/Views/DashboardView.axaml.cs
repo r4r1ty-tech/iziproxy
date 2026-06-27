@@ -15,12 +15,24 @@ public partial class DashboardView : UserControl
         DataContextChanged += OnDataContextChanged;
     }
 
+    private DashboardViewModel? _currentVm;
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
+        if (_currentVm != null)
+        {
+            _currentVm.ChartSegments.CollectionChanged -= OnChartSegmentsChanged;
+        }
+
         if (DataContext is DashboardViewModel vm)
         {
-            vm.ChartSegments.CollectionChanged += OnChartSegmentsChanged;
-            RebuildChart(vm);
+            _currentVm = vm;
+            _currentVm.ChartSegments.CollectionChanged += OnChartSegmentsChanged;
+            RebuildChart(_currentVm);
+        }
+        else
+        {
+            _currentVm = null;
         }
     }
 
