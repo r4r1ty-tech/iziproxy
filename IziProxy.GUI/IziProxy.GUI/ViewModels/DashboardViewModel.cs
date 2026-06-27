@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.Input;
 using IziProxy;
 using Avalonia.Media.Imaging;
 using QRCoder;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -41,17 +40,8 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _totalAllTrafficFormatted = "0 B";
     [ObservableProperty] private bool _hasTrafficData = false;
 
-    [ObservableProperty] private GridLength _inbound1Width = new GridLength(1, GridUnitType.Star);
-    [ObservableProperty] private GridLength _inbound2Width = new GridLength(1, GridUnitType.Star);
-    [ObservableProperty] private GridLength _inbound3Width = new GridLength(1, GridUnitType.Star);
-
-    [ObservableProperty] private string _inbound1Label = "inbound-1 (0%)";
-    [ObservableProperty] private string _inbound2Label = "inbound-2 (0%)";
-    [ObservableProperty] private string _inbound3Label = "inbound-3 (0%)";
-
-    [ObservableProperty] private double _inbound1Percentage = 0;
-    [ObservableProperty] private double _inbound2Percentage = 0;
-    [ObservableProperty] private double _inbound3Percentage = 0;
+    /// <summary>Сегменты визуального графика трафика (один на inbound).</summary>
+    public ObservableCollection<TrafficChartSegment> ChartSegments { get; } = new();
 
     // ── SNI-профили ──────────────────────────────────────────────────
     public ObservableCollection<SniProfileItem> SniProfiles { get; } = new();
@@ -114,22 +104,21 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Палитра цветов для сегментов графика (циклически повторяется).
+    /// </summary>
+    private static readonly string[] SegmentColors =
+        ["#9C27B0", "#2196F3", "#4CAF50", "#FF9800", "#E91E63", "#00BCD4", "#8BC34A"];
+
     private void UpdateTrafficChart()
     {
+        ChartSegments.Clear();
+
         var stats = TrafficStats.Where(s => s.Tag != "api").ToList();
         if (stats.Count == 0)
         {
             HasTrafficData = false;
-            Inbound1Width = new GridLength(1, GridUnitType.Star);
-            Inbound2Width = new GridLength(1, GridUnitType.Star);
-            Inbound3Width = new GridLength(1, GridUnitType.Star);
             TotalAllTrafficFormatted = "0 B";
-            Inbound1Label = "inbound-1 (0%)";
-            Inbound2Label = "inbound-2 (0%)";
-            Inbound3Label = "inbound-3 (0%)";
-            Inbound1Percentage = 0;
-            Inbound2Percentage = 0;
-            Inbound3Percentage = 0;
             return;
         }
 
@@ -139,43 +128,33 @@ public partial class DashboardViewModel : ObservableObject
         if (totalBytes == 0)
         {
             HasTrafficData = false;
-            Inbound1Width = new GridLength(1, GridUnitType.Star);
-            Inbound2Width = new GridLength(1, GridUnitType.Star);
-            Inbound3Width = new GridLength(1, GridUnitType.Star);
-            Inbound1Label = stats.Count > 0 ? $"{stats[0].Tag} (0%)" : "—";
-            Inbound2Label = stats.Count > 1 ? $"{stats[1].Tag} (0%)" : "—";
-            Inbound3Label = stats.Count > 2 ? $"{stats[2].Tag} (0%)" : "—";
-            Inbound1Percentage = 0;
-            Inbound2Percentage = 0;
-            Inbound3Percentage = 0;
+            for (int i = 0; i < stats.Count; i++)
+            {
+                ChartSegments.Add(new TrafficChartSegment
+                {
+                    Label = $"{stats[i].Tag} (0%)",
+                    Percentage = 0,
+                    Color = SegmentColors[i % SegmentColors.Length],
+                    WidthFraction = 1.0 / stats.Count,
+                });
+            }
             return;
         }
 
         HasTrafficData = true;
 
-        double p1 = stats.Count > 0 ? (double)stats[0].TotalBytes / totalBytes * 100 : 0;
-        double p2 = stats.Count > 1 ? (double)stats[1].TotalBytes / totalBytes * 100 : 0;
-        double p3 = stats.Count > 2 ? (double)stats[2].TotalBytes / totalBytes * 100 : 0;
-
-        int pct1 = (int)Math.Round(p1);
-        int pct2 = (int)Math.Round(p2);
-        int pct3 = (int)Math.Round(p3);
-
-        int w1 = Math.Max(1, pct1);
-        int w2 = Math.Max(1, pct2);
-        int w3 = Math.Max(1, pct3);
-
-        Inbound1Width = new GridLength(w1, GridUnitType.Star);
-        Inbound2Width = new GridLength(w2, GridUnitType.Star);
-        Inbound3Width = new GridLength(w3, GridUnitType.Star);
-
-        Inbound1Label = stats.Count > 0 ? $"{stats[0].Tag} ({pct1}%)" : "—";
-        Inbound2Label = stats.Count > 1 ? $"{stats[1].Tag} ({pct2}%)" : "—";
-        Inbound3Label = stats.Count > 2 ? $"{stats[2].Tag} ({pct3}%)" : "—";
-
-        Inbound1Percentage = pct1;
-        Inbound2Percentage = pct2;
-        Inbound3Percentage = pct3;
+        for (int i = 0; i < stats.Count; i++)
+        {
+            double pct = (double)stats[i].TotalBytes / totalBytes * 100;
+            int rounded = (int)Math.Round(pct);
+            ChartSegments.Add(new TrafficChartSegment
+            {
+                Label = $"{stats[i].Tag} ({rounded}%)",
+                Percentage = rounded,
+                Color = SegmentColors[i % SegmentColors.Length],
+                WidthFraction = Math.Max(0.01, pct / 100.0),
+            });
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanExecute))]
@@ -471,4 +450,23 @@ public partial class SniProfileItem : ObservableObject
             // Игнорируем ошибки генерации QR
         }
     }
+}
+
+/// <summary>
+/// Сегмент визуального графика распределения трафика.
+/// Каждый сегмент соответствует одному inbound-профилю.
+/// </summary>
+public class TrafficChartSegment
+{
+    /// <summary>Текстовая метка с именем и процентом (например "inbound-1 (45%)").</summary>
+    public string Label { get; set; } = string.Empty;
+
+    /// <summary>Процент от суммарного трафика (0–100).</summary>
+    public int Percentage { get; set; }
+
+    /// <summary>Цвет сегмента в формате hex (например "#9C27B0").</summary>
+    public string Color { get; set; } = "#888888";
+
+    /// <summary>Доля от общей ширины (0.0–1.0), используется для привязки Width.</summary>
+    public double WidthFraction { get; set; }
 }
