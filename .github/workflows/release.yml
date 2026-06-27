@@ -151,30 +151,51 @@ jobs:
           $keystorePath = Join-Path $env:GITHUB_WORKSPACE "iziproxy-release.keystore"
           [IO.File]::WriteAllBytes($keystorePath, $bytes)
 
-      - name: Publish Android APK
+      - name: Publish Android APK (Release)
         run: |
           dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
             -c Release `
             -f net10.0-android `
             -p:AndroidPackageFormat=apk
 
-      - name: Find APK and stage it
+      - name: Build Android APK (Debug)
         run: |
-          $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
-          if (-not $apk) {
-            $apk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*.apk" | Select-Object -First 1
+          dotnet build IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
+            -c Debug `
+            -f net10.0-android `
+            -p:AndroidPackageFormat=apk
+
+      - name: Find APKs and stage them
+        run: |
+          # Находим Release APK
+          $releaseApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
+          if (-not $releaseApk) {
+            $releaseApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Release/net10.0-android/" -Recurse -Filter "*.apk" | Select-Object -First 1
           }
-          if ($apk) {
-            Copy-Item $apk.FullName "IziProxy.apk"
+          if ($releaseApk) {
+            Copy-Item $releaseApk.FullName "IziProxy-Release.apk"
           } else {
-            Write-Error "APK not found!"; exit 1
+            Write-Error "Release APK not found!"; exit 1
           }
 
-      - name: Upload artifact
+          # Находим Debug APK
+          $debugApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Debug/net10.0-android/" -Recurse -Filter "*-Signed.apk" | Select-Object -First 1
+          if (-not $debugApk) {
+            $debugApk = Get-ChildItem -Path "IziProxy.GUI/IziProxy.GUI.Android/bin/Debug/net10.0-android/" -Recurse -Filter "*.apk" | Select-Object -First 1
+          }
+          if ($debugApk) {
+            Copy-Item $debugApk.FullName "IziProxy-Debug.apk"
+          } else {
+            Write-Error "Debug APK not found!"; exit 1
+          }
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: IziProxy.apk
+          path: |
+            IziProxy-Release.apk
+            IziProxy-Debug.apk
 
   # ────────────────────────────────────────────────
   # 5. Создаём релиз и загружаем все артефакты
@@ -212,8 +233,10 @@ jobs:
           | Windows x86 | IziProxy-win-x86.exe |
           | Windows ARM64 | IziProxy-win-arm64.exe |
           | Linux x64 | IziProxy-Linux-x86_64.AppImage |
-          | Android | IziProxy.apk |" \
+          | Android Release | IziProxy-Release.apk |
+          | Android Debug | IziProxy-Debug.apk |" \
             artifacts/win-x86/IziProxy-win-x86.exe \
             artifacts/win-arm64/IziProxy-win-arm64.exe \
             artifacts/linux-appimage/IziProxy-Linux-x86_64.AppImage \
-            artifacts/android-apk/IziProxy.apk
+            artifacts/android-apk/IziProxy-Release.apk \
+            artifacts/android-apk/IziProxy-Debug.apk

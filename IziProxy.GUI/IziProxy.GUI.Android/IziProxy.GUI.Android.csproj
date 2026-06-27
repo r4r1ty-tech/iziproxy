@@ -21,11 +21,13 @@
     <AndroidLinkTool></AndroidLinkTool>
     <AndroidEnableProguard>false</AndroidEnableProguard>
     <!-- Только arm64 — современные устройства, меньше памяти при сборке -->
-    <AndroidSupportedAbis>arm64-v8a</AndroidSupportedAbis>
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    <JavaSdkDirectory Condition="Exists('/home/alex/.var/app/com.visualstudio.code/data/vscode/extensions/redhat.java-1.54.0-linux-x64/jre/21.0.10-linux-x86_64')">/home/alex/.var/app/com.visualstudio.code/data/vscode/extensions/redhat.java-1.54.0-linux-x64/jre/21.0.10-linux-x86_64</JavaSdkDirectory>
     <!-- Увеличиваем heap для D8/R8 дексера -->
     <JavaMaximumHeapSize>2G</JavaMaximumHeapSize>
-    <!-- AOT: значительно ускоряет холодный старт на Android -->
-    <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+    <!-- AOT: значительно ускоряет холодный старт на Android (только для Release) -->
+    <AndroidEnableProfiledAot Condition="'$(Configuration)' == 'Release'">true</AndroidEnableProfiledAot>
+    <AndroidEnableProfiledAot Condition="'$(Configuration)' != 'Release'">false</AndroidEnableProfiledAot>
     <!-- Trimming: убирает неиспользуемые сборки, уменьшает размер APK -->
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
