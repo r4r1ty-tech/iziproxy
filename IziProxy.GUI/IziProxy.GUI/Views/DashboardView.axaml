@@ -49,7 +49,7 @@
                 </Ellipse.Fill>
               </Ellipse>
               <TextBlock Text="{Binding ServiceStatus}"
-                         FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+                          FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
             </StackPanel>
             <TextBlock Text="{Binding LastUpdated, StringFormat='Обновлено: {0}'}"
                        FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
@@ -320,38 +320,114 @@
                    Foreground="{StaticResource MutedTextBrush}" FontSize="13"
                    IsVisible="{Binding TrafficStats.Count, Converter={x:Static ObjectConverters.IsNull}}"/>
 
+        <!-- Визуальный график трафика (только если есть данные) -->
+        <Border Classes="M3Card" Padding="20" IsVisible="{Binding HasTrafficData}" Margin="0,4">
+          <StackPanel Spacing="16">
+            <!-- Верхняя строка: Название и общая сумма -->
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Grid.Column="0" Text="Распределение трафика" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="Всего:" FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                <TextBlock Text="{Binding TotalAllTrafficFormatted}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Полоса Stacked Bar Chart -->
+            <Border CornerRadius="8" ClipToBounds="True" Height="16" Background="#15FFFFFF">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="{Binding Inbound1Width}"/>
+                  <ColumnDefinition Width="{Binding Inbound2Width}"/>
+                  <ColumnDefinition Width="{Binding Inbound3Width}"/>
+                </Grid.ColumnDefinitions>
+                <!-- Сегмент для inbound-1 -->
+                <Border Grid.Column="0" Background="#9C27B0" ToolTip.Tip="{Binding Inbound1Label}">
+                  <ToolTip.ShowDelay>10</ToolTip.ShowDelay>
+                </Border>
+                <!-- Сегмент для inbound-2 -->
+                <Border Grid.Column="1" Background="#2196F3" ToolTip.Tip="{Binding Inbound2Label}">
+                  <ToolTip.ShowDelay>10</ToolTip.ShowDelay>
+                </Border>
+                <!-- Сегмент для inbound-3 -->
+                <Border Grid.Column="2" Background="#4CAF50" ToolTip.Tip="{Binding Inbound3Label}">
+                  <ToolTip.ShowDelay>10</ToolTip.ShowDelay>
+                </Border>
+              </Grid>
+            </Border>
+
+            <!-- Легенда под графиком -->
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
+              <!-- Легенда 1 -->
+              <StackPanel Orientation="Horizontal" Margin="0,0,16,0" Spacing="6">
+                <Ellipse Width="10" Height="10" Fill="#9C27B0" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Inbound1Label}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
+              </StackPanel>
+              <!-- Легенда 2 -->
+              <StackPanel Orientation="Horizontal" Margin="0,0,16,0" Spacing="6">
+                <Ellipse Width="10" Height="10" Fill="#2196F3" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Inbound2Label}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
+              </StackPanel>
+              <!-- Легенда 3 -->
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Ellipse Width="10" Height="10" Fill="#4CAF50" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Inbound3Label}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
+              </StackPanel>
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+
         <ItemsControl ItemsSource="{Binding TrafficStats}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="core:InboundTrafficStat">
               <Border Classes="M3Card" Padding="16" Margin="0,4">
                 <StackPanel Spacing="8">
-                  <!-- Inbound Name -->
-                  <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Border Background="{StaticResource PrimaryContainerBrush}"
-                            Width="36" Height="36"
-                            CornerRadius="18"
-                            VerticalAlignment="Center">
-                      <materialIcons:MaterialIcon Kind="SwapVertical" Width="18" Height="18" Foreground="{StaticResource PrimaryBrush}"/>
-                    </Border>
-                    <TextBlock Text="{Binding Tag}"
-                               FontSize="15"
-                               FontWeight="Bold"
-                               VerticalAlignment="Center"
-                               Foreground="{StaticResource TextBrush}"/>
-                  </StackPanel>
+                  <!-- Inbound Name & Total -->
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                      <Border Background="{StaticResource PrimaryContainerBrush}"
+                              Width="36" Height="36"
+                              CornerRadius="18"
+                              VerticalAlignment="Center">
+                        <materialIcons:MaterialIcon Kind="SwapVertical" Width="18" Height="18" Foreground="{StaticResource PrimaryBrush}"/>
+                      </Border>
+                      <TextBlock Text="{Binding Tag}"
+                                 FontSize="15"
+                                 FontWeight="Bold"
+                                 VerticalAlignment="Center"
+                                 Foreground="{StaticResource TextBrush}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <TextBlock Text="Всего:" FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                      <TextBlock Text="{Binding TotalFormatted}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
+                    </StackPanel>
+                  </Grid>
 
-                  <!-- Traffic Stats -->
-                  <StackPanel Orientation="Horizontal" Spacing="20" Margin="46,0,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <materialIcons:MaterialIcon Kind="ArrowUp" Width="16" Height="16" Foreground="#81C784" VerticalAlignment="Center"/>
-                      <TextBlock Text="{Binding UplinkFormatted}"
-                                 FontSize="14" FontWeight="SemiBold" Foreground="#81C784" VerticalAlignment="Center"/>
+                  <!-- Traffic Stats & Balance Bar -->
+                  <StackPanel Spacing="6" Margin="46,0,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="20">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <materialIcons:MaterialIcon Kind="ArrowUp" Width="16" Height="16" Foreground="#81C784" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding UplinkFormatted}"
+                                   FontSize="13" FontWeight="SemiBold" Foreground="#81C784" VerticalAlignment="Center"/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <materialIcons:MaterialIcon Kind="ArrowDown" Width="16" Height="16" Foreground="#64B5F6" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DownlinkFormatted}"
+                                   FontSize="13" FontWeight="SemiBold" Foreground="#64B5F6" VerticalAlignment="Center"/>
+                      </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <materialIcons:MaterialIcon Kind="ArrowDown" Width="16" Height="16" Foreground="#64B5F6" VerticalAlignment="Center"/>
-                      <TextBlock Text="{Binding DownlinkFormatted}"
-                                 FontSize="14" FontWeight="SemiBold" Foreground="#64B5F6" VerticalAlignment="Center"/>
-                    </StackPanel>
+
+                    <!-- Полоса соотношения Uplink/Downlink -->
+                    <ProgressBar Value="{Binding UplinkPercent}" 
+                                 Maximum="100" 
+                                 Background="#64B5F6" 
+                                 Foreground="#81C784"
+                                 Height="6" 
+                                 CornerRadius="3"
+                                 MinWidth="200" 
+                                 MaxWidth="300"
+                                 HorizontalAlignment="Left" 
+                                 Margin="0,4,0,0"/>
                   </StackPanel>
                 </StackPanel>
               </Border>
