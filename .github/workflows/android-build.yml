@@ -41,11 +41,16 @@ jobs:
           [IO.File]::WriteAllBytes($keystorePath, $bytes)
 
       - name: Publish Android APK
+        env:
+          JAVA_TOOL_OPTIONS: -Xmx4g
         run: |
           dotnet publish IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj `
             -c Release `
             -f net10.0-android `
-            -p:AndroidPackageFormat=apk
+            -p:AndroidPackageFormat=apk `
+            -p:AndroidLinkMode=None `
+            -p:AndroidEnableProguard=false `
+            -v:diag
 
       - name: Find and rename APK
         run: |
