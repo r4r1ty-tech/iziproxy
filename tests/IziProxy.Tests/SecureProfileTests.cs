@@ -181,4 +181,29 @@ public class SecureProfileTests
             try { File.Delete(tempFile); } catch { }
         }
     }
+
+    [Fact]
+    public void SecureField_CorruptedBase64_ReturnsEmptyString()
+    {
+        var sf = new SecureField("IziProxy.Tests.SecureProfile.CorruptedBase64");
+        string input = SecureField.Prefix + "not-a-base64-string-!!!";
+
+        string result = sf.Unprotect(input);
+
+        Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
+    public void SecureField_CryptographicError_ReturnsEmptyString()
+    {
+        var sf1 = new SecureField("IziProxy.Tests.SecureProfile.Crypto1");
+        var sf2 = new SecureField("IziProxy.Tests.SecureProfile.Crypto2");
+        const string secret = "my-secret-password";
+
+        string encrypted = sf1.Protect(secret);
+        string result = sf2.Unprotect(encrypted);
+
+        Assert.Equal(string.Empty, result);
+    }
 }
+
