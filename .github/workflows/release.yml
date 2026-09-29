@@ -107,8 +107,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y wget
 
       - name: Build AppImage
-        # Используем закоммиченные AppDir/AppRun, AppDir/IziProxy.desktop,
-        # AppDir/iziproxy.svg. Перезаписывать их не нужно — раньше workflow
+        # Используем закоммиченные AppDir/AppRun, AppDir/*.desktop,
+        # AppDir/iziproxy.png. Перезаписывать их не нужно — раньше workflow
         # генерил .desktop с Exec=IziProxy (без пути), и при клике через DE
         # AppImage не находил бинарь в usr/bin/.
         run: |
@@ -161,8 +161,15 @@ jobs:
             IziProxy.GUI/IziProxy.GUI.Android/IziProxy.GUI.Android.csproj
 
       - name: Decode keystore
+        # Без секрета keystore не создаётся, и APK подписывается debug-ключом.
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          $bytes = [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
+          if (-not $env:ANDROID_KEYSTORE_BASE64) {
+            Write-Host "::warning::ANDROID_KEYSTORE_BASE64 не задан — APK будет подписан debug-ключом"
+            exit 0
+          }
+          $bytes = [Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
           $keystorePath = Join-Path $env:GITHUB_WORKSPACE "iziproxy-release.keystore"
           [IO.File]::WriteAllBytes($keystorePath, $bytes)
 
@@ -251,4 +258,5 @@ jobs:
           gh release create "$TAG_NAME" \
             --title "IziProxy $TAG_NAME" \
             --generate-notes \
+            --latest \
             "${files[@]}"

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=IziProxy
+Comment=Deploy Xray (VLESS + REALITY) on your own server
+Comment[ru]=Развертывание Xray (VLESS + REALITY) на своём сервере
+Exec=usr/bin/IziProxy
+Icon=iziproxy
+Categories=Network;

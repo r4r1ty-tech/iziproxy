@@ -1,3 +1,4 @@
+using System.Globalization;
 using Android.App;
 using Android.Runtime;
 using Avalonia;
@@ -15,6 +16,16 @@ namespace IziProxy.GUI.Android
 
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
+            // При InvariantGlobalization .NET не видит язык системы —
+            // берём его из Java Locale, чтобы подхватился Strings.ru.resx.
+            try
+            {
+                var culture = new CultureInfo(Java.Util.Locale.Default.Language ?? string.Empty);
+                CultureInfo.DefaultThreadCurrentUICulture = culture;
+                CultureInfo.CurrentUICulture = culture;
+            }
+            catch (CultureNotFoundException) { }
+
             return base.CustomizeAppBuilder(builder)
                 .WithInterFont()
                 // Показываем только Warning и выше — убирает verbose Avalonia логи на Android

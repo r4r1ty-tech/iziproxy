@@ -8,8 +8,10 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <!-- Release signing -->
-    <AndroidKeyStore>true</AndroidKeyStore>
+    <!-- Release signing: только если keystore реально есть (в CI он
+         появляется из секрета ANDROID_KEYSTORE_BASE64). Без него APK
+         подписывается debug-ключом, а не валит сборку. -->
+    <AndroidKeyStore Condition="Exists('$(MSBuildThisFileDirectory)../../iziproxy-release.keystore')">true</AndroidKeyStore>
     <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)../../iziproxy-release.keystore</AndroidSigningKeyStore>
     <AndroidSigningKeyAlias>iziproxy</AndroidSigningKeyAlias>
     <AndroidSigningKeyPass>iziproxy123</AndroidSigningKeyPass>
@@ -33,6 +35,9 @@
     <TrimMode>partial</TrimMode>
     <!-- Отключаем тяжёлые ICU-данные глобализации (не нужны для ru/en) -->
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Разрешаем CultureInfo("ru") без ICU: нужен только для выбора
+         Strings.ru.resx, форматирование остаётся инвариантным. -->
+    <PredefinedCulturesOnly>false</PredefinedCulturesOnly>
   </PropertyGroup>
 
   <ItemGroup>
