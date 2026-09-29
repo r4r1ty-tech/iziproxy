@@ -67,14 +67,14 @@ public static class SniRepairService
     public static async Task<List<InboundSniInfo>> ReadCurrentSnis(
         SSH ssh, ServerConfig config, IProgress<string>? progress = null)
     {
-        progress?.Report("[INFO] Чтение текущей конфигурации Xray...");
+        progress?.Report("[INFO] " + Tr.Get("Sni_ReadingConfig"));
 
         var result = await ssh.RunSudoCommand(config, $"cat {XrayConfigPath}");
         string json = result.Result?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(json))
         {
-            progress?.Report("[ERROR] Конфиг Xray пустой или не найден");
+            progress?.Report("[ERROR] " + Tr.Get("Sni_ConfigEmpty"));
             return new List<InboundSniInfo>();
         }
 
@@ -99,7 +99,7 @@ public static class SniRepairService
             if (!root.TryGetProperty("inbounds", out var inbounds) ||
                 inbounds.ValueKind != JsonValueKind.Array)
             {
-                progress?.Report("[WARN] Конфиг не содержит массив inbounds");
+                progress?.Report("[WARN] " + Tr.Get("Sni_NoInbounds"));
                 return snis;
             }
 
@@ -137,11 +137,11 @@ public static class SniRepairService
                 });
             }
 
-            progress?.Report($"[INFO] Прочитано {snis.Count} inbound-профилей");
+            progress?.Report("[INFO] " + Tr.F("Sni_ReadProfiles", snis.Count));
         }
         catch (JsonException ex)
         {
-            progress?.Report($"[ERROR] Ошибка парсинга config.json: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Sni_ParseError", ex.Message));
         }
 
         return snis;
@@ -164,11 +164,11 @@ public static class SniRepairService
     {
         if (string.IsNullOrWhiteSpace(newSni))
         {
-            progress?.Report("[ERROR] Новый SNI не может быть пустым");
+            progress?.Report("[ERROR] " + Tr.Get("Sni_EmptySni"));
             return false;
         }
 
-        progress?.Report($"[INFO] Замена SNI для inbound[{inboundIndex}] на {newSni}...");
+        progress?.Report("[INFO] " + Tr.F("Sni_Replacing", inboundIndex, newSni));
 
         // 1. Читаем текущий конфиг
         var catResult = await ssh.RunSudoCommand(config, $"cat {XrayConfigPath}");
@@ -176,7 +176,7 @@ public static class SniRepairService
 
         if (string.IsNullOrWhiteSpace(json))
         {
-            progress?.Report("[ERROR] Не удалось прочитать config.json");
+            progress?.Report("[ERROR] " + Tr.Get("Sni_ReadFailed"));
             return false;
         }
 
@@ -188,7 +188,7 @@ public static class SniRepairService
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Ошибка модификации JSON: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Sni_ModifyError", ex.Message));
             return false;
         }
 
@@ -211,7 +211,7 @@ public static class SniRepairService
 
         if (!uploaded)
         {
-            progress?.Report("[ERROR] Не удалось загрузить обновлённый конфиг на сервер");
+            progress?.Report("[ERROR] " + Tr.Get("Sni_UploadFailed"));
             return false;
         }
 
@@ -227,11 +227,11 @@ public static class SniRepairService
 
         if (output.Contains("SNI_CHANGE_OK"))
         {
-            progress?.Report($"[INFO] SNI успешно заменён на {newSni}, Xray перезапущен");
+            progress?.Report("[INFO] " + Tr.F("Sni_Replaced", newSni));
             return true;
         }
 
-        progress?.Report($"[ERROR] Xray не запустился после замены SNI: {output}");
+        progress?.Report("[ERROR] " + Tr.F("Sni_XrayFailed", output));
         return false;
     }
 
@@ -248,7 +248,7 @@ public static class SniRepairService
         string? excludeSni = null,
         IProgress<string>? progress = null)
     {
-        progress?.Report("[INFO] Автоподбор лучшего SNI-домена...");
+        progress?.Report("[INFO] " + Tr.Get("Sni_AutoSelecting"));
 
         // Фильтруем исключённый домен на стороне C#
         var candidates = string.IsNullOrWhiteSpace(excludeSni)
@@ -257,12 +257,12 @@ public static class SniRepairService
 
         if (candidates.Length == 0)
         {
-            progress?.Report("[WARN] Все кандидаты исключены — список доменов пуст");
+            progress?.Report("[WARN] " + Tr.Get("Sni_AllExcluded"));
             return null;
         }
 
         if (!string.IsNullOrWhiteSpace(excludeSni))
-            progress?.Report($"[INFO] Текущий SNI '{excludeSni}' исключён из кандидатов");
+            progress?.Report("[INFO] " + Tr.F("Sni_Excluded", excludeSni));
 
         // Формируем bash-скрипт для проверки доменов.
         // Для каждого домена делаем curl с замером времени.
@@ -298,7 +298,7 @@ fi
             if (line.StartsWith("SNI_PROBE=", StringComparison.Ordinal))
             {
                 string probe = line["SNI_PROBE=".Length..];
-                progress?.Report($"[DEBUG] Проба: {probe}");
+                progress?.Report($"[DEBUG] Probe: {probe}");
             }
         }
 
@@ -309,17 +309,17 @@ fi
                 string best = line["SNI_BEST=".Length..].Trim();
                 if (best == "NONE" || string.IsNullOrEmpty(best))
                 {
-                    progress?.Report("[WARN] Ни один домен не прошёл проверку");
+                    progress?.Report("[WARN] " + Tr.Get("Sni_NonePassed"));
                     return null;
                 }
 
                 string domain = best.Contains('|') ? best[..best.IndexOf('|')] : best;
-                progress?.Report($"[INFO] Лучший SNI: {domain}");
+                progress?.Report("[INFO] " + Tr.F("Sni_Best", domain));
                 return domain;
             }
         }
 
-        progress?.Report("[WARN] Не удалось определить лучший SNI");
+        progress?.Report("[WARN] " + Tr.Get("Sni_BestNotFound"));
         return null;
     }
 

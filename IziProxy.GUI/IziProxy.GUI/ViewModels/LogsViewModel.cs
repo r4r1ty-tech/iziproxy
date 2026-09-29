@@ -36,8 +36,8 @@ public partial class LogsViewModel : ObservableObject
 
     public LogsViewModel()
     {
-        try { File.WriteAllText(LogFilePath, $"--- Начало сессии {DateTime.Now} ---\n"); } catch { }
-        System.Diagnostics.Debug.WriteLine($"[INFO] LogsViewModel: лог-файл={LogFilePath}");
+        try { File.WriteAllText(LogFilePath, Tr.F("Logs_SessionStart", DateTime.Now) + "\n"); } catch { }
+        System.Diagnostics.Debug.WriteLine($"[INFO] LogsViewModel: log file={LogFilePath}");
 
         ProgressReporter = new Progress<string>(msg =>
         {
@@ -97,7 +97,7 @@ public partial class LogsViewModel : ObservableObject
     {
         _allLogs.Clear();
         Logs.Clear();
-        try { File.WriteAllText(LogFilePath, $"--- Лог очищен {DateTime.Now} ---\n"); } catch { }
+        try { File.WriteAllText(LogFilePath, Tr.F("Logs_Cleared", DateTime.Now) + "\n"); } catch { }
     }
 
     [RelayCommand]
@@ -113,7 +113,7 @@ public partial class LogsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Logs.Add($"Не удалось открыть файл лога: {ex.Message}");
+            Logs.Add(Tr.F("Logs_OpenFailed", ex.Message));
         }
     }
 }

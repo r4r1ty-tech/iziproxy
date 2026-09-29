@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:IziProxy.GUI"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
              xmlns:views="using:IziProxy.GUI.Views"
              xmlns:gui="using:IziProxy"
@@ -17,27 +18,27 @@
                 CornerRadius="16">
           <materialIcons:MaterialIcon Kind="ServerPlus" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
         </Border>
-        <TextBlock Text="Развертывание" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+        <TextBlock Text="{l:Tr Deploy_Title}" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
       </StackPanel>
 
       <!-- Управление профилями -->
       <Border Classes="M3Card" Padding="16">
         <StackPanel Spacing="12">
-          <TextBlock Text="Профили серверов" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+          <TextBlock Text="{l:Tr Deploy_Profiles}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
 
           <!-- Выбор + Удалить -->
           <StackPanel Spacing="8">
             <ComboBox ItemsSource="{Binding Profiles}"
                       SelectedItem="{Binding SelectedProfile}"
                       HorizontalAlignment="Stretch"
-                      PlaceholderText="Выберите сохраненный профиль">
+                      PlaceholderText="{l:Tr Deploy_SelectProfile}">
               <ComboBox.ItemTemplate>
                 <DataTemplate x:DataType="gui:VdsProfile">
                   <TextBlock Text="{Binding Name}"/>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
-            <Button Content="❌ Удалить"
+            <Button Content="{l:Tr Deploy_DeleteProfile}"
                     Classes="Tonal"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
@@ -48,8 +49,8 @@
           <!-- Имя + Сохранить -->
           <StackPanel Spacing="8" Margin="0,4,0,0">
             <TextBox Text="{Binding NewProfileName}"
-                     PlaceholderText="Имя нового профиля (напр. Мой VDS)"/>
-            <Button Content="💾 Сохранить"
+                     PlaceholderText="{l:Tr Deploy_NewProfileName}"/>
+            <Button Content="{l:Tr Deploy_SaveProfile}"
                     Classes="Tonal"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
@@ -63,35 +64,35 @@
         <StackPanel Spacing="16">
 
           <StackPanel Spacing="6">
-            <TextBlock Text="IP-адрес сервера" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBlock Text="{l:Tr Deploy_ServerIp}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
             <TextBox Text="{Binding Host}"
                      PlaceholderText="1.2.3.4"
                      IsEnabled="{Binding !IsDeploying}"/>
           </StackPanel>
 
           <StackPanel Spacing="6">
-            <TextBlock Text="Имя пользователя" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBlock Text="{l:Tr Deploy_Username}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
             <TextBox Text="{Binding Username}"
                      PlaceholderText="root"
                      IsEnabled="{Binding !IsDeploying}"/>
           </StackPanel>
 
           <StackPanel Spacing="6">
-            <TextBlock Text="Пароль" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBlock Text="{l:Tr Deploy_Password}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
             <TextBox Text="{Binding Password}"
                      PasswordChar="●"
-                     PlaceholderText="пароль (или оставьте пустым при использовании ключа)"
+                     PlaceholderText="{l:Tr Deploy_PasswordHint}"
                      IsEnabled="{Binding !IsDeploying}"
                      TextWrapping="Wrap"/>
           </StackPanel>
 
           <StackPanel Spacing="6">
-            <TextBlock Text="SSH-ключ (необязательно)" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBlock Text="{l:Tr Deploy_SshKey}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
             <!-- На десктопе: поле + кнопка файлового диалога -->
             <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !IsNarrowMode}">
               <TextBox Grid.Column="0"
                        Text="{Binding SshKeyPath}"
-                       PlaceholderText="Путь к id_rsa"
+                       PlaceholderText="{l:Tr Deploy_SshKeyHint}"
                        IsEnabled="{Binding !IsDeploying}"/>
               <Button Grid.Column="1"
                       Content="📁"
@@ -104,7 +105,7 @@
             <!-- На Android/мобиле: только текстовое поле (файловый диалог неработает) -->
             <TextBox IsVisible="{Binding IsNarrowMode}"
                      Text="{Binding SshKeyPath}"
-                     PlaceholderText="Путь к SSH-ключу, напр. /sdcard/id_rsa"
+                     PlaceholderText="{l:Tr Deploy_SshKeyHintMobile}"
                      IsEnabled="{Binding !IsDeploying}"/>
           </StackPanel>
 
@@ -114,7 +115,7 @@
 
       <!-- Кнопки действий -->
       <StackPanel Spacing="8" Margin="0,8,0,0">
-        <Button Content="⚡ Проверить соединение"
+        <Button Content="{l:Tr Deploy_TestConnection}"
                 Classes="Tonal"
                 Command="{Binding TestConnectionCommand}"
                 IsEnabled="{Binding !IsDeploying}"
@@ -127,7 +128,7 @@
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center">
           <StackPanel Orientation="Horizontal" Spacing="12">
-            <TextBlock Text="Установить" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
+            <TextBlock Text="{l:Tr Deploy_Install}" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
             <ProgressBar IsIndeterminate="True"
                          Width="20" Height="20"
                          Foreground="{StaticResource OnPrimaryBrush}"
@@ -147,7 +148,7 @@
       <StackPanel IsVisible="{Binding IsCompleted}" Spacing="12">
         <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,4">
           <materialIcons:MaterialIcon Kind="LinkVariant" Width="22" Height="22" Foreground="#81C784"/>
-          <TextBlock Text="VLESS ссылки" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+          <TextBlock Text="{l:Tr Deploy_VlessLinks}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
         </StackPanel>
 
         <ItemsControl ItemsSource="{Binding VlessLinks}">
@@ -171,7 +172,7 @@
 
                   <Grid ColumnDefinitions="*,Auto">
                     <Button Grid.Column="0"
-                            Content="QR-код"
+                            Content="{l:Tr Deploy_QrCode}"
                             Classes="Tonal"
                             Command="{Binding ToggleQrCommand}"
                             HorizontalAlignment="Left"/>

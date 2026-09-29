@@ -116,16 +116,18 @@ jobs:
           cp publish_linux/IziProxy.GUI.Desktop AppDir/usr/bin/IziProxy
           chmod +x AppDir/usr/bin/IziProxy
 
-          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
+          # Новый appimagetool (AppImage/appimagetool) кладёт статический
+          # runtime: AppImage не требует libfuse2 на системе пользователя.
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
           chmod +x appimagetool
           ./appimagetool --appimage-extract
-          ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-Linux-x86_64.AppImage
+          ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-x86_64.AppImage
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-appimage
-          path: IziProxy-Linux-x86_64.AppImage
+          path: IziProxy-x86_64.AppImage
 
   # ────────────────────────────────────────────────
   # 4. Android APK
@@ -219,6 +221,9 @@ jobs:
   # ────────────────────────────────────────────────
   publish-release:
     needs: [build-windows-x86, build-windows-arm64, build-linux, build-android]
+    # Релиз публикуется, даже если упала Android-сборка: desktop-артефакты
+    # не должны зависеть от неё. APK просто не попадут в релиз.
+    if: ${{ !cancelled() && needs.build-windows-x86.result == 'success' && needs.build-windows-arm64.result == 'success' && needs.build-linux.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -234,26 +239,16 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
+          files=(
+            artifacts/win-x86/IziProxy-win-x86.exe
+            artifacts/win-arm64/IziProxy-win-arm64.exe
+            artifacts/linux-appimage/IziProxy-x86_64.AppImage
+          )
+          for apk in artifacts/android-apk/IziProxy-Release.apk artifacts/android-apk/IziProxy-Debug.apk; do
+            [ -f "$apk" ] && files+=("$apk")
+          done
+
           gh release create "$TAG_NAME" \
             --title "IziProxy $TAG_NAME" \
-            --notes "## IziProxy $TAG_NAME
-
-          ### Новые функции и улучшения
-          - **График интернет-трафика (Stacked Bar Chart)**: Добавлена визуализация трафика по входящим портам на дашборде с красивой цветовой легендой.
-          - **Прогресс-бары Uplink/Downlink**: Отображение соотношения Upload / Download трафика в карточках каждого входящего подключения.
-          - **Исправление VPN-соединения**: Добавлена интерактивная кнопка «Не работает?» для автоматического подбора и обновления SNI-доменов при блокировках.
-          - **Оптимизация и стабильность**: Устранены предупреждения компилятора и предотвращены потенциальные утечки памяти при смене контекста в UI.
-
-          ### Загрузки
-          | Платформа | Файл |
-          |-----------|------|
-          | Windows x86 | IziProxy-win-x86.exe |
-          | Windows ARM64 | IziProxy-win-arm64.exe |
-          | Linux x64 | IziProxy-Linux-x86_64.AppImage |
-          | Android Release | IziProxy-Release.apk |
-          | Android Debug | IziProxy-Debug.apk |" \
-            artifacts/win-x86/IziProxy-win-x86.exe \
-            artifacts/win-arm64/IziProxy-win-arm64.exe \
-            artifacts/linux-appimage/IziProxy-Linux-x86_64.AppImage \
-            artifacts/android-apk/IziProxy-Release.apk \
-            artifacts/android-apk/IziProxy-Debug.apk
+            --generate-notes \
+            "${files[@]}"

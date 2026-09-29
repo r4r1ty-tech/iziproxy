@@ -31,13 +31,13 @@ jobs:
         cp publish_linux/IziProxy.GUI.Desktop AppDir/usr/bin/IziProxy
         chmod +x AppDir/usr/bin/IziProxy
 
-        wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
+        wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
         chmod +x appimagetool
         ./appimagetool --appimage-extract
-        ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-Linux-x86_64.AppImage
+        ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-x86_64.AppImage
 
     - name: Upload AppImage to Release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload v1.0.1 IziProxy-Linux-x86_64.AppImage --clobber
+        gh release upload "$(gh release view --json tagName -q .tagName)" IziProxy-x86_64.AppImage --clobber

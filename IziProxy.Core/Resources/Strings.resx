@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Common_Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Common_Copied" xml:space="preserve">
+    <value>Copied ✓</value>
+  </data>
+  <data name="Common_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Common_DeployFirst" xml:space="preserve">
+    <value>Deploy on the “Deploy” tab first to establish an SSH connection.</value>
+  </data>
+  <data name="Common_EnterDomain" xml:space="preserve">
+    <value>Enter a domain</value>
+  </data>
+  <data name="Common_ErrorPrefix" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="Common_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Common_SniNotFound" xml:space="preserve">
+    <value>Could not find an SNI. Try entering one manually.</value>
+  </data>
+  <data name="Common_Updated" xml:space="preserve">
+    <value>Updated: </value>
+  </data>
+  <data name="Dash_AutoSelect" xml:space="preserve">
+    <value>Auto select</value>
+  </data>
+  <data name="Dash_AutoSelectError" xml:space="preserve">
+    <value>Auto select error: {0}</value>
+  </data>
+  <data name="Dash_BestDomain" xml:space="preserve">
+    <value>Best domain: {0}. Press “Apply” to replace.</value>
+  </data>
+  <data name="Dash_CheckConfig" xml:space="preserve">
+    <value>Check config</value>
+  </data>
+  <data name="Dash_ConfigCheck" xml:space="preserve">
+    <value>Config check: {0}</value>
+  </data>
+  <data name="Dash_ConfigInvalid" xml:space="preserve">
+    <value>✗ Error</value>
+  </data>
+  <data name="Dash_ConfigValid" xml:space="preserve">
+    <value>✓ Valid</value>
+  </data>
+  <data name="Dash_Copied" xml:space="preserve">
+    <value>Copied!</value>
+  </data>
+  <data name="Dash_Error" xml:space="preserve">
+    <value>Dashboard error: {0}</value>
+  </data>
+  <data name="Dash_LoadProfiles" xml:space="preserve">
+    <value>Load profiles from server</value>
+  </data>
+  <data name="Dash_NewVlessLink" xml:space="preserve">
+    <value>New VLESS link</value>
+  </data>
+  <data name="Dash_NoData" xml:space="preserve">
+    <value>No data (press “Refresh”)</value>
+  </data>
+  <data name="Dash_NotWorking" xml:space="preserve">
+    <value>Not working?</value>
+  </data>
+  <data name="Dash_ReplaceSni" xml:space="preserve">
+    <value>Replace SNI domain</value>
+  </data>
+  <data name="Dash_ReplaceSniHint" xml:space="preserve">
+    <value>Enter a new domain or press “Auto select” to pick the best one automatically.</value>
+  </data>
+  <data name="Dash_ReplacingSni" xml:space="preserve">
+    <value>Replacing SNI...</value>
+  </data>
+  <data name="Dash_Restart" xml:space="preserve">
+    <value>Restart</value>
+  </data>
+  <data name="Dash_Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Dash_SelectingSni" xml:space="preserve">
+    <value>Selecting the best SNI (may take 30-60 s)...</value>
+  </data>
+  <data name="Dash_SniExample" xml:space="preserve">
+    <value>For example: speed.cloudflare.com</value>
+  </data>
+  <data name="Dash_SniLoadError" xml:space="preserve">
+    <value>SNI load error: {0}</value>
+  </data>
+  <data name="Dash_SniReplaceFailed" xml:space="preserve">
+    <value>SNI replacement failed</value>
+  </data>
+  <data name="Dash_SniReplaced" xml:space="preserve">
+    <value>SNI replaced, Xray restarted</value>
+  </data>
+  <data name="Dash_StatusUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Dash_Stopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="Dash_Title" xml:space="preserve">
+    <value>Status dashboard</value>
+  </data>
+  <data name="Dash_Total" xml:space="preserve">
+    <value>Total:</value>
+  </data>
+  <data name="Dash_TrafficByInbound" xml:space="preserve">
+    <value>Traffic by inbound</value>
+  </data>
+  <data name="Dash_TrafficDistribution" xml:space="preserve">
+    <value>Traffic distribution</value>
+  </data>
+  <data name="Dash_VpnProfiles" xml:space="preserve">
+    <value>VPN profiles</value>
+  </data>
+  <data name="Dash_VpnProfilesHint" xml:space="preserve">
+    <value>Replace the SNI domain when blocked</value>
+  </data>
+  <data name="Dash_XrayConfig" xml:space="preserve">
+    <value>Xray configuration</value>
+  </data>
+  <data name="Dash_XrayConfigHint" xml:space="preserve">
+    <value>Check that the current JSON configuration file on the server is valid</value>
+  </data>
+  <data name="Dash_XrayStatus" xml:space="preserve">
+    <value>Xray status</value>
+  </data>
+  <data name="Dep_Applying" xml:space="preserve">
+    <value>Applying the Xray configuration...</value>
+  </data>
+  <data name="Dep_BuildingConfig" xml:space="preserve">
+    <value>Building config.json from the template</value>
+  </data>
+  <data name="Dep_ConfigUploadFailed" xml:space="preserve">
+    <value>Could not upload config.json</value>
+  </data>
+  <data name="Dep_DeployStderr" xml:space="preserve">
+    <value>Deploy.sh errors (stderr):
+{0}</value>
+  </data>
+  <data name="Dep_DeployUploadFailed" xml:space="preserve">
+    <value>Could not upload Deploy.sh</value>
+  </data>
+  <data name="Dep_InboundParams" xml:space="preserve">
+    <value>Inbound parameters received: ports=[{0},{1},{2}], snis=[{3},{4},{5}]</value>
+  </data>
+  <data name="Dep_NoPorts" xml:space="preserve">
+    <value>Critical error: Deploy.sh returned no ports (or empty ones).</value>
+  </data>
+  <data name="Dep_NoPortsLog" xml:space="preserve">
+    <value>Deploy.sh returned no ports (or empty ones)</value>
+  </data>
+  <data name="Dep_NoSni" xml:space="preserve">
+    <value>Critical error: Deploy.sh returned no SNI (or empty ones).</value>
+  </data>
+  <data name="Dep_NoSniLog" xml:space="preserve">
+    <value>Deploy.sh returned no SNI (or empty ones)</value>
+  </data>
+  <data name="Dep_RestartStderr" xml:space="preserve">
+    <value>Restart errors (stderr):
+{0}</value>
+  </data>
+  <data name="Dep_UploadingConfig" xml:space="preserve">
+    <value>Uploading config.json to the server</value>
+  </data>
+  <data name="Dep_UploadingDeploy" xml:space="preserve">
+    <value>Uploading Deploy.sh to the server</value>
+  </data>
+  <data name="Dep_XrayActive" xml:space="preserve">
+    <value>Xray service restarted and active</value>
+  </data>
+  <data name="Dep_XrayCrashed" xml:space="preserve">
+    <value>Xray crashed after restart (configuration or port error):
+{0}</value>
+  </data>
+  <data name="Dep_XrayCrashedLog" xml:space="preserve">
+    <value>Xray crashed after restart</value>
+  </data>
+  <data name="Deploy_ConnectFailed" xml:space="preserve">
+    <value>❌ Connection failed</value>
+  </data>
+  <data name="Deploy_Connected" xml:space="preserve">
+    <value>✓ Connected</value>
+  </data>
+  <data name="Deploy_Connecting" xml:space="preserve">
+    <value>Connecting to the server...</value>
+  </data>
+  <data name="Deploy_DeleteProfile" xml:space="preserve">
+    <value>❌ Delete</value>
+  </data>
+  <data name="Deploy_Done" xml:space="preserve">
+    <value>✅ Deployment complete!</value>
+  </data>
+  <data name="Deploy_DoneBanner" xml:space="preserve">
+    <value>✅ DEPLOYMENT COMPLETED SUCCESSFULLY!</value>
+  </data>
+  <data name="Deploy_EnterIp" xml:space="preserve">
+    <value>Enter an IP address</value>
+  </data>
+  <data name="Deploy_Error" xml:space="preserve">
+    <value>ERROR: {0}</value>
+  </data>
+  <data name="Deploy_Failed" xml:space="preserve">
+    <value>❌ Deployment failed</value>
+  </data>
+  <data name="Deploy_GeneratingLinks" xml:space="preserve">
+    <value>Generating VLESS links...</value>
+  </data>
+  <data name="Deploy_GoCopyLinks" xml:space="preserve">
+    <value>Open the 'Deploy' tab to copy the connection links.</value>
+  </data>
+  <data name="Deploy_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="Deploy_LinkLabel" xml:space="preserve">
+    <value>Link {0}  |  Port: {1}  |  SNI: {2}</value>
+  </data>
+  <data name="Deploy_NewProfileName" xml:space="preserve">
+    <value>New profile name (e.g. My VDS)</value>
+  </data>
+  <data name="Deploy_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Deploy_PasswordHint" xml:space="preserve">
+    <value>password (leave empty when using a key)</value>
+  </data>
+  <data name="Deploy_PickSshKey" xml:space="preserve">
+    <value>Select a private SSH key</value>
+  </data>
+  <data name="Deploy_Profiles" xml:space="preserve">
+    <value>Server profiles</value>
+  </data>
+  <data name="Deploy_QrCode" xml:space="preserve">
+    <value>QR code</value>
+  </data>
+  <data name="Deploy_RunningScript" xml:space="preserve">
+    <value>Running the install script (may take 1-3 min)...</value>
+  </data>
+  <data name="Deploy_SaveProfile" xml:space="preserve">
+    <value>💾 Save</value>
+  </data>
+  <data name="Deploy_ScriptFailed" xml:space="preserve">
+    <value>❌ Script execution failed</value>
+  </data>
+  <data name="Deploy_SelectProfile" xml:space="preserve">
+    <value>Select a saved profile</value>
+  </data>
+  <data name="Deploy_ServerIp" xml:space="preserve">
+    <value>Server IP address</value>
+  </data>
+  <data name="Deploy_SshError" xml:space="preserve">
+    <value>SSH error: {0}</value>
+  </data>
+  <data name="Deploy_SshKey" xml:space="preserve">
+    <value>SSH key (optional)</value>
+  </data>
+  <data name="Deploy_SshKeyHint" xml:space="preserve">
+    <value>Path to id_rsa</value>
+  </data>
+  <data name="Deploy_SshKeyHintMobile" xml:space="preserve">
+    <value>Path to SSH key, e.g. /sdcard/id_rsa</value>
+  </data>
+  <data name="Deploy_Starting" xml:space="preserve">
+    <value>Starting deployment...</value>
+  </data>
+  <data name="Deploy_TestAuthFailed" xml:space="preserve">
+    <value>Error: SSH authentication failed.</value>
+  </data>
+  <data name="Deploy_TestConnection" xml:space="preserve">
+    <value>⚡ Test connection</value>
+  </data>
+  <data name="Deploy_TestError" xml:space="preserve">
+    <value>Connection error: {0}</value>
+  </data>
+  <data name="Deploy_TestFailed" xml:space="preserve">
+    <value>Could not connect to the server. ✗</value>
+  </data>
+  <data name="Deploy_TestOk" xml:space="preserve">
+    <value>Connection established successfully! ✓</value>
+  </data>
+  <data name="Deploy_TestOkLog" xml:space="preserve">
+    <value>SSH connection established successfully!</value>
+  </data>
+  <data name="Deploy_TestStart" xml:space="preserve">
+    <value>Starting SSH connection test to {0}</value>
+  </data>
+  <data name="Deploy_Testing" xml:space="preserve">
+    <value>Testing the connection...</value>
+  </data>
+  <data name="Deploy_Title" xml:space="preserve">
+    <value>Deployment</value>
+  </data>
+  <data name="Deploy_UploadFailed" xml:space="preserve">
+    <value>❌ Script upload failed</value>
+  </data>
+  <data name="Deploy_UploadingScript" xml:space="preserve">
+    <value>Uploading the install script...</value>
+  </data>
+  <data name="Deploy_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Deploy_VlessLinks" xml:space="preserve">
+    <value>VLESS links</value>
+  </data>
+  <data name="Logs_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Logs_Cleared" xml:space="preserve">
+    <value>--- Log cleared {0} ---</value>
+  </data>
+  <data name="Logs_Count" xml:space="preserve">
+    <value>Messages: </value>
+  </data>
+  <data name="Logs_OpenFailed" xml:space="preserve">
+    <value>Could not open the log file: {0}</value>
+  </data>
+  <data name="Logs_OpenFile" xml:space="preserve">
+    <value>Open log file</value>
+  </data>
+  <data name="Logs_SessionStart" xml:space="preserve">
+    <value>--- Session started {0} ---</value>
+  </data>
+  <data name="Logs_Title" xml:space="preserve">
+    <value>Event log</value>
+  </data>
+  <data name="Mon_CheckingConfig" xml:space="preserve">
+    <value>Checking the Xray configuration with xray -test</value>
+  </data>
+  <data name="Mon_CheckingStatus" xml:space="preserve">
+    <value>Checking the Xray service status</value>
+  </data>
+  <data name="Mon_ConfigProblem" xml:space="preserve">
+    <value>Config problem: {0}</value>
+  </data>
+  <data name="Mon_ConfigValid" xml:space="preserve">
+    <value>Config is valid ✓</value>
+  </data>
+  <data name="Mon_QueryingStats" xml:space="preserve">
+    <value>Requesting traffic stats via xray api statsquery</value>
+  </data>
+  <data name="Mon_RestartError" xml:space="preserve">
+    <value>Restart error: {0}</value>
+  </data>
+  <data name="Mon_Restarted" xml:space="preserve">
+    <value>Xray restarted ✓</value>
+  </data>
+  <data name="Mon_Restarting" xml:space="preserve">
+    <value>Restarting Xray</value>
+  </data>
+  <data name="Mon_Running" xml:space="preserve">
+    <value>Xray: running ✓</value>
+  </data>
+  <data name="Mon_Stopped" xml:space="preserve">
+    <value>Xray: stopped ✗</value>
+  </data>
+  <data name="Nav_Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Nav_Deploy" xml:space="preserve">
+    <value>Deploy</value>
+  </data>
+  <data name="Nav_Logs" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="Nav_Troubleshoot" xml:space="preserve">
+    <value>Troubleshoot</value>
+  </data>
+  <data name="Profile_FileMissing" xml:space="preserve">
+    <value>Profiles file not found ({0}), using an empty list</value>
+  </data>
+  <data name="Profile_HostEmpty" xml:space="preserve">
+    <value>Server IP/Host cannot be empty.</value>
+  </data>
+  <data name="Profile_HostInvalid" xml:space="preserve">
+    <value>Invalid IP or hostname: '{0}'. Expected IPv4 (1.2.3.4), IPv6 (::1) or a hostname (vds.example.com).</value>
+  </data>
+  <data name="Profile_KeyNotAbsolute" xml:space="preserve">
+    <value>SshKeyPath must be absolute (start with '/' or '~/'): '{0}'.</value>
+  </data>
+  <data name="Profile_KeyTraversal" xml:space="preserve">
+    <value>SshKeyPath contains '..' (path traversal): '{0}'.</value>
+  </data>
+  <data name="Profile_Legacy" xml:space="preserve">
+    <value>Loaded {0} profiles stored in legacy plaintext; they will be re-encrypted on the next save</value>
+  </data>
+  <data name="Profile_LoadError" xml:space="preserve">
+    <value>Could not load profiles from {0}: {1}; using an empty list</value>
+  </data>
+  <data name="Profile_Loaded" xml:space="preserve">
+    <value>Loaded {0} profiles from {1}</value>
+  </data>
+  <data name="Profile_NameEmpty" xml:space="preserve">
+    <value>Profile name cannot be empty.</value>
+  </data>
+  <data name="Profile_NameTooLong" xml:space="preserve">
+    <value>Profile name is too long: {0} characters (max 64).</value>
+  </data>
+  <data name="Profile_NoAuth" xml:space="preserve">
+    <value>Either a password or an SSH key path is required (otherwise authentication fails).</value>
+  </data>
+  <data name="Profile_SaveError" xml:space="preserve">
+    <value>Could not save profiles to {0}: {1}</value>
+  </data>
+  <data name="Profile_Saved" xml:space="preserve">
+    <value>Saved {0} profiles to {1}</value>
+  </data>
+  <data name="Profile_UsernameEmpty" xml:space="preserve">
+    <value>Username cannot be empty.</value>
+  </data>
+  <data name="Profile_UsernameInvalid" xml:space="preserve">
+    <value>Invalid username: '{0}'. It must start with a letter or '_' and contain only a-z, 0-9, '_', '-', max 32 characters.</value>
+  </data>
+  <data name="Sni_AllExcluded" xml:space="preserve">
+    <value>All candidates were excluded, the domain list is empty</value>
+  </data>
+  <data name="Sni_AutoSelecting" xml:space="preserve">
+    <value>Selecting the best SNI domain...</value>
+  </data>
+  <data name="Sni_Best" xml:space="preserve">
+    <value>Best SNI: {0}</value>
+  </data>
+  <data name="Sni_BestNotFound" xml:space="preserve">
+    <value>Could not determine the best SNI</value>
+  </data>
+  <data name="Sni_ConfigEmpty" xml:space="preserve">
+    <value>Xray config is empty or missing</value>
+  </data>
+  <data name="Sni_EmptySni" xml:space="preserve">
+    <value>The new SNI cannot be empty</value>
+  </data>
+  <data name="Sni_Excluded" xml:space="preserve">
+    <value>Current SNI '{0}' is excluded from the candidates</value>
+  </data>
+  <data name="Sni_ModifyError" xml:space="preserve">
+    <value>Failed to modify the JSON: {0}</value>
+  </data>
+  <data name="Sni_NoInbounds" xml:space="preserve">
+    <value>The config has no inbounds array</value>
+  </data>
+  <data name="Sni_NonePassed" xml:space="preserve">
+    <value>No domain passed the check</value>
+  </data>
+  <data name="Sni_ParseError" xml:space="preserve">
+    <value>Failed to parse config.json: {0}</value>
+  </data>
+  <data name="Sni_ReadFailed" xml:space="preserve">
+    <value>Could not read config.json</value>
+  </data>
+  <data name="Sni_ReadProfiles" xml:space="preserve">
+    <value>Read {0} inbound profiles</value>
+  </data>
+  <data name="Sni_ReadingConfig" xml:space="preserve">
+    <value>Reading the current Xray configuration...</value>
+  </data>
+  <data name="Sni_Replaced" xml:space="preserve">
+    <value>SNI replaced with {0}, Xray restarted</value>
+  </data>
+  <data name="Sni_Replacing" xml:space="preserve">
+    <value>Replacing SNI for inbound[{0}] with {1}...</value>
+  </data>
+  <data name="Sni_UploadFailed" xml:space="preserve">
+    <value>Could not upload the updated config to the server</value>
+  </data>
+  <data name="Sni_XrayFailed" xml:space="preserve">
+    <value>Xray did not start after the SNI change: {0}</value>
+  </data>
+  <data name="Ssh_ConnectError" xml:space="preserve">
+    <value>Connection error: {0}</value>
+  </data>
+  <data name="Ssh_Connected" xml:space="preserve">
+    <value>SSH connection established</value>
+  </data>
+  <data name="Ssh_FileUploadError" xml:space="preserve">
+    <value>Failed to upload file {0}: {1}</value>
+  </data>
+  <data name="Ssh_FileUploaded" xml:space="preserve">
+    <value>File {0} uploaded to {1}</value>
+  </data>
+  <data name="Ssh_InstallDone" xml:space="preserve">
+    <value>MainInstall.sh finished</value>
+  </data>
+  <data name="Ssh_InstallError" xml:space="preserve">
+    <value>MainInstall.sh failed: {0}</value>
+  </data>
+  <data name="Ssh_InstallStderr" xml:space="preserve">
+    <value>MainInstall.sh errors (stderr):
+{0}</value>
+  </data>
+  <data name="Ssh_InstallUploadError" xml:space="preserve">
+    <value>Failed to upload MainInstall.sh: {0}</value>
+  </data>
+  <data name="Ssh_InstallUploaded" xml:space="preserve">
+    <value>MainInstall.sh uploaded</value>
+  </data>
+  <data name="Ssh_NotConnected" xml:space="preserve">
+    <value>SSH client is not connected</value>
+  </data>
+  <data name="Ssh_SftpNotConnected" xml:space="preserve">
+    <value>SFTP client is not connected</value>
+  </data>
+  <data name="Ssh_StreamUploadError" xml:space="preserve">
+    <value>Failed to upload stream to {0}: {1}</value>
+  </data>
+  <data name="Ssh_StreamUploaded" xml:space="preserve">
+    <value>{0} uploaded to {1}</value>
+  </data>
+  <data name="Ts_Applying" xml:space="preserve">
+    <value>⏳ Applying {0}...</value>
+  </data>
+  <data name="Ts_AutoReplace" xml:space="preserve">
+    <value>Automatic SNI replacement</value>
+  </data>
+  <data name="Ts_AutoReplaceButton" xml:space="preserve">
+    <value>Auto replace (excluding current)</value>
+  </data>
+  <data name="Ts_AutoReplaceHint" xml:space="preserve">
+    <value>Finds a fast domain from the server and applies it. The current SNI is excluded from the candidates.</value>
+  </data>
+  <data name="Ts_CustomSni" xml:space="preserve">
+    <value>Custom SNI</value>
+  </data>
+  <data name="Ts_CustomSniHint" xml:space="preserve">
+    <value>Enter a domain manually (e.g. www.microsoft.com)</value>
+  </data>
+  <data name="Ts_DomainPlaceholder" xml:space="preserve">
+    <value>Enter a domain...</value>
+  </data>
+  <data name="Ts_EnterDomain" xml:space="preserve">
+    <value>⚠️ Enter a domain</value>
+  </data>
+  <data name="Ts_Error" xml:space="preserve">
+    <value>❌ Error: {0}</value>
+  </data>
+  <data name="Ts_FoundApplying" xml:space="preserve">
+    <value>⏳ Found: {0}. Applying...</value>
+  </data>
+  <data name="Ts_NoProfiles" xml:space="preserve">
+    <value>Profiles are not loaded. Press “Refresh”.</value>
+  </data>
+  <data name="Ts_NotConnected" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="Ts_Searching" xml:space="preserve">
+    <value>🔍 Searching for the best SNI (excluding "{0}")...</value>
+  </data>
+  <data name="Ts_ServerState" xml:space="preserve">
+    <value>Server state</value>
+  </data>
+  <data name="Ts_SniNotFound" xml:space="preserve">
+    <value>⚠️ Could not find an SNI. Try entering one manually.</value>
+  </data>
+  <data name="Ts_SniProfiles" xml:space="preserve">
+    <value>SNI profiles</value>
+  </data>
+  <data name="Ts_SniProfilesHint" xml:space="preserve">
+    <value>Replace the SNI if the VPN does not connect or is blocked by your ISP</value>
+  </data>
+  <data name="Ts_SniReplaceFailed" xml:space="preserve">
+    <value>❌ SNI replacement failed</value>
+  </data>
+  <data name="Ts_SniReplaced" xml:space="preserve">
+    <value>✅ SNI replaced with {0}, Xray restarted</value>
+  </data>
+  <data name="Ts_StatusConfigErrors" xml:space="preserve">
+    <value>⚠️ Xray is running, but the config has errors</value>
+  </data>
+  <data name="Ts_StatusOk" xml:space="preserve">
+    <value>✅ Xray is running, config is valid</value>
+  </data>
+  <data name="Ts_StatusStopped" xml:space="preserve">
+    <value>❌ Xray is stopped</value>
+  </data>
+  <data name="Vless_CountMismatch" xml:space="preserve">
+    <value>Port count ({0}) does not match SNI count ({1}); links are generated only for the smaller count</value>
+  </data>
+  <data name="Vless_EmptySni" xml:space="preserve">
+    <value>SNI #{0} is empty, using fallback www.microsoft.com</value>
+  </data>
+  <data name="Vless_Generated" xml:space="preserve">
+    <value>Generated {0} VLESS links</value>
+  </data>
+  <data name="Vless_Generating" xml:space="preserve">
+    <value>Generating {0} VLESS links (xhttp+REALITY) for {1}</value>
+  </data>
+  <data name="Vless_NoPorts" xml:space="preserve">
+    <value>No ports or SNI to generate VLESS links</value>
+  </data>
+  <data name="Xray_GeneratingKeys" xml:space="preserve">
+    <value>Generating Xray keys (x25519, UUID, ShortID)</value>
+  </data>
+  <data name="Xray_GeoEmpty" xml:space="preserve">
+    <value>GEO is empty (is ipinfo.io unreachable from the server?)</value>
+  </data>
+  <data name="Xray_GeoRequest" xml:space="preserve">
+    <value>Requesting VDS geolocation</value>
+  </data>
+  <data name="Xray_KeysReady" xml:space="preserve">
+    <value>x25519 keys received</value>
+  </data>
+  <data name="Xray_ShortIdEmpty" xml:space="preserve">
+    <value>ShortID is empty (openssl returned nothing); clients may fail to connect</value>
+  </data>
+  <data name="Xray_ShortIdReady" xml:space="preserve">
+    <value>ShortID received</value>
+  </data>
+  <data name="Xray_UuidEmpty" xml:space="preserve">
+    <value>Could not generate a UUID (empty output)</value>
+  </data>
+  <data name="Xray_UuidFailed" xml:space="preserve">
+    <value>Error: could not generate a UUID.</value>
+  </data>
+  <data name="Xray_UuidReady" xml:space="preserve">
+    <value>UUID received</value>
+  </data>
+  <data name="Xray_X25519Empty" xml:space="preserve">
+    <value>xray x25519 returned an empty result. Check the Xray installation.</value>
+  </data>
+</root>

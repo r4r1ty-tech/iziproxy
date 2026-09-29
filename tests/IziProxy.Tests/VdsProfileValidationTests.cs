@@ -104,7 +104,7 @@ public class VdsProfileValidationTests
             Password = "x"
         };
         var errors = p.Validate();
-        Assert.Contains(errors, e => e.Contains("Имя профиля"));
+        Assert.Contains(errors, e => e.Contains("Profile name"));
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class VdsProfileValidationTests
             Password = "x"
         };
         var errors = p.Validate();
-        Assert.Contains(errors, e => e.Contains("Имя профиля"));
+        Assert.Contains(errors, e => e.Contains("Profile name"));
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class VdsProfileValidationTests
             Password = "x"
         };
         var errors = p.Validate();
-        Assert.Contains(errors, e => e.Contains("слишком длинное"));
+        Assert.Contains(errors, e => e.Contains("too long"));
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class VdsProfileValidationTests
                 Password = "x"
             };
             var errors = p.Validate();
-            Assert.True(errors.Any(e => e.Contains("Некорректный IP или hostname")),
+            Assert.True(errors.Any(e => e.Contains("Invalid IP or hostname")),
                 $"Host '{host}' should be invalid but got errors: [{string.Join(", ", errors)}]");
         }
     }
@@ -243,7 +243,7 @@ public class VdsProfileValidationTests
                 Password = "x"
             };
             var errors = p.Validate();
-            Assert.True(errors.Any(e => e.Contains("Некорректный username")),
+            Assert.True(errors.Any(e => e.Contains("Invalid username")),
                 $"Username '{username}' should be invalid but got errors: [{string.Join(", ", errors)}]");
         }
     }
@@ -287,7 +287,7 @@ public class VdsProfileValidationTests
             SshKeyPath = ""
         };
         var errors = p.Validate();
-        Assert.Contains(errors, e => e.Contains("пароль") && e.Contains("ключ"));
+        Assert.Contains(errors, e => e.Contains("password") && e.Contains("SSH key"));
     }
 
     [Fact]
@@ -317,7 +317,7 @@ public class VdsProfileValidationTests
             SshKeyPath = "id_rsa"
         };
         var errors = p.Validate();
-        Assert.Contains(errors, e => e.Contains("абсолютным"));
+        Assert.Contains(errors, e => e.Contains("absolute"));
     }
 
     [Fact]
@@ -336,9 +336,9 @@ public class VdsProfileValidationTests
         var errors = p.Validate();
 
         Assert.True(errors.Count >= 4, $"Expected at least 4 errors, got {errors.Count}: [{string.Join(", ", errors)}]");
-        Assert.Contains(errors, e => e.Contains("Имя профиля"));
-        Assert.Contains(errors, e => e.Contains("IP/Host") || e.Contains("IP или hostname"));
-        Assert.Contains(errors, e => e.Contains("username"));  // case-insensitive: ошибка содержит 'Некорректный username'
-        Assert.Contains(errors, e => e.Contains("пароль") && e.Contains("ключ"));
+        Assert.Contains(errors, e => e.Contains("Profile name"));
+        Assert.Contains(errors, e => e.Contains("IP/Host") || e.Contains("IP or hostname"));
+        Assert.Contains(errors, e => e.Contains("username"));  // case-insensitive: ошибка содержит 'Invalid username'
+        Assert.Contains(errors, e => e.Contains("password") && e.Contains("SSH key"));
     }
 }

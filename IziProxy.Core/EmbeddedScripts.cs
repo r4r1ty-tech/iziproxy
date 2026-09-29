@@ -26,19 +26,19 @@ public static class EmbeddedScripts
         using var stream = Open("config.json");
         using var reader = new StreamReader(stream);
         string content = reader.ReadToEnd();
-        Debug.WriteLine($"[DEBUG] EmbeddedScripts.ReadConfigJson: прочитан шаблон config.json, длина={content.Length} байт");
+        Debug.WriteLine($"[DEBUG] EmbeddedScripts.ReadConfigJson: read config.json template, length={content.Length} bytes");
         return content;
     }
 
     private static Stream Open(string fileName)
     {
         string resourceName = Prefix + fileName;
-        Debug.WriteLine($"[DEBUG] EmbeddedScripts.Open: ищу ресурс '{resourceName}'");
+        Debug.WriteLine($"[DEBUG] EmbeddedScripts.Open: looking for resource '{resourceName}'");
         var stream = _asm.GetManifestResourceStream(resourceName)
             ?? throw new FileNotFoundException(
-                $"Встроенный ресурс '{resourceName}' не найден. " +
-                $"Доступные ресурсы: {string.Join(", ", _asm.GetManifestResourceNames())}");
-        Debug.WriteLine($"[DEBUG] EmbeddedScripts.Open: ресурс '{resourceName}' найден, открыт Stream длиной {stream.Length} байт");
+                $"Embedded resource '{resourceName}' not found. " +
+                $"Available resources: {string.Join(", ", _asm.GetManifestResourceNames())}");
+        Debug.WriteLine($"[DEBUG] EmbeddedScripts.Open: resource '{resourceName}' found, opened stream of {stream.Length} bytes");
         return stream;
     }
 }

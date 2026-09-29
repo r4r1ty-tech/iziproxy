@@ -64,7 +64,7 @@ public class XrayConfigParams
         if (string.IsNullOrWhiteSpace(raw))
         {
             throw new ArgumentException(
-                "xray x25519 вернул пустой результат. Проверьте установку Xray.",
+                Tr.Get("Xray_X25519Empty"),
                 nameof(raw));
         }
 
@@ -110,9 +110,9 @@ public class XrayConfigParams
         if (string.IsNullOrEmpty(privateKey) || string.IsNullOrEmpty(publicKey))
         {
             throw new FormatException(
-                $"Не удалось найти PrivateKey/PublicKey в выводе xray x25519. " +
-                $"Ожидаются префиксы 'PrivateKey:'/'Password:' или 'Private key:'/'Public key:'. " +
-                $"Вывод был:\n{raw}");
+                $"Could not find PrivateKey/PublicKey in the xray x25519 output. " +
+                $"Expected 'PrivateKey:'/'Password:' or 'Private key:'/'Public key:' prefixes. " +
+                $"Output was:\n{raw}");
         }
 
         return (privateKey, publicKey);
@@ -128,19 +128,19 @@ public class XrayConfigParams
     /// <exception cref="Exception">Бросается в случае сбоя при выполнении команд генерации.</exception>
     public static async Task<XrayConfigParams> Generate(SSH sshClient, ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report("[TRACE] XrayConfigParams.Generate вход: генерируем ключи/UUID/ShortID на сервере");
-        progress?.Report("[INFO] Генерация ключей Xray (x25519, UUID, ShortID)");
+        progress?.Report("[TRACE] XrayConfigParams.Generate enter: generating keys/UUID/ShortID on the server");
+        progress?.Report("[INFO] " + Tr.Get("Xray_GeneratingKeys"));
 
         var xrayConfig = new XrayConfigParams();
 
         // 1. Генерация x25519 ключей (приватный и публичный/password)
-        progress?.Report("[DEBUG] Выполнение команды генерации x25519 ключей: /usr/local/bin/xray x25519");
+        progress?.Report("[DEBUG] Running x25519 key generation: /usr/local/bin/xray x25519");
         var x25519Result = await sshClient.RunSudoCommand(serverConfig, "/usr/local/bin/xray x25519");
         // Result может быть null если SSH.NET вернул пустой SshCommand —
         // ParseX25519Output всё равно бросит ArgumentException на пустом входе,
         // но нормализуем здесь чтобы flow analysis не жаловался на CS8604.
         string x25519Output = x25519Result.Result ?? string.Empty;
-        progress?.Report($"[DEBUG] Вывод генерации x25519 (длина={x25519Output.Length}):\n{x25519Output}");
+        progress?.Report($"[DEBUG] x25519 output (length={x25519Output.Length}):\n{x25519Output}");
 
         // Парсинг ключей. Поддерживает три формата вывода: старый
         // "PrivateKey:/Password (PublicKey):", альтернативный "Private key:/Public key:",
@@ -149,35 +149,35 @@ public class XrayConfigParams
         xrayConfig.PrivateKey = privateKey;
         xrayConfig.Password = publicKey;
 
-        progress?.Report($"[DEBUG] Успешно найден PrivateKey (длина: {xrayConfig.PrivateKey.Length}) и Password/PublicKey (длина: {xrayConfig.Password.Length})");
-        progress?.Report("[INFO] x25519 ключи получены");
+        progress?.Report($"[DEBUG] Found PrivateKey (length: {xrayConfig.PrivateKey.Length}) and Password/PublicKey (length: {xrayConfig.Password.Length})");
+        progress?.Report("[INFO] " + Tr.Get("Xray_KeysReady"));
 
         // 2. Генерация UUID
-        progress?.Report("[DEBUG] Выполнение команды генерации UUID: /usr/local/bin/xray uuid");
+        progress?.Report("[DEBUG] Running UUID generation: /usr/local/bin/xray uuid");
         var uuidResult = await sshClient.RunSudoCommand(serverConfig, "/usr/local/bin/xray uuid");
         xrayConfig.Uuid = uuidResult.Result.Trim();
-        progress?.Report($"[DEBUG] Вывод UUID: {xrayConfig.Uuid}");
+        progress?.Report($"[DEBUG] UUID output: {xrayConfig.Uuid}");
 
         if (string.IsNullOrWhiteSpace(xrayConfig.Uuid))
         {
-            progress?.Report("[ERROR] Не удалось сгенерировать UUID (пустой вывод)");
-            throw new Exception("Ошибка: Не удалось сгенерировать UUID.");
+            progress?.Report("[ERROR] " + Tr.Get("Xray_UuidEmpty"));
+            throw new Exception(Tr.Get("Xray_UuidFailed"));
         }
-        progress?.Report("[INFO] UUID получен");
+        progress?.Report("[INFO] " + Tr.Get("Xray_UuidReady"));
 
         // 3. Генерация случайного ShortID (8 байт в hex-формате)
-        progress?.Report("[DEBUG] Выполнение команды генерации ShortID: openssl rand -hex 8");
+        progress?.Report("[DEBUG] Running ShortID generation: openssl rand -hex 8");
         var shortIdResult = await sshClient.RunSudoCommand(serverConfig, "openssl rand -hex 8");
         xrayConfig.ShortId = shortIdResult.Result.Trim();
-        progress?.Report($"[DEBUG] Вывод ShortID: {xrayConfig.ShortId}");
+        progress?.Report($"[DEBUG] ShortID output: {xrayConfig.ShortId}");
 
         if (string.IsNullOrWhiteSpace(xrayConfig.ShortId))
         {
-            progress?.Report("[WARN] ShortID пустой (openssl ничего не вернул) — клиенты могут не подключаться");
+            progress?.Report("[WARN] " + Tr.Get("Xray_ShortIdEmpty"));
         }
         else
         {
-            progress?.Report("[INFO] ShortID получен");
+            progress?.Report("[INFO] " + Tr.Get("Xray_ShortIdReady"));
         }
 
         progress?.Report($"[INFO] Xray Keys Generated: UUID={xrayConfig.Uuid}, PrivateKey={xrayConfig.PrivateKey}, Password={xrayConfig.Password}, ShortID={xrayConfig.ShortId}");
@@ -194,15 +194,15 @@ public class XrayConfigParams
     /// <returns>Строка с JSON-информацией о геопозиции сервера.</returns>
     public static async Task<string> GetGeoVDS(SSH sshClient, ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report("[TRACE] XrayConfigParams.GetGeoVDS вход: запрашиваем geo через ipinfo.io");
-        progress?.Report("[INFO] Запрос геолокации VDS");
-        progress?.Report("[DEBUG] Выполнение команды curl -s ipinfo.io/geo");
+        progress?.Report("[TRACE] XrayConfigParams.GetGeoVDS enter: requesting geo via ipinfo.io");
+        progress?.Report("[INFO] " + Tr.Get("Xray_GeoRequest"));
+        progress?.Report("[DEBUG] Running curl -s ipinfo.io/geo");
         var geoResult = await sshClient.RunSudoCommand(serverConfig, "curl -s ipinfo.io/geo");
         string geoOutput = geoResult.Result.Trim();
-        progress?.Report($"[DEBUG] Вывод GEO (длина={geoOutput.Length}):\n{geoOutput}");
+        progress?.Report($"[DEBUG] GEO output (length={geoOutput.Length}):\n{geoOutput}");
         if (string.IsNullOrWhiteSpace(geoOutput))
         {
-            progress?.Report("[WARN] GEO пустое (ipinfo.io недоступен с сервера?)");
+            progress?.Report("[WARN] " + Tr.Get("Xray_GeoEmpty"));
         }
         return geoOutput;
     }

@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:IziProxy.GUI"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
              xmlns:core="using:IziProxy"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
@@ -16,7 +17,7 @@
                 CornerRadius="16">
           <materialIcons:MaterialIcon Kind="ChartBox" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
         </Border>
-        <TextBlock Text="Панель состояния" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+        <TextBlock Text="{l:Tr Dash_Title}" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
       </StackPanel>
 
       <!-- Нет подключения -->
@@ -27,7 +28,7 @@
               IsVisible="{Binding !IsConnected}">
         <StackPanel Orientation="Horizontal" Spacing="12">
           <materialIcons:MaterialIcon Kind="AlertCircleOutline" Width="24" Height="24" Foreground="#FFD54F" VerticalAlignment="Top" Margin="0,2,0,0"/>
-          <TextBlock Text="Сначала выполните деплой на вкладке «Deploy», чтобы установить SSH-соединение."
+          <TextBlock Text="{l:Tr Common_DeployFirst}"
                      TextWrapping="Wrap"
                      FontSize="14"
                      FontWeight="SemiBold"
@@ -40,7 +41,7 @@
       <Border Classes="M3Card" Padding="20" IsVisible="{Binding IsConnected}">
         <StackPanel Spacing="16">
           <StackPanel Spacing="8">
-            <TextBlock Text="Статус Xray" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBlock Text="{l:Tr Dash_XrayStatus}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
             <StackPanel Orientation="Horizontal" Spacing="10">
               <!-- Цветной индикатор -->
               <Ellipse Width="12" Height="12" VerticalAlignment="Center">
@@ -51,19 +52,20 @@
               <TextBlock Text="{Binding ServiceStatus}"
                           FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
             </StackPanel>
-            <TextBlock Text="{Binding LastUpdated, StringFormat='Обновлено: {0}'}"
-                       FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBlock FontSize="11" Foreground="{StaticResource MutedTextBrush}">
+              <Run Text="{l:Tr Common_Updated}"/><Run Text="{Binding LastUpdated}"/>
+            </TextBlock>
           </StackPanel>
 
           <!-- Кнопки -->
           <WrapPanel Orientation="Horizontal">
-            <Button Content="Обновить"
+            <Button Content="{l:Tr Common_Refresh}"
                     Classes="Tonal"
                     Command="{Binding RefreshStatusCommand}"
                     IsEnabled="{Binding !IsBusy}"
                     MinHeight="48"
                     Margin="0,0,8,8"/>
-            <Button Content="Перезапустить"
+            <Button Content="{l:Tr Dash_Restart}"
                     Command="{Binding RestartServiceCommand}"
                     IsEnabled="{Binding !IsBusy}"
                     MinHeight="48"
@@ -83,11 +85,11 @@
         <StackPanel Spacing="12">
           <Grid ColumnDefinitions="*,Auto">
             <StackPanel Grid.Column="0" Spacing="4">
-              <TextBlock Text="Конфигурация Xray" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-              <TextBlock Text="Проверить валидность текущего JSON конфигурационного файла на сервере" FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
+              <TextBlock Text="{l:Tr Dash_XrayConfig}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+              <TextBlock Text="{l:Tr Dash_XrayConfigHint}" FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
             </StackPanel>
             <Button Grid.Column="1"
-                    Content="Проверить конфиг"
+                    Content="{l:Tr Dash_CheckConfig}"
                     Classes="Tonal"
                     Command="{Binding ValidateConfigCommand}"
                     IsEnabled="{Binding !IsBusy}"
@@ -100,7 +102,8 @@
                   Padding="12"
                   IsVisible="{Binding ConfigCheckText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
             <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="{Binding IsConfigValid, StringFormat={}{0:✓ Валиден|✗ Ошибка}}"
+              <TextBlock Text="{Binding ConfigValidityText}"
+                         Classes.Valid="{Binding IsConfigValid}"
                          FontWeight="Bold"
                          FontSize="13"
                          VerticalAlignment="Center">
@@ -108,7 +111,7 @@
                   <Style Selector="TextBlock">
                     <Setter Property="Foreground" Value="#F2B8B5"/>
                   </Style>
-                  <Style Selector="TextBlock[Text=✓ Валиден]">
+                  <Style Selector="TextBlock.Valid">
                     <Setter Property="Foreground" Value="#81C784"/>
                   </Style>
                 </TextBlock.Styles>
@@ -136,13 +139,13 @@
                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <StackPanel Spacing="2" VerticalAlignment="Center">
-            <TextBlock Text="VPN-профили" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-            <TextBlock Text="Замена SNI-домена при блокировке" FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
+            <TextBlock Text="{l:Tr Dash_VpnProfiles}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="{l:Tr Dash_VpnProfilesHint}" FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
           </StackPanel>
         </StackPanel>
 
         <!-- Кнопка загрузки профилей -->
-        <Button Content="Загрузить профили с сервера"
+        <Button Content="{l:Tr Dash_LoadProfiles}"
                 Classes="Tonal"
                 Command="{Binding LoadSniProfilesCommand}"
                 IsEnabled="{Binding !IsBusy}"
@@ -197,7 +200,7 @@
                             MinHeight="40">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <materialIcons:MaterialIcon Kind="Wrench" Width="16" Height="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="Не работает?" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="{l:Tr Dash_NotWorking}" FontSize="12" VerticalAlignment="Center"/>
                       </StackPanel>
                     </Button>
                   </Grid>
@@ -209,17 +212,17 @@
                           Padding="16"
                           Margin="0,4,0,0">
                     <StackPanel Spacing="12">
-                      <TextBlock Text="Замена SNI-домена"
+                      <TextBlock Text="{l:Tr Dash_ReplaceSni}"
                                  FontSize="14" FontWeight="SemiBold"
                                  Foreground="{StaticResource TextBrush}"/>
-                      <TextBlock Text="Введите новый домен или нажмите «Автоподбор» для автоматического выбора лучшего."
+                      <TextBlock Text="{l:Tr Dash_ReplaceSniHint}"
                                  FontSize="12"
                                  Foreground="{StaticResource MutedTextBrush}"
                                  TextWrapping="Wrap"/>
 
                       <!-- Поле ввода нового SNI -->
                       <TextBox Text="{Binding NewSni}"
-                               PlaceholderText="Например: speed.cloudflare.com"
+                               PlaceholderText="{l:Tr Dash_SniExample}"
                                IsEnabled="{Binding !IsBusy}"/>
 
                       <!-- Кнопки -->
@@ -231,7 +234,7 @@
                                 Margin="0,0,8,6">
                           <StackPanel Orientation="Horizontal" Spacing="6">
                             <materialIcons:MaterialIcon Kind="Check" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Применить" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Tr Common_Apply}" VerticalAlignment="Center"/>
                           </StackPanel>
                         </Button>
                         <Button Classes="Tonal"
@@ -241,7 +244,7 @@
                                 Margin="0,0,0,6">
                           <StackPanel Orientation="Horizontal" Spacing="6">
                             <materialIcons:MaterialIcon Kind="AutoFix" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Автоподбор" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Tr Dash_AutoSelect}" VerticalAlignment="Center"/>
                           </StackPanel>
                         </Button>
                       </WrapPanel>
@@ -266,7 +269,7 @@
                               Padding="12"
                               Margin="0,4,0,0">
                         <StackPanel Spacing="8">
-                          <TextBlock Text="Новая VLESS-ссылка"
+                          <TextBlock Text="{l:Tr Dash_NewVlessLink}"
                                      FontSize="12" FontWeight="SemiBold"
                                      Foreground="{StaticResource PrimaryBrush}"/>
                           <TextBlock Text="{Binding GeneratedLink}"
@@ -312,11 +315,11 @@
 
       <!-- Трафик -->
       <StackPanel IsVisible="{Binding IsConnected}" Spacing="10">
-        <TextBlock Text="Трафик по inbound'ам"
+        <TextBlock Text="{l:Tr Dash_TrafficByInbound}"
                    FontSize="18" FontWeight="Bold"
                    Foreground="{StaticResource TextBrush}"/>
 
-        <TextBlock Text="Нет данных (нажмите «Обновить»)"
+        <TextBlock Text="{l:Tr Dash_NoData}"
                    Foreground="{StaticResource MutedTextBrush}" FontSize="13"
                    IsVisible="{Binding TrafficStats.Count, Converter={x:Static ObjectConverters.IsNull}}"/>
 
@@ -325,9 +328,9 @@
           <StackPanel Spacing="16">
             <!-- Верхняя строка: Название и общая сумма -->
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Grid.Column="0" Text="Распределение трафика" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+              <TextBlock Grid.Column="0" Text="{l:Tr Dash_TrafficDistribution}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                <TextBlock Text="Всего:" FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                <TextBlock Text="{l:Tr Dash_Total}" FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
                 <TextBlock Text="{Binding TotalAllTrafficFormatted}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
               </StackPanel>
             </Grid>
@@ -363,7 +366,7 @@
                                  Foreground="{StaticResource TextBrush}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                      <TextBlock Text="Всего:" FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                      <TextBlock Text="{l:Tr Dash_Total}" FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
                       <TextBlock Text="{Binding TotalFormatted}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
                     </StackPanel>
                   </Grid>

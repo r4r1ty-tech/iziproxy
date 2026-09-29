@@ -25,10 +25,14 @@ public partial class DashboardViewModel : ObservableObject
 
     // ── Статус сервиса ───────────────────────────────────────────────
     [ObservableProperty] private bool   _isRunning        = false;
-    [ObservableProperty] private string _serviceStatus    = "Неизвестно";
+    [ObservableProperty] private string _serviceStatus    = Tr.Get("Dash_StatusUnknown");
     [ObservableProperty] private string _statusColorHex   = "#FF3333";
-    [ObservableProperty] private bool   _isConfigValid    = false;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ConfigValidityText))]
+    private bool   _isConfigValid    = false;
     [ObservableProperty] private string _configCheckText  = string.Empty;
+
+    public string ConfigValidityText => Tr.Get(IsConfigValid ? "Dash_ConfigValid" : "Dash_ConfigInvalid");
 
     // ── Загрузка ─────────────────────────────────────────────────────
     [ObservableProperty] private bool   _isBusy           = false;
@@ -81,7 +85,7 @@ public partial class DashboardViewModel : ObservableObject
             var status = await XrayMonitor.GetStatus(_deployVm.ActiveSsh, _deployVm.ActiveConfig, _logsVm.ProgressReporter);
 
             IsRunning       = status.IsRunning;
-            ServiceStatus   = status.IsRunning ? "Запущен" : "Остановлен";
+            ServiceStatus   = Tr.Get(status.IsRunning ? "Dash_Running" : "Dash_Stopped");
             StatusColorHex  = status.IsRunning ? "#22C55E" : "#FF3333";
             IsConfigValid   = status.IsConfigValid;
             ConfigCheckText = status.ConfigCheckOutput;
@@ -96,7 +100,7 @@ public partial class DashboardViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _logsVm.ProgressReporter.Report("Ошибка Dashboard: " + ex.Message);
+            _logsVm.ProgressReporter.Report(Tr.F("Dash_Error", ex.Message));
         }
         finally
         {
@@ -185,7 +189,7 @@ public partial class DashboardViewModel : ObservableObject
             var result = await _deployVm.ActiveSsh.RunSudoCommand(_deployVm.ActiveConfig, "/usr/local/bin/xray -test -config /usr/local/etc/xray/config.json 2>&1");
             ConfigCheckText = result.Result.Trim();
             IsConfigValid   = !ConfigCheckText.Contains("error", StringComparison.OrdinalIgnoreCase);
-            _logsVm.ProgressReporter.Report("Проверка конфига: " + ConfigCheckText);
+            _logsVm.ProgressReporter.Report(Tr.F("Dash_ConfigCheck", ConfigCheckText));
         }
         finally
         {
@@ -215,7 +219,7 @@ public partial class DashboardViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _logsVm.ProgressReporter.Report("Ошибка загрузки SNI: " + ex.Message);
+            _logsVm.ProgressReporter.Report(Tr.F("Dash_SniLoadError", ex.Message));
         }
         finally
         {
@@ -238,7 +242,7 @@ public partial class DashboardViewModel : ObservableObject
         if (success)
         {
             item.CurrentSni = newSni;
-            item.StatusMessage = "SNI заменён, Xray перезапущен";
+            item.StatusMessage = Tr.Get("Dash_SniReplaced");
 
             // Перегенерируем VLESS-ссылку если есть параметры
             if (_deployVm.ActiveXrayParams != null)
@@ -255,7 +259,7 @@ public partial class DashboardViewModel : ObservableObject
         }
         else
         {
-            item.StatusMessage = "Ошибка замены SNI";
+            item.StatusMessage = Tr.Get("Dash_SniReplaceFailed");
         }
 
         return success;
@@ -330,7 +334,7 @@ public partial class SniProfileItem : ObservableObject
     [ObservableProperty] private string _generatedLink = string.Empty;
 
     /// <summary>Текст кнопки копирования.</summary>
-    [ObservableProperty] private string _copyLabel = "Скопировать";
+    [ObservableProperty] private string _copyLabel = Tr.Get("Common_Copy");
 
     /// <summary>QR-код для ссылки.</summary>
     [ObservableProperty] private Bitmap? _qrCodeImage = null;
@@ -360,19 +364,19 @@ public partial class SniProfileItem : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(NewSni))
         {
-            StatusMessage = "Введите домен";
+            StatusMessage = Tr.Get("Common_EnterDomain");
             return;
         }
 
         IsBusy = true;
-        StatusMessage = "Замена SNI...";
+        StatusMessage = Tr.Get("Dash_ReplacingSni");
         try
         {
             await _dashboardVm.ApplySniChange(this, NewSni.Trim());
         }
         catch (Exception ex)
         {
-            StatusMessage = "Ошибка: " + ex.Message;
+            StatusMessage = Tr.F("Common_ErrorPrefix", ex.Message);
         }
         finally
         {
@@ -384,23 +388,23 @@ public partial class SniProfileItem : ObservableObject
     private async Task AutoSelectSni()
     {
         IsBusy = true;
-        StatusMessage = "Подбор лучшего SNI (может занять 30-60 сек)...";
+        StatusMessage = Tr.Get("Dash_SelectingSni");
         try
         {
             string? bestSni = await _dashboardVm.RunAutoSelectSni();
             if (bestSni != null)
             {
                 NewSni = bestSni;
-                StatusMessage = $"Лучший домен: {bestSni}. Нажмите «Применить» для замены.";
+                StatusMessage = Tr.F("Dash_BestDomain", bestSni);
             }
             else
             {
-                StatusMessage = "Не удалось подобрать SNI. Попробуйте ввести вручную.";
+                StatusMessage = Tr.Get("Common_SniNotFound");
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = "Ошибка автоподбора: " + ex.Message;
+            StatusMessage = Tr.F("Dash_AutoSelectError", ex.Message);
         }
         finally
         {
@@ -419,9 +423,9 @@ public partial class SniProfileItem : ObservableObject
             await clipboard.SetValueAsync(DataFormat.Text, GeneratedLink);
         }
 
-        CopyLabel = "Скопировано!";
+        CopyLabel = Tr.Get("Dash_Copied");
         await Task.Delay(2000);
-        CopyLabel = "Скопировать";
+        CopyLabel = Tr.Get("Common_Copy");
     }
 
     [RelayCommand]

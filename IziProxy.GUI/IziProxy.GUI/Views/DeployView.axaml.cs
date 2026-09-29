@@ -18,7 +18,7 @@ public partial class DeployView : UserControl
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Выберите приватный SSH-ключ",
+            Title = Tr.Get("Deploy_PickSshKey"),
             AllowMultiple = false
         });
 

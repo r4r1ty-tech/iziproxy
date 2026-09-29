@@ -19,7 +19,7 @@ public class SSH : IDisposable
     /// <returns>True, если оба подключения успешно установлены; иначе false.</returns>
     public async Task<bool> TestConnection(ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report($"[TRACE] SSH.TestConnection вход: host={serverConfig.Host}, port={serverConfig.Port}, user={serverConfig.Username}, auth={(string.IsNullOrEmpty(serverConfig.SshKey) ? "password" : "key")}");
+        progress?.Report($"[TRACE] SSH.TestConnection enter: host={serverConfig.Host}, port={serverConfig.Port}, user={serverConfig.Username}, auth={(string.IsNullOrEmpty(serverConfig.SshKey) ? "password" : "key")}");
 
         try
         {
@@ -33,7 +33,7 @@ public class SSH : IDisposable
                     string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                     sshKeyPath = Path.Combine(userProfile, sshKeyPath.TrimStart('~', '/', '\\'));
                 }
-                progress?.Report($"[DEBUG] SSH.TestConnection: используем ключ {sshKeyPath}");
+                progress?.Report($"[DEBUG] SSH.TestConnection: using key {sshKeyPath}");
 
                 var privateKey = new PrivateKeyFile(sshKeyPath);
                 var keyAuth = new PrivateKeyAuthenticationMethod(serverConfig.Username, privateKey);
@@ -45,7 +45,7 @@ public class SSH : IDisposable
                 }
                 else
                 {
-                progress?.Report("[DEBUG] SSH.TestConnection: используем password-аутентификацию");
+                progress?.Report("[DEBUG] SSH.TestConnection: using password authentication");
                 connectionInfo = new ConnectionInfo(serverConfig.Host, serverConfig.Port, serverConfig.Username,
                     new PasswordAuthenticationMethod(serverConfig.Username, serverConfig.Password))
                     {
@@ -58,20 +58,20 @@ public class SSH : IDisposable
                 // Инициализация и подключение SSH
                 _sshClient = new SshClient(connectionInfo);
                 _sshClient.Connect();
-                progress?.Report("[DEBUG] SSH-клиент подключен");
+                progress?.Report("[DEBUG] SSH client connected");
 
                 // Инициализация и подключение SFTP
                 _sftpClient = new SftpClient(connectionInfo);
                 _sftpClient.Connect();
-                progress?.Report("[DEBUG] SFTP-клиент подключен");
+                progress?.Report("[DEBUG] SFTP client connected");
             });
 
-            progress?.Report("[INFO] SSH-подключение установлено успешно");
+            progress?.Report("[INFO] " + Tr.Get("Ssh_Connected"));
             return true;
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Ошибка подключения: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Ssh_ConnectError", ex.Message));
             return false;
         }
     }
@@ -84,11 +84,11 @@ public class SSH : IDisposable
     /// <returns>True, если загрузка прошла успешно; иначе false.</returns>
     public async Task<bool> UploadTestScript(ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report($"[TRACE] SSH.UploadTestScript вход: host={serverConfig.Host}, user={serverConfig.Username}");
+        progress?.Report($"[TRACE] SSH.UploadTestScript enter: host={serverConfig.Host}, user={serverConfig.Username}");
 
         if (_sftpClient == null || !_sftpClient.IsConnected)
         {
-            progress?.Report("[ERROR] SFTP-клиент не подключен");
+            progress?.Report("[ERROR] " + Tr.Get("Ssh_SftpNotConnected"));
             return false;
         }
 
@@ -108,16 +108,16 @@ public class SSH : IDisposable
                 else
                     targetPath = $"/home/{serverConfig.Username}/MainInstall.sh";
 
-                progress?.Report($"[DEBUG] SFTP Uploading MainInstall.sh to {targetPath} (размер потока: {ms.Length} байт, сконвертирован в LF)");
+                progress?.Report($"[DEBUG] SFTP Uploading MainInstall.sh to {targetPath} (stream size: {ms.Length} bytes, converted to LF)");
                 _sftpClient.UploadFile(ms, targetPath);
             });
 
-            progress?.Report("[INFO] MainInstall.sh загружен успешно");
+            progress?.Report("[INFO] " + Tr.Get("Ssh_InstallUploaded"));
             return true;
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Ошибка загрузки MainInstall.sh: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Ssh_InstallUploadError", ex.Message));
             return false;
         }
     }
@@ -132,11 +132,11 @@ public class SSH : IDisposable
     /// <returns>True, если файл успешно загружен; иначе false.</returns>
     public async Task<bool> UploadFile(string localFilePath, string remoteFileName, ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report($"[TRACE] SSH.UploadFile вход: local={localFilePath}, remote={remoteFileName}");
+        progress?.Report($"[TRACE] SSH.UploadFile enter: local={localFilePath}, remote={remoteFileName}");
 
         if (_sftpClient == null || !_sftpClient.IsConnected)
         {
-            progress?.Report("[ERROR] SFTP-клиент не подключен");
+            progress?.Report("[ERROR] " + Tr.Get("Ssh_SftpNotConnected"));
             return false;
         }
 
@@ -153,16 +153,16 @@ public class SSH : IDisposable
                 else
                     targetPath = $"/home/{serverConfig.Username}/{remoteFileName}";
 
-                progress?.Report($"[DEBUG] SFTP Uploading {localFilePath} to {targetPath} (размер файла: {ms.Length} байт, сконвертирован в LF)");
+                progress?.Report($"[DEBUG] SFTP Uploading {localFilePath} to {targetPath} (file size: {ms.Length} bytes, converted to LF)");
                 _sftpClient.UploadFile(ms, targetPath, true); // true = overwrite (перезаписать при наличии)
-                progress?.Report($"[INFO] Файл {localFilePath} загружен успешно в {targetPath}");
+                progress?.Report("[INFO] " + Tr.F("Ssh_FileUploaded", localFilePath, targetPath));
             });
 
             return true;
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Ошибка загрузки файла {localFilePath}: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Ssh_FileUploadError", localFilePath, ex.Message));
             return false;
         }
     }
@@ -172,11 +172,11 @@ public class SSH : IDisposable
     /// </summary>
     public async Task<bool> UploadFile(Stream stream, string remoteFileName, ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report($"[TRACE] SSH.UploadFile(Stream) вход: remote={remoteFileName}");
+        progress?.Report($"[TRACE] SSH.UploadFile(Stream) enter: remote={remoteFileName}");
 
         if (_sftpClient == null || !_sftpClient.IsConnected)
         {
-            progress?.Report("[ERROR] SFTP-клиент не подключен");
+            progress?.Report("[ERROR] " + Tr.Get("Ssh_SftpNotConnected"));
             return false;
         }
 
@@ -194,16 +194,16 @@ public class SSH : IDisposable
                 else
                     targetPath = $"/home/{serverConfig.Username}/{remoteFileName}";
 
-                progress?.Report($"[DEBUG] SFTP Uploading stream to {targetPath} (размер потока: {ms.Length} байт, сконвертирован в LF)");
+                progress?.Report($"[DEBUG] SFTP Uploading stream to {targetPath} (stream size: {ms.Length} bytes, converted to LF)");
                 _sftpClient.UploadFile(ms, targetPath, true);
-                progress?.Report($"[INFO] {remoteFileName} загружен успешно в {targetPath}");
+                progress?.Report("[INFO] " + Tr.F("Ssh_StreamUploaded", remoteFileName, targetPath));
             });
 
             return true;
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Ошибка загрузки потока в {remoteFileName}: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Ssh_StreamUploadError", remoteFileName, ex.Message));
             return false;
         }
     }
@@ -216,11 +216,11 @@ public class SSH : IDisposable
     /// <returns>True, если скрипт успешно запущен; иначе false.</returns>
     public async Task<bool> RunTestScript(ServerConfig serverConfig, IProgress<string>? progress = null)
     {
-        progress?.Report($"[TRACE] SSH.RunTestScript вход: host={serverConfig.Host}, user={serverConfig.Username}");
+        progress?.Report($"[TRACE] SSH.RunTestScript enter: host={serverConfig.Host}, user={serverConfig.Username}");
 
         if (_sshClient == null || !_sshClient.IsConnected)
         {
-            progress?.Report("[ERROR] SSH-клиент не подключен");
+            progress?.Report("[ERROR] " + Tr.Get("Ssh_NotConnected"));
             return false;
         }
 
@@ -229,21 +229,21 @@ public class SSH : IDisposable
             string homeDir = serverConfig.Username == "root" ? "/root" : $"/home/{serverConfig.Username}";
             string command = $"chmod +x {homeDir}/MainInstall.sh && bash {homeDir}/MainInstall.sh";
 
-            progress?.Report($"[DEBUG] Выполнение MainInstall.sh: {command}");
+            progress?.Report($"[DEBUG] Running MainInstall.sh: {command}");
             SshCommand sshCommand = await RunSudoCommand(serverConfig, command);
 
             if (!string.IsNullOrWhiteSpace(sshCommand.Error))
             {
-                progress?.Report($"[WARN] Ошибки MainInstall.sh (stderr):\n{sshCommand.Error}");
+                progress?.Report("[WARN] " + Tr.F("Ssh_InstallStderr", sshCommand.Error));
             }
 
             progress?.Report(sshCommand.Result);
-            progress?.Report("[INFO] MainInstall.sh выполнен");
+            progress?.Report("[INFO] " + Tr.Get("Ssh_InstallDone"));
             return true;
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Ошибка выполнения MainInstall.sh: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Ssh_InstallError", ex.Message));
             return false;
         }
     }
@@ -300,18 +300,18 @@ public class SSH : IDisposable
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        progress?.Report($"[TRACE] SSH.RunSudoCommand вход: user={serverConfig.Username}, command={command}");
+        progress?.Report($"[TRACE] SSH.RunSudoCommand enter: user={serverConfig.Username}, command={command}");
 
         if (_sshClient == null || !_sshClient.IsConnected)
         {
-            progress?.Report("[ERROR] SSH-клиент не подключен");
-            throw new InvalidOperationException("SSH-клиент не подключен.");
+            progress?.Report("[ERROR] " + Tr.Get("Ssh_NotConnected"));
+            throw new InvalidOperationException(Tr.Get("Ssh_NotConnected"));
         }
 
         // Root: выполняем как есть, без обёрток.
         if (serverConfig.Username.Equals("root", StringComparison.OrdinalIgnoreCase))
         {
-            progress?.Report("[DEBUG] RunSudoCommand: root-пользователь, выполняем без sudo-обвязки");
+            progress?.Report("[DEBUG] RunSudoCommand: root user, running without sudo wrapper");
             return await Task.Run(() => _sshClient.RunCommand(command), cancellationToken);
         }
 
@@ -324,8 +324,8 @@ public class SSH : IDisposable
         // Прогресс-репортер оборачиваем, чтобы пароль (если случайно попадёт в
         // строку лога через ex.Message, ssh error и т.п.) был замаскирован.
         var maskedProgress = progress == null ? null : new PasswordMasker(progress, serverConfig.Password);
-        maskedProgress?.Report("[DEBUG] sudo через stdin (пароль НЕ в shell-истории сервера)");
-        maskedProgress?.Report($"[DEBUG] RunSudoCommand: shell-команда: {sudoCommand}");
+        maskedProgress?.Report("[DEBUG] sudo via stdin (password is NOT in the server shell history)");
+        maskedProgress?.Report($"[DEBUG] RunSudoCommand: shell command: {sudoCommand}");
 
         return await Task.Run(() =>
         {
@@ -343,7 +343,7 @@ public class SSH : IDisposable
                 // и команда выполнится без блокировки.
                 executeTask.Wait(cancellationToken);
             }
-            maskedProgress?.Report($"[DEBUG] RunSudoCommand: exit={sshCommand.ExitStatus}, длина stdout={sshCommand.Result?.Length ?? 0}, длина stderr={sshCommand.Error?.Length ?? 0}");
+            maskedProgress?.Report($"[DEBUG] RunSudoCommand: exit={sshCommand.ExitStatus}, stdout length={sshCommand.Result?.Length ?? 0}, stderr length={sshCommand.Error?.Length ?? 0}");
             return sshCommand;
         }, cancellationToken);
     }
@@ -365,7 +365,7 @@ public class SSH : IDisposable
                 if (_sshClient.IsConnected)
                 {
                     _sshClient.Disconnect();
-                    System.Diagnostics.Debug.WriteLine("[DEBUG] SSH.Disconnect: SSH-клиент отключен");
+                    System.Diagnostics.Debug.WriteLine("[DEBUG] SSH.Disconnect: SSH client disconnected");
                 }
             }
             catch (ObjectDisposedException) { }
@@ -384,7 +384,7 @@ public class SSH : IDisposable
                 if (_sftpClient.IsConnected)
                 {
                     _sftpClient.Disconnect();
-                    System.Diagnostics.Debug.WriteLine("[DEBUG] SSH.Disconnect: SFTP-клиент отключен");
+                    System.Diagnostics.Debug.WriteLine("[DEBUG] SSH.Disconnect: SFTP client disconnected");
                 }
             }
             catch (ObjectDisposedException) { }

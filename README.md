@@ -150,7 +150,7 @@ dotnet test
 | Сценарий | Триггер | Результат |
 |---|---|---|
 | [release.yml](.github/workflows/release.yml) | Создание тега `v*` или запуск вручную | Сборка кроссплатформенных артефактов (Windows x86, Windows ARM64, Linux AppImage, Android APK Release & Debug) и автоматическая публикация релиза в GitHub Releases |
-| [linux-build.yml](.github/workflows/linux-build.yml) | Запуск вручную | Сборка и загрузка `IziProxy-Linux-x86_64.AppImage` |
+| [linux-build.yml](.github/workflows/linux-build.yml) | Запуск вручную | Сборка и загрузка `IziProxy-x86_64.AppImage` |
 | [android-build.yml](.github/workflows/android-build.yml) | Запуск вручную | Сборка и загрузка `IziProxy-Release.apk` и `IziProxy-Debug.apk` |
 
 ---

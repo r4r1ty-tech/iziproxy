@@ -180,6 +180,6 @@ public class EmbeddedScriptsTests
         // Внутренний exception — FileNotFoundException с осмысленным message
         Assert.IsType<FileNotFoundException>(ex.InnerException);
         Assert.Contains("NonExistent.sh", ex.InnerException!.Message);
-        Assert.Contains("Доступные ресурсы", ex.InnerException.Message);
+        Assert.Contains("Available resources", ex.InnerException.Message);
     }
 }

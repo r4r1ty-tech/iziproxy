@@ -51,33 +51,31 @@ public class VdsProfile
         // Name
         if (string.IsNullOrWhiteSpace(Name))
         {
-            errors.Add("Имя профиля не может быть пустым.");
+            errors.Add(Tr.Get("Profile_NameEmpty"));
         }
         else if (Name.Trim().Length > 64)
         {
-            errors.Add($"Имя профиля слишком длинное: {Name.Trim().Length} символов (макс. 64).");
+            errors.Add(Tr.F("Profile_NameTooLong", Name.Trim().Length));
         }
 
         // Host
         if (string.IsNullOrWhiteSpace(Host))
         {
-            errors.Add("IP/Host сервера не может быть пустым.");
+            errors.Add(Tr.Get("Profile_HostEmpty"));
         }
         else if (!IsValidHostOrIp(Host.Trim()))
         {
-            errors.Add($"Некорректный IP или hostname: '{Host.Trim()}'. " +
-                       "Ожидается IPv4 (1.2.3.4), IPv6 (::1) или hostname (vds.example.com).");
+            errors.Add(Tr.F("Profile_HostInvalid", Host.Trim()));
         }
 
         // Username
         if (string.IsNullOrWhiteSpace(Username))
         {
-            errors.Add("Username не может быть пустым.");
+            errors.Add(Tr.Get("Profile_UsernameEmpty"));
         }
         else if (!UsernameRegex.IsMatch(Username.Trim()))
         {
-            errors.Add($"Некорректный username: '{Username.Trim()}'. " +
-                       "Должен начинаться с буквы или '_', содержать только a-z, 0-9, '_', '-', макс. 32 символа.");
+            errors.Add(Tr.F("Profile_UsernameInvalid", Username.Trim()));
         }
 
         // Password / SshKeyPath — нужен хотя бы один
@@ -85,7 +83,7 @@ public class VdsProfile
         bool hasKey = !string.IsNullOrWhiteSpace(SshKeyPath);
         if (!hasPassword && !hasKey)
         {
-            errors.Add("Нужен либо пароль, либо путь к SSH-ключу (иначе аутентификация не пройдёт).");
+            errors.Add(Tr.Get("Profile_NoAuth"));
         }
 
         // SshKeyPath — если задан, проверяем на path traversal
@@ -94,7 +92,7 @@ public class VdsProfile
             string keyPath = SshKeyPath.Trim();
             if (keyPath.Contains("..", StringComparison.Ordinal))
             {
-                errors.Add($"SshKeyPath содержит '..' (path traversal): '{keyPath}'.");
+                errors.Add(Tr.F("Profile_KeyTraversal", keyPath));
             }
             // На Linux ключи почти всегда в /home/*/.ssh/ или /root/.ssh/.
             // Абсолютный путь — must. Relative ("id_rsa") опасен тем, что
@@ -103,7 +101,7 @@ public class VdsProfile
             // не error — caller может переопределить.
             if (!keyPath.StartsWith('/') && !keyPath.StartsWith("~/", StringComparison.Ordinal))
             {
-                errors.Add($"SshKeyPath должен быть абсолютным (начинаться с '/' или '~/'): '{keyPath}'.");
+                errors.Add(Tr.F("Profile_KeyNotAbsolute", keyPath));
             }
         }
 
@@ -157,21 +155,21 @@ public static class VdsProfileService
     public static List<VdsProfile> LoadProfiles(string? filePath = null, IProgress<string>? progress = null)
     {
         var path = filePath ?? DefaultFilePath;
-        progress?.Report($"[TRACE] VdsProfileService.LoadProfiles вход: path={path}");
+        progress?.Report($"[TRACE] VdsProfileService.LoadProfiles enter: path={path}");
         try
         {
             if (!File.Exists(path))
             {
-                progress?.Report($"[INFO] Файл профилей не найден ({path}) — возвращаем пустой список");
+                progress?.Report("[INFO] " + Tr.F("Profile_FileMissing", path));
                 return new List<VdsProfile>();
             }
 
             string json = File.ReadAllText(path);
-            progress?.Report($"[DEBUG] Прочитан JSON профилей, длина={json.Length} байт");
+            progress?.Report($"[DEBUG] Read profiles JSON, length={json.Length} bytes");
 
             var loaded = JsonSerializer.Deserialize<List<VdsProfile>>(json)
                 ?? new List<VdsProfile>();
-            progress?.Report($"[DEBUG] Десериализовано {loaded.Count} профилей из JSON");
+            progress?.Report($"[DEBUG] Deserialized {loaded.Count} profiles from JSON");
 
             // Расшифровываем Password у каждого профиля. Legacy plain-text
             // (без префикса enc:v1:) SecureField.Unprotect вернёт as is.
@@ -191,14 +189,14 @@ public static class VdsProfileService
             }
             if (legacyCount > 0)
             {
-                progress?.Report($"[WARN] Загружено {legacyCount} профилей в legacy plaintext — будут перешифрованы при следующем Save");
+                progress?.Report("[WARN] " + Tr.F("Profile_Legacy", legacyCount));
             }
-            progress?.Report($"[INFO] Загружено {loaded.Count} профилей из {path}");
+            progress?.Report("[INFO] " + Tr.F("Profile_Loaded", loaded.Count, path));
             return loaded;
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Не удалось загрузить профили из {path}: {ex.Message} — возвращаем пустой список");
+            progress?.Report("[ERROR] " + Tr.F("Profile_LoadError", path, ex.Message));
             return new List<VdsProfile>();
         }
     }
@@ -206,14 +204,14 @@ public static class VdsProfileService
     public static void SaveProfiles(List<VdsProfile> profiles, string? filePath = null, IProgress<string>? progress = null)
     {
         var path = filePath ?? DefaultFilePath;
-        progress?.Report($"[TRACE] VdsProfileService.SaveProfiles вход: profiles={profiles.Count}, path={path}");
+        progress?.Report($"[TRACE] VdsProfileService.SaveProfiles enter: profiles={profiles.Count}, path={path}");
         try
         {
             var dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
-                progress?.Report($"[DEBUG] Создана директория {dir}");
+                progress?.Report($"[DEBUG] Created directory {dir}");
             }
 
             // Шифруем Password каждого профиля перед сериализацией.
@@ -232,11 +230,11 @@ public static class VdsProfileService
                     SshKeyPath = p.SshKeyPath,
                 });
             }
-            progress?.Report($"[DEBUG] Зашифровано {toSerialize.Count} паролей через DataProtection");
+            progress?.Report($"[DEBUG] Encrypted {toSerialize.Count} passwords with DataProtection");
 
             string json = JsonSerializer.Serialize(toSerialize, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, json);
-            progress?.Report($"[DEBUG] JSON записан в {path}, размер={json.Length} байт");
+            progress?.Report($"[DEBUG] JSON written to {path}, size={json.Length} bytes");
 
             // Ограничиваем доступ к файлу: на Linux/macOS ставим 0600
             // (read/write только владельцу). На Windows File.SetUnixFileMode
@@ -246,14 +244,14 @@ public static class VdsProfileService
             if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() || OperatingSystem.IsFreeBSD())
             {
                 File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                progress?.Report("[DEBUG] Установлен режим файла 0600 (только владелец)");
+                progress?.Report("[DEBUG] File mode set to 0600 (owner only)");
             }
 
-            progress?.Report($"[INFO] Сохранено {profiles.Count} профилей в {path}");
+            progress?.Report("[INFO] " + Tr.F("Profile_Saved", profiles.Count, path));
         }
         catch (Exception ex)
         {
-            progress?.Report($"[ERROR] Не удалось сохранить профили в {path}: {ex.Message}");
+            progress?.Report("[ERROR] " + Tr.F("Profile_SaveError", path, ex.Message));
             // Игнорируем ошибки записи
         }
     }

@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:IziProxy.GUI"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.Views.TroubleshootView"
@@ -27,7 +28,7 @@
         <StackPanel Orientation="Horizontal" Spacing="12">
           <materialIcons:MaterialIcon Kind="AlertCircleOutline" Width="24" Height="24"
                                       Foreground="#FFD54F" VerticalAlignment="Top" Margin="0,2,0,0"/>
-          <TextBlock Text="Сначала выполните деплой на вкладке «Deploy», чтобы установить SSH-соединение."
+          <TextBlock Text="{l:Tr Common_DeployFirst}"
                      TextWrapping="Wrap"
                      FontSize="14"
                      FontWeight="SemiBold"
@@ -42,7 +43,7 @@
 
           <Grid ColumnDefinitions="*,Auto">
             <StackPanel Grid.Column="0" Spacing="4">
-              <TextBlock Text="Состояние сервера" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+              <TextBlock Text="{l:Tr Ts_ServerState}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
               <TextBlock Text="{Binding StatusSummary}"
                          FontSize="14"
                          TextWrapping="Wrap"
@@ -57,14 +58,15 @@
                     VerticalAlignment="Center">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <materialIcons:MaterialIcon Kind="Refresh" Width="18" Height="18"/>
-                <TextBlock Text="Обновить" VerticalAlignment="Center"/>
+                <TextBlock Text="{l:Tr Common_Refresh}" VerticalAlignment="Center"/>
               </StackPanel>
             </Button>
           </Grid>
 
-          <TextBlock Text="{Binding LastUpdated, StringFormat='Обновлено: {0}'}"
-                     FontSize="11"
-                     Foreground="{StaticResource MutedTextBrush}"/>
+          <TextBlock FontSize="11"
+                     Foreground="{StaticResource MutedTextBrush}">
+            <Run Text="{l:Tr Common_Updated}"/><Run Text="{Binding LastUpdated}"/>
+          </TextBlock>
 
           <ProgressBar IsIndeterminate="True"
                        IsVisible="{Binding IsBusy}"
@@ -86,8 +88,8 @@
                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <StackPanel VerticalAlignment="Center" Spacing="2">
-            <TextBlock Text="Профили SNI" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-            <TextBlock Text="Замените SNI если VPN не подключается или заблокирован провайдером"
+            <TextBlock Text="{l:Tr Ts_SniProfiles}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="{l:Tr Ts_SniProfilesHint}"
                        FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
           </StackPanel>
         </StackPanel>
@@ -95,7 +97,7 @@
         <!-- Пустой список -->
         <Border Classes="M3Card" Padding="20"
                 IsVisible="{Binding Profiles.Count, Converter={x:Static ObjectConverters.IsNull}}">
-          <TextBlock Text="Профили не загружены. Нажмите «Обновить»."
+          <TextBlock Text="{l:Tr Ts_NoProfiles}"
                      FontSize="13"
                      Foreground="{StaticResource MutedTextBrush}"
                      HorizontalAlignment="Center"/>
@@ -175,10 +177,10 @@
 
                     <!-- Автозамена SNI -->
                     <StackPanel Spacing="6">
-                      <TextBlock Text="Автозамена SNI"
+                      <TextBlock Text="{l:Tr Ts_AutoReplace}"
                                  FontSize="13" FontWeight="SemiBold"
                                  Foreground="{StaticResource TextBrush}"/>
-                      <TextBlock Text="Подберёт быстрый домен с сервера и применит его. Текущий SNI будет исключён из кандидатов."
+                      <TextBlock Text="{l:Tr Ts_AutoReplaceHint}"
                                  FontSize="12"
                                  TextWrapping="Wrap"
                                  Foreground="{StaticResource MutedTextBrush}"/>
@@ -189,23 +191,23 @@
                               Margin="0,4,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                           <materialIcons:MaterialIcon Kind="AutoFix" Width="18" Height="18"/>
-                          <TextBlock Text="Автозамена (исключая текущий)" VerticalAlignment="Center"/>
+                          <TextBlock Text="{l:Tr Ts_AutoReplaceButton}" VerticalAlignment="Center"/>
                         </StackPanel>
                       </Button>
                     </StackPanel>
 
                     <!-- Кастомный SNI -->
                     <StackPanel Spacing="6">
-                      <TextBlock Text="Кастомный SNI"
+                      <TextBlock Text="{l:Tr Ts_CustomSni}"
                                  FontSize="13" FontWeight="SemiBold"
                                  Foreground="{StaticResource TextBrush}"/>
-                      <TextBlock Text="Введите домен вручную (например: www.microsoft.com)"
+                      <TextBlock Text="{l:Tr Ts_CustomSniHint}"
                                  FontSize="12"
                                  Foreground="{StaticResource MutedTextBrush}"/>
                       <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
                         <TextBox Grid.Column="0"
                                  Text="{Binding CustomSni}"
-                                 PlaceholderText="Введите домен..."
+                                 PlaceholderText="{l:Tr Ts_DomainPlaceholder}"
                                  IsEnabled="{Binding !IsBusy}"
                                  Margin="0,0,8,0"/>
                         <Button Grid.Column="1"
@@ -215,7 +217,7 @@
                                 MinHeight="44">
                           <StackPanel Orientation="Horizontal" Spacing="6">
                             <materialIcons:MaterialIcon Kind="Check" Width="18" Height="18"/>
-                            <TextBlock Text="Применить" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Tr Common_Apply}" VerticalAlignment="Center"/>
                           </StackPanel>
                         </Button>
                       </Grid>

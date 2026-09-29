@@ -122,7 +122,7 @@ public partial class DeployViewModel : ObservableObject
         IsDeploying = true;
         IsCompleted = false;
         VlessLinks.Clear();
-        StatusText = "Запуск деплоя...";
+        StatusText = Tr.Get("Deploy_Starting");
 
         ActiveSsh?.Dispose();
         ActiveSsh = null;
@@ -148,24 +148,24 @@ public partial class DeployViewModel : ObservableObject
             var ssh = new SSH();
 
             // 1. Подключение
-            progress.Report("Подключение к серверу...");
+            progress.Report(Tr.Get("Deploy_Connecting"));
             bool connected = await ssh.TestConnection(config, progress);
             if (!connected)
             {
-                StatusText = "❌ Ошибка подключения";
+                StatusText = Tr.Get("Deploy_ConnectFailed");
                 ssh.Dispose();
                 return;
             }
-            progress.Report("✓ Подключение установлено");
+            progress.Report(Tr.Get("Deploy_Connected"));
 
             // 2. Загрузка и запуск MainInstall.sh
-            progress.Report("Загрузка установочного скрипта...");
+            progress.Report(Tr.Get("Deploy_UploadingScript"));
             bool uploaded = await ssh.UploadTestScript(config, progress);
-            if (!uploaded) { StatusText = "❌ Ошибка загрузки скрипта"; ssh.Dispose(); return; }
+            if (!uploaded) { StatusText = Tr.Get("Deploy_UploadFailed"); ssh.Dispose(); return; }
 
-            progress.Report("Выполнение установочного скрипта (может занять 1-3 мин)...");
+            progress.Report(Tr.Get("Deploy_RunningScript"));
             bool ran = await ssh.RunTestScript(config, progress);
-            if (!ran) { StatusText = "❌ Ошибка выполнения скрипта"; ssh.Dispose(); return; }
+            if (!ran) { StatusText = Tr.Get("Deploy_ScriptFailed"); ssh.Dispose(); return; }
 
             // 3. Генерация ключей Xray
             var xrayParams = await XrayConfigParams.Generate(ssh, config, progress);
@@ -173,7 +173,7 @@ public partial class DeployViewModel : ObservableObject
             // 4. Деплой конфига
             var deployer = new DeployScripts();
             bool deployed = await deployer.DeployAndConfigure(ssh, config, xrayParams, progress);
-            if (!deployed) { StatusText = "❌ Ошибка деплоя"; ssh.Dispose(); return; }
+            if (!deployed) { StatusText = Tr.Get("Deploy_Failed"); ssh.Dispose(); return; }
 
             // 5. GEO
             try
@@ -184,11 +184,11 @@ public partial class DeployViewModel : ObservableObject
             catch { /* не критично */ }
 
             // 6. Генерация VLESS-ссылок
-            progress.Report("\nГенерация VLESS-ссылок...");
+            progress.Report("\n" + Tr.Get("Deploy_GeneratingLinks"));
             var links = VlessLinkGenerator.GenerateRealityLinks(config, xrayParams);
             for (int i = 0; i < links.Count; i++)
             {
-                string label = $"Ссылка {i + 1}  |  Порт: {xrayParams.Ports[i]}  |  SNI: {xrayParams.Snis[i]}";
+                string label = Tr.F("Deploy_LinkLabel", i + 1, xrayParams.Ports[i], xrayParams.Snis[i]);
                 VlessLinks.Add(new VlessLinkItem
                 {
                     Label = label,
@@ -202,17 +202,17 @@ public partial class DeployViewModel : ObservableObject
             ActiveXrayParams = xrayParams;
             ActiveSsh        = ssh;
             IsCompleted  = true;
-            StatusText   = "✅ Деплой завершён!";
+            StatusText   = Tr.Get("Deploy_Done");
 
             progress.Report("\n=================================================");
-            progress.Report("✅ ДЕПЛОЙ УСПЕШНО ЗАВЕРШЕН!");
-            progress.Report("Перейдите на вкладку 'Deploy', чтобы скопировать ссылки подключения.");
+            progress.Report(Tr.Get("Deploy_DoneBanner"));
+            progress.Report(Tr.Get("Deploy_GoCopyLinks"));
             progress.Report("=================================================");
         }
         catch (Exception ex)
         {
             StatusText = "❌ " + ex.Message;
-            progress.Report("ОШИБКА: " + ex.Message);
+            progress.Report(Tr.F("Deploy_Error", ex.Message));
         }
         finally
         {
@@ -227,14 +227,14 @@ public partial class DeployViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(Host))
         {
-            StatusText = "Введите IP-адрес";
+            StatusText = Tr.Get("Deploy_EnterIp");
             return;
         }
 
         IsDeploying = true;
-        StatusText = "Проверка подключения...";
+        StatusText = Tr.Get("Deploy_Testing");
         var rawProgress = _logsVm.ProgressReporter;
-        rawProgress.Report("Начало проверки SSH подключения к " + Host);
+        rawProgress.Report(Tr.F("Deploy_TestStart", Host));
 
         try
         {
@@ -255,19 +255,19 @@ public partial class DeployViewModel : ObservableObject
             bool connected = await ssh.TestConnection(config, progress);
             if (connected)
             {
-                StatusText = "Подключение успешно установлено! ✓";
-                progress.Report("SSH Подключение успешно установлено!");
+                StatusText = Tr.Get("Deploy_TestOk");
+                progress.Report(Tr.Get("Deploy_TestOkLog"));
             }
             else
             {
-                StatusText = "Не удалось подключиться к серверу. ✗";
-                progress.Report("Ошибка: не удалось авторизоваться по SSH.");
+                StatusText = Tr.Get("Deploy_TestFailed");
+                progress.Report(Tr.Get("Deploy_TestAuthFailed"));
             }
         }
         catch (Exception ex)
         {
-            StatusText = "Ошибка подключения: " + ex.Message;
-            _logsVm.ProgressReporter.Report("Ошибка SSH: " + ex.Message);
+            StatusText = Tr.F("Deploy_TestError", ex.Message);
+            _logsVm.ProgressReporter.Report(Tr.F("Deploy_SshError", ex.Message));
         }
         finally
         {
@@ -284,7 +284,7 @@ public partial class VlessLinkItem : ObservableObject
     public string Label { get; set; } = string.Empty;
     public string Link  { get; set; } = string.Empty;
 
-    [ObservableProperty] private string _copyLabel = "Скопировать";
+    [ObservableProperty] private string _copyLabel = Tr.Get("Common_Copy");
 
     [ObservableProperty] private Bitmap? _qrCodeImage = null;
 
@@ -297,9 +297,9 @@ public partial class VlessLinkItem : ObservableObject
             await clipboard.SetValueAsync(DataFormat.Text, Link);
         }
         
-        CopyLabel = "Скопировано ✓";
+        CopyLabel = Tr.Get("Common_Copied");
         await Task.Delay(2000);
-        CopyLabel = "Скопировать";
+        CopyLabel = Tr.Get("Common_Copy");
     }
 
     [RelayCommand]

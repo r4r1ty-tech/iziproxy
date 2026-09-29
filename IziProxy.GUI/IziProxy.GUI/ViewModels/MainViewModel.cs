@@ -44,10 +44,10 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public string CurrentTabName => SelectedTabIndex switch
     {
-        0 => "Deploy",
-        1 => "Логи",
-        2 => "Dashboard",
-        3 => "Troubleshoot",
+        0 => Tr.Get("Nav_Deploy"),
+        1 => Tr.Get("Nav_Logs"),
+        2 => Tr.Get("Nav_Dashboard"),
+        3 => Tr.Get("Nav_Troubleshoot"),
         _ => "IziProxy"
     };
 

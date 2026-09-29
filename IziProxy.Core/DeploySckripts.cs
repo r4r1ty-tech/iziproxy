@@ -84,30 +84,30 @@ public class DeployScripts
     /// <returns>True, если деплой выполнен успешно; иначе false.</returns>
     public async Task<bool> DeployAndConfigure(SSH sshClient, ServerConfig serverConfig, XrayConfigParams xrayParams, IProgress<string>? progress = null)
     {
-        progress?.Report("[TRACE] DeployScripts.DeployAndConfigure вход: x25519-ключи и UUID уже сгенерированы, отправляем конфиг на сервер");
-        progress?.Report("[INFO] Загрузка Deploy.sh на сервер");
+        progress?.Report("[TRACE] DeployScripts.DeployAndConfigure enter: x25519 keys and UUID are ready, sending the config to the server");
+        progress?.Report("[INFO] " + Tr.Get("Dep_UploadingDeploy"));
 
         bool isDeployUploaded = await sshClient.UploadFile(EmbeddedScripts.OpenDeploy(), "Deploy.sh", serverConfig, progress);
 
         if (!isDeployUploaded)
         {
-            progress?.Report("[ERROR] Не удалось загрузить Deploy.sh");
+            progress?.Report("[ERROR] " + Tr.Get("Dep_DeployUploadFailed"));
             return false;
         }
 
-        progress?.Report("[INFO] Формирование config.json из шаблона");
+        progress?.Report("[INFO] " + Tr.Get("Dep_BuildingConfig"));
         string configContent = await Task.Run(() => EmbeddedScripts.ReadConfigJson());
 
         configContent = configContent.Replace("__UUID__", xrayParams.Uuid)
                                      .Replace("__PRIVATE_KEY__", xrayParams.PrivateKey)
                                      .Replace("__SHORT_ID__", xrayParams.ShortId);
-        progress?.Report($"[DEBUG] config.json: подставлены UUID/PrivateKey/ShortId, размер={configContent.Length} байт");
+        progress?.Report($"[DEBUG] config.json: UUID/PrivateKey/ShortId filled in, size={configContent.Length} bytes");
 
         string tempConfigPath = Path.Combine(Path.GetTempPath(), "iziproxy_temp_config.json");
         await Task.Run(() => File.WriteAllText(tempConfigPath, configContent));
-        progress?.Report($"[DEBUG] Временный config.json сохранен: {tempConfigPath}");
+        progress?.Report($"[DEBUG] Temporary config.json saved: {tempConfigPath}");
 
-        progress?.Report("[INFO] Загрузка config.json на сервер");
+        progress?.Report("[INFO] " + Tr.Get("Dep_UploadingConfig"));
         bool isConfigUploaded = await sshClient.UploadFile(tempConfigPath, "config.json", serverConfig, progress);
 
         await Task.Run(() =>
@@ -115,24 +115,24 @@ public class DeployScripts
             if (File.Exists(tempConfigPath))
                 File.Delete(tempConfigPath);
         });
-        progress?.Report("[DEBUG] Временный config.json удалён");
+        progress?.Report("[DEBUG] Temporary config.json deleted");
 
         if (!isConfigUploaded)
         {
-            progress?.Report("[ERROR] Не удалось загрузить config.json");
+            progress?.Report("[ERROR] " + Tr.Get("Dep_ConfigUploadFailed"));
             return false;
         }
 
         string homeDir = serverConfig.Username == "root" ? "/root" : $"/home/{serverConfig.Username}";
         string runCommand = $"chmod +x {homeDir}/Deploy.sh && bash {homeDir}/Deploy.sh";
 
-        progress?.Report($"[DEBUG] Выполнение Deploy.sh на сервере: {runCommand}");
+        progress?.Report($"[DEBUG] Running Deploy.sh on the server: {runCommand}");
         var result = await sshClient.RunSudoCommand(serverConfig, runCommand);
         string output = result.Result ?? "";
-        progress?.Report($"[DEBUG] Вывод Deploy.sh (длина={output.Length}):\n{output}");
+        progress?.Report($"[DEBUG] Deploy.sh output (length={output.Length}):\n{output}");
         if (!string.IsNullOrWhiteSpace(result.Error))
         {
-            progress?.Report($"[WARN] Ошибки Deploy.sh (stderr):\n{result.Error}");
+            progress?.Report("[WARN] " + Tr.F("Dep_DeployStderr", result.Error));
         }
 
         // Парсим порты и SNI из вывода скрипта через ParseDeployOutput.
@@ -144,19 +144,19 @@ public class DeployScripts
         string sni2 = deployResult.Sni2;
         string sni3 = deployResult.Sni3;
 
-        progress?.Report($"[DEBUG] Спаршены порты: {port1}, {port2}, {port3}");
-        progress?.Report($"[DEBUG] Спаршены SNI: {sni1}, {sni2}, {sni3}");
+        progress?.Report($"[DEBUG] Parsed ports: {port1}, {port2}, {port3}");
+        progress?.Report($"[DEBUG] Parsed SNI: {sni1}, {sni2}, {sni3}");
 
         if (string.IsNullOrWhiteSpace(port1) || string.IsNullOrWhiteSpace(port2) || string.IsNullOrWhiteSpace(port3))
         {
-            progress?.Report("[ERROR] Deploy.sh не вернул порты (или вернул пустые)");
-            throw new Exception("Критическая ошибка: скрипт Deploy.sh не вернул порты (или вернул пустые).");
+            progress?.Report("[ERROR] " + Tr.Get("Dep_NoPortsLog"));
+            throw new Exception(Tr.Get("Dep_NoPorts"));
         }
 
         if (string.IsNullOrWhiteSpace(sni1) || string.IsNullOrWhiteSpace(sni2) || string.IsNullOrWhiteSpace(sni3))
         {
-            progress?.Report("[ERROR] Deploy.sh не вернул SNI (или вернул пустые)");
-            throw new Exception("Критическая ошибка: скрипт Deploy.sh не вернул SNI (или вернул пустые).");
+            progress?.Report("[ERROR] " + Tr.Get("Dep_NoSniLog"));
+            throw new Exception(Tr.Get("Dep_NoSni"));
         }
 
         xrayParams.Ports.Add(port1);
@@ -166,9 +166,9 @@ public class DeployScripts
         xrayParams.Snis.Add(sni1);
         xrayParams.Snis.Add(sni2);
         xrayParams.Snis.Add(sni3);
-        progress?.Report($"[INFO] Параметры inbound'ов получены: ports=[{port1},{port2},{port3}], snis=[{sni1},{sni2},{sni3}]");
+        progress?.Report("[INFO] " + Tr.F("Dep_InboundParams", port1, port2, port3, sni1, sni2, sni3));
 
-        progress?.Report("[INFO] Применение конфигурации Xray...");
+        progress?.Report("[INFO] " + Tr.Get("Dep_Applying"));
         string xrayConfDir = "/usr/local/etc/xray";
         string targetConfPath = $"{xrayConfDir}/config.json";
 
@@ -187,25 +187,25 @@ else
 fi
 ";
 
-        progress?.Report($"[DEBUG] Копирование конфига в {targetConfPath} и рестарт (с проверкой статуса)...");
+        progress?.Report($"[DEBUG] Copying config to {targetConfPath} and restarting (with status check)...");
         var applyResult = await sshClient.RunSudoCommand(serverConfig, applyCommand);
         string applyOutput = applyResult.Result ?? "";
 
-        progress?.Report($"[DEBUG] Результат рестарта (длина={applyOutput.Length}):\n{applyOutput}");
+        progress?.Report($"[DEBUG] Restart result (length={applyOutput.Length}):\n{applyOutput}");
         if (!string.IsNullOrWhiteSpace(applyResult.Error))
         {
-            progress?.Report($"[WARN] Ошибки рестарта (stderr):\n{applyResult.Error}");
+            progress?.Report("[WARN] " + Tr.F("Dep_RestartStderr", applyResult.Error));
         }
 
         if (applyOutput.Contains("XRAY_STATUS=failed"))
         {
             int errorIndex = applyOutput.IndexOf("XRAY_STATUS=failed") + "XRAY_STATUS=failed".Length;
             string errorLog = applyOutput.Substring(errorIndex).Trim();
-            progress?.Report("[ERROR] Xray упал после рестарта");
-            throw new Exception($"Xray упал после рестарта (ошибка конфигурации или портов):\n{errorLog}");
+            progress?.Report("[ERROR] " + Tr.Get("Dep_XrayCrashedLog"));
+            throw new Exception(Tr.F("Dep_XrayCrashed", errorLog));
         }
 
-        progress?.Report("[INFO] Сервис Xray успешно перезапущен и активен");
+        progress?.Report("[INFO] " + Tr.Get("Dep_XrayActive"));
         return true;
     }
 }

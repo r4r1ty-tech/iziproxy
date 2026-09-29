@@ -1,6 +1,7 @@
 <UserControl
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:l="using:IziProxy.GUI"
     xmlns:vm="using:IziProxy.GUI.ViewModels"
     xmlns:views="using:IziProxy.GUI.Views"
     xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
@@ -130,7 +131,7 @@
                                         Height="22"
                                     />
                   <TextBlock
-                                        Text="Deploy"
+                                        Text="{l:Tr Nav_Deploy}"
                                         VerticalAlignment="Center"
                                         FontSize="15"
                                         FontWeight="SemiBold"
@@ -145,7 +146,7 @@
                                         Height="22"
                                     />
                   <TextBlock
-                                        Text="Logs"
+                                        Text="{l:Tr Nav_Logs}"
                                         VerticalAlignment="Center"
                                         FontSize="15"
                                         FontWeight="SemiBold"
@@ -160,7 +161,7 @@
                                         Height="22"
                                     />
                   <TextBlock
-                                        Text="Dashboard"
+                                        Text="{l:Tr Nav_Dashboard}"
                                         VerticalAlignment="Center"
                                         FontSize="15"
                                         FontWeight="SemiBold"
@@ -175,7 +176,7 @@
                                         Height="22"
                                     />
                   <TextBlock
-                                        Text="Troubleshoot"
+                                        Text="{l:Tr Nav_Troubleshoot}"
                                         VerticalAlignment="Center"
                                         FontSize="15"
                                         FontWeight="SemiBold"
@@ -251,7 +252,7 @@
             <TextBlock
                             Classes="BottomNavLabel"
                             Classes.Active="{Binding IsDeployVisible}"
-                            Text="Deploy"
+                            Text="{l:Tr Nav_Deploy}"
                             FontSize="11"
                             HorizontalAlignment="Center"
                         />
@@ -285,7 +286,7 @@
             <TextBlock
                             Classes="BottomNavLabel"
                             Classes.Active="{Binding IsLogsVisible}"
-                            Text="Логи"
+                            Text="{l:Tr Nav_Logs}"
                             FontSize="11"
                             HorizontalAlignment="Center"
                         />
@@ -319,7 +320,7 @@
             <TextBlock
                             Classes="BottomNavLabel"
                             Classes.Active="{Binding IsDashboardVisible}"
-                            Text="Dashboard"
+                            Text="{l:Tr Nav_Dashboard}"
                             FontSize="11"
                             HorizontalAlignment="Center"
                         />
@@ -353,7 +354,7 @@
             <TextBlock
                             Classes="BottomNavLabel"
                             Classes.Active="{Binding IsTroubleshootVisible}"
-                            Text="Troubleshoot"
+                            Text="{l:Tr Nav_Troubleshoot}"
                             FontSize="11"
                             HorizontalAlignment="Center"
                         />

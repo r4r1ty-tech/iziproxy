@@ -19,7 +19,7 @@ public partial class TroubleshootViewModel : ObservableObject
     [ObservableProperty] private bool   _isBusy        = false;
     [ObservableProperty] private bool   _isRunning     = false;
     [ObservableProperty] private bool   _isConfigValid = false;
-    [ObservableProperty] private string _statusSummary = "Нет подключения";
+    [ObservableProperty] private string _statusSummary = Tr.Get("Ts_NotConnected");
     [ObservableProperty] private string _lastUpdated   = "—";
 
     // ── Профили (inbound'ы) ──────────────────────────────────────────
@@ -62,9 +62,9 @@ public partial class TroubleshootViewModel : ObservableObject
             IsConfigValid = status.IsConfigValid;
             StatusSummary = status.IsRunning
                 ? (status.IsConfigValid
-                    ? "✅ Xray работает, конфиг валиден"
-                    : "⚠️ Xray работает, но конфиг содержит ошибки")
-                : "❌ Xray остановлен";
+                    ? Tr.Get("Ts_StatusOk")
+                    : Tr.Get("Ts_StatusConfigErrors"))
+                : Tr.Get("Ts_StatusStopped");
 
             // 2. Список SNI-профилей
             var snis = await SniRepairService.ReadCurrentSnis(
@@ -101,11 +101,11 @@ public partial class TroubleshootViewModel : ObservableObject
         if (success)
         {
             item.CurrentSni    = newSni;
-            item.StatusMessage = $"✅ SNI заменён на {newSni}, Xray перезапущен";
+            item.StatusMessage = Tr.F("Ts_SniReplaced", newSni);
         }
         else
         {
-            item.StatusMessage = "❌ Ошибка замены SNI";
+            item.StatusMessage = Tr.Get("Ts_SniReplaceFailed");
         }
 
         return success;
@@ -171,23 +171,23 @@ public partial class TroubleshootProfileItem : ObservableObject
     private async Task AutoReplaceSni()
     {
         IsBusy = true;
-        StatusMessage = $"🔍 Поиск лучшего SNI (исключая \"{CurrentSni}\")...";
+        StatusMessage = Tr.F("Ts_Searching", CurrentSni);
         try
         {
             string? bestSni = await _vm.AutoSelectSni(CurrentSni);
             if (bestSni != null)
             {
-                StatusMessage = $"⏳ Найден: {bestSni}. Применение...";
+                StatusMessage = Tr.F("Ts_FoundApplying", bestSni);
                 await _vm.ApplySniChange(this, bestSni);
             }
             else
             {
-                StatusMessage = "⚠️ Не удалось подобрать SNI. Попробуйте ввести вручную.";
+                StatusMessage = Tr.Get("Ts_SniNotFound");
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = "❌ Ошибка: " + ex.Message;
+            StatusMessage = Tr.F("Ts_Error", ex.Message);
         }
         finally
         {
@@ -203,19 +203,19 @@ public partial class TroubleshootProfileItem : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(CustomSni))
         {
-            StatusMessage = "⚠️ Введите домен";
+            StatusMessage = Tr.Get("Ts_EnterDomain");
             return;
         }
 
         IsBusy = true;
-        StatusMessage = $"⏳ Применение {CustomSni.Trim()}...";
+        StatusMessage = Tr.F("Ts_Applying", CustomSni.Trim());
         try
         {
             await _vm.ApplySniChange(this, CustomSni.Trim());
         }
         catch (Exception ex)
         {
-            StatusMessage = "❌ Ошибка: " + ex.Message;
+            StatusMessage = Tr.F("Ts_Error", ex.Message);
         }
         finally
         {

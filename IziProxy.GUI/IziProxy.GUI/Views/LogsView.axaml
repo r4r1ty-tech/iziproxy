@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:IziProxy.GUI"
              xmlns:vm="using:IziProxy.GUI.ViewModels"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="IziProxy.GUI.Views.LogsView"
@@ -15,7 +16,7 @@
                 CornerRadius="16">
           <materialIcons:MaterialIcon Kind="ConsoleLine" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
         </Border>
-        <TextBlock Text="Журнал событий" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+        <TextBlock Text="{l:Tr Logs_Title}" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
       </StackPanel>
       
       <WrapPanel Orientation="Horizontal">
@@ -39,12 +40,12 @@
                       IsChecked="{Binding ShowError}"
                       Classes="Tonal"
                       Margin="0,0,8,8"/>
-        <Button Content="Открыть лог-файл"
+        <Button Content="{l:Tr Logs_OpenFile}"
                 Classes="Tonal"
                 Command="{Binding OpenLogFileCommand}"
                 IsVisible="{Binding !IsNarrowMode}"
                 Margin="0,0,8,8"/>
-        <Button Content="Очистить"
+        <Button Content="{l:Tr Logs_Clear}"
                 Classes="Tonal"
                 Command="{Binding ClearLogsCommand}"
                 Margin="0,0,0,8"/>
@@ -72,10 +73,11 @@
 
     <!-- Счётчик -->
     <TextBlock Grid.Row="2"
-               Text="{Binding Logs.Count, StringFormat='Сообщений: {0}'}"
                FontSize="13" Foreground="{StaticResource MutedTextBrush}"
                HorizontalAlignment="Right"
-               Margin="0,8,0,0"/>
+               Margin="0,8,0,0">
+      <Run Text="{l:Tr Logs_Count}"/><Run Text="{Binding Logs.Count}"/>
+    </TextBlock>
   </Grid>
 
 </UserControl>
