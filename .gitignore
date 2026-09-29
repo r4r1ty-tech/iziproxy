@@ -27,7 +27,7 @@ squashfs-root/
 AppDir/.DirIcon
 
 # AppDir/bin — это артефакт публикации (заполняется на лету при сборке)
-AppDir/usr/
+AppDir/usr/bin/
 
 # xray.zip — большой бинарь, не нужен в репе (используется только при локальной разработке)
 xray.zip
