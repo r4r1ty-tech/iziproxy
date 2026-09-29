@@ -121,13 +121,16 @@ jobs:
           wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
           chmod +x appimagetool
           ./appimagetool --appimage-extract
-          ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-x86_64.AppImage
+          # -u встраивает update information и создаёт .zsync для AppImageUpdate
+          ARCH=x86_64 ./squashfs-root/AppRun -u "gh-releases-zsync|${{ github.repository_owner }}|${{ github.event.repository.name }}|latest|IziProxy-x86_64.AppImage.zsync" AppDir IziProxy-x86_64.AppImage
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-appimage
-          path: IziProxy-x86_64.AppImage
+          path: |
+            IziProxy-x86_64.AppImage
+            IziProxy-x86_64.AppImage.zsync
 
   # ────────────────────────────────────────────────
   # 4. Android APK
@@ -250,6 +253,7 @@ jobs:
             artifacts/win-x86/IziProxy-win-x86.exe
             artifacts/win-arm64/IziProxy-win-arm64.exe
             artifacts/linux-appimage/IziProxy-x86_64.AppImage
+            artifacts/linux-appimage/IziProxy-x86_64.AppImage.zsync
           )
           for apk in artifacts/android-apk/IziProxy-Release.apk artifacts/android-apk/IziProxy-Debug.apk; do
             [ -f "$apk" ] && files+=("$apk")

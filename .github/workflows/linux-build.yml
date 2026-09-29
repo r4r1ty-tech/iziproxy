@@ -34,10 +34,10 @@ jobs:
         wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
         chmod +x appimagetool
         ./appimagetool --appimage-extract
-        ARCH=x86_64 ./squashfs-root/AppRun AppDir IziProxy-x86_64.AppImage
+        ARCH=x86_64 ./squashfs-root/AppRun -u "gh-releases-zsync|${{ github.repository_owner }}|${{ github.event.repository.name }}|latest|IziProxy-x86_64.AppImage.zsync" AppDir IziProxy-x86_64.AppImage
 
     - name: Upload AppImage to Release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload "$(gh release view --json tagName -q .tagName)" IziProxy-x86_64.AppImage --clobber
+        gh release upload "$(gh release view --json tagName -q .tagName)" IziProxy-x86_64.AppImage IziProxy-x86_64.AppImage.zsync --clobber
